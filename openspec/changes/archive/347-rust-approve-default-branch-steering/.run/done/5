@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:520970d708b13d3713f07970ac486305ffcfe1178ea1cc121d1cf87c907682cf"
+build_stamp: "38b5f686"
+project_commit: "e3fecb8b"
+exit_code: 0
+scope_files: {"crates/apps/cli/tests/approve_default_branch.rs":"sha256:eb5b887a9fac1feda16c0024d0317832d5d2a7cd99e92f5f8935f5349a9bbdd7","crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt":"sha256:7d640b2f50b08e3c61999276d42f41df2c19c7221a92584f35fddbff83b9e874","crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt":"sha256:25525f02319a5279e87e1e87c24531129fd8577e7593ede4823f40792dcf0784","crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt":"sha256:0aa729a376f1c6befc33eff6411f6dbe15485fe2f62fa30c30db5591fb754096","crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt":"sha256:269907a1af2d404e96e615827d3a07ae08422ea9a261b91879287adf194914fd","crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt":"sha256:db6fe5895d40adadc9ed3c12909008bfcb4d2a29f823e84e8f51e0ca4302b5e9"}
+---
+2026-10-25T18:37:49.120Z

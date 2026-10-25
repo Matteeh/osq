@@ -65,7 +65,7 @@ pub(crate) fn approve(
 /// The first task without a done marker or with a regressed marker.
 ///
 /// Implements: rust-approve/steered-approval
-fn continues_from(snapshot: &ChangeSnapshot) -> Option<String> {
+pub(super) fn continues_from(snapshot: &ChangeSnapshot) -> Option<String> {
     snapshot
         .tasks
         .iter()
@@ -139,7 +139,11 @@ fn restore(path: &Path, bytes: Option<&[u8]>) -> Result<(), FeatureError> {
 /// Appends one `approved` event naming the seal and each trigger's target.
 ///
 /// Implements: rust-approve/steered-approval
-fn append_event(folder: &Path, seal: &str, triggers: &[Trigger]) -> Result<(), FeatureError> {
+pub(super) fn append_event(
+    folder: &Path,
+    seal: &str,
+    triggers: &[Trigger],
+) -> Result<(), FeatureError> {
     let dir = folder.join(".run").join("events");
     fs::create_dir_all(&dir).map_err(|error| write_error(&dir, &error))?;
     let path = dir.join("change.jsonl");

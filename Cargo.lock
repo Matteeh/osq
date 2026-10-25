@@ -331,6 +331,7 @@ dependencies = [
  "osq-kernel-harnesses",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-sync",
  "osq-kernel-vcs",
  "serde_json",
 ]

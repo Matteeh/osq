@@ -31,14 +31,14 @@ pub(crate) fn run(root: &Path, change: &Path, envelope: &Envelope) -> Result<(),
     Ok(())
 }
 
-/// Whether a target has no active marker or was retried at or after the event.
+/// Whether a target has no active marker or records a failure at or after the event.
 ///
 /// Implements: rust-retry/approval-reaction
 fn retired(change: &Path, target: &str, approved: &str) -> bool {
     if !has_marker(change, target) {
         return true;
     }
-    retried_at_or_after(change, target, approved)
+    failure_at_or_after(change, target, approved)
 }
 
 /// Whether `.run/regressed/<target>.md` or a task's dead marker exists.
@@ -51,10 +51,10 @@ fn has_marker(change: &Path, target: &str) -> bool {
         || (target != CHANGE && run.join("dead").join(format!("{target}.md")).exists())
 }
 
-/// Whether the target's stream holds a retry for it at or after the event.
+/// Whether the target's stream records a failure for it at or after the event.
 ///
 /// Implements: rust-retry/approval-reaction
-fn retried_at_or_after(change: &Path, target: &str, approved: &str) -> bool {
+fn failure_at_or_after(change: &Path, target: &str, approved: &str) -> bool {
     let path = change
         .join(".run")
         .join("events")
@@ -64,9 +64,12 @@ fn retried_at_or_after(change: &Path, target: &str, approved: &str) -> bool {
         let Ok(envelope) = parse_event_line(line) else {
             return false;
         };
-        let Event::Retry(retry) = envelope.event else {
-            return false;
+        let matches = match &envelope.event {
+            Event::Retry(retry) => retry.target == target,
+            Event::Regressed(regressed) => regressed.task.as_deref() == Some(target),
+            Event::Dead(dead) => dead.task == target,
+            _ => false,
         };
-        retry.target == target && envelope.timestamp.as_str() >= approved
+        matches && envelope.timestamp.as_str() >= approved
     })
 }

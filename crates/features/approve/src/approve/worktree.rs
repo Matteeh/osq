@@ -4,7 +4,7 @@ pub(crate) mod copy;
 pub(crate) mod markers;
 mod path;
 mod prepare;
-mod record;
+pub(super) mod record;
 pub(crate) mod text;
 
 use std::fs;

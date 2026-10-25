@@ -17,12 +17,12 @@ pub(crate) fn not_found(query: &str, changes: &Path) -> String {
     }
 }
 
-/// The refusal for a default-branch trigger.
+/// The refusal for an archived change that needs steering past a default-branch trigger.
 ///
 /// Implements: rust-approve/steering-refusal
-pub(crate) fn default_branch(folder: &str, triggers: &[Trigger]) -> String {
+pub(crate) fn archived_steering(folder: &str, triggers: &[Trigger]) -> String {
     format!(
-        "Change {folder} needs steering: {}. Rust approve does not approve default-branch steering yet.",
+        "Change {folder} needs steering: {}. Rust approve steers an archived change only past a default-branch trigger.",
         described(triggers)
     )
 }
@@ -68,6 +68,31 @@ pub(crate) fn steered(
     if let Some(worktree) = worktree {
         let _ = writeln!(text, "  Worktree: {}", worktree.display());
         let _ = writeln!(text, "  Branch: osq/{folder}");
+    }
+    if let Some(task) = continues {
+        let _ = writeln!(text, "  Continues from task {task}");
+    }
+    text
+}
+
+/// The lines a default-branch approval prints.
+///
+/// Implements: rust-approve/default-branch-approval
+pub(crate) fn default_branch(
+    folder: &str,
+    seal: &str,
+    worktree: &Path,
+    default: &str,
+    reopened: Option<&str>,
+    continues: Option<&str>,
+) -> String {
+    let mut text = format!(
+        "Approved {} ({folder})\n  Hash: {seal}\n  Worktree: {}\n  Branch: osq/{folder}\n  Merged {default} into osq/{folder}\n",
+        id(folder),
+        worktree.display()
+    );
+    if let Some(line) = reopened {
+        let _ = writeln!(text, "{line}");
     }
     if let Some(task) = continues {
         let _ = writeln!(text, "  Continues from task {task}");

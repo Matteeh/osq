@@ -43,7 +43,7 @@ pub(crate) fn list(
         .worktree_list()
         .map_err(|error| failed(&error.to_string()))?
         .into_iter()
-        .filter(active_approved)
+        .filter(approved)
         .map(candidate)
         .collect::<Vec<TreeCandidate>>();
     let trees = change_trees(root, &candidates, &[]);
@@ -56,23 +56,19 @@ pub(crate) fn list(
         .collect())
 }
 
-/// Whether a worktree checks out an osq branch with its active change approved.
+/// Whether a worktree checks out an osq branch whose change is approved, active or archived.
 ///
 /// Implements: rust-approve/approve-lookup
-fn active_approved(worktree: &Worktree) -> bool {
+fn approved(worktree: &Worktree) -> bool {
     let Some(branch) = worktree.branch.as_deref() else {
         return false;
     };
     let Some(folder) = branch.strip_prefix("osq/") else {
         return false;
     };
-    Path::new(&worktree.path)
-        .join("openspec")
-        .join("changes")
-        .join(folder)
-        .join(".run")
-        .join("approved")
-        .is_file()
+    let changes = Path::new(&worktree.path).join("openspec").join("changes");
+    let marker = |path: &Path| path.join(".run").join("approved").is_file();
+    marker(&changes.join(folder)) || marker(&changes.join("archive").join(folder))
 }
 
 /// Turns one git worktree into a tree candidate.

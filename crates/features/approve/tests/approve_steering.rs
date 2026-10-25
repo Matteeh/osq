@@ -47,10 +47,7 @@ const ROWS: &[Row] = &[
             (".run/regressed/change.md", &["reason: sync_conflict"]),
         ],
         lock: None,
-        expected: Expected::Failed(
-            "Change 001-a needs steering: change conflict (sync_conflict). \
-             Rust approve does not approve default-branch steering yet.",
-        ),
+        expected: Expected::Steered(&["change"], "1"),
     },
     Row {
         name: "change-requirement-changed",
@@ -59,10 +56,7 @@ const ROWS: &[Row] = &[
             (".run/regressed/change.md", &["reason: requirement_changed"]),
         ],
         lock: None,
-        expected: Expected::Failed(
-            "Change 001-a needs steering: change requirement_changed \
-             (requirement_changed). Rust approve does not approve default-branch steering yet.",
-        ),
+        expected: Expected::Steered(&["change"], "1"),
     },
     Row {
         name: "change-sync-verify-red",
@@ -71,10 +65,7 @@ const ROWS: &[Row] = &[
             (".run/regressed/change.md", &["reason: sync_verify_red"]),
         ],
         lock: None,
-        expected: Expected::Failed(
-            "Change 001-a needs steering: change regression (sync_verify_red). \
-             Rust approve does not approve default-branch steering yet.",
-        ),
+        expected: Expected::Steered(&["change"], "1"),
     },
     Row {
         name: "change-verify-path-missing",

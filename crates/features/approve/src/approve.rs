@@ -1,5 +1,6 @@
 //! Running `approve`: find the active change, refuse steering, then seal it.
 
+mod default_branch;
 pub(crate) mod find;
 mod lint;
 mod lookup;
@@ -16,7 +17,7 @@ use std::path::Path;
 use osq_core::FeatureError;
 use osq_kernel_config::load_config;
 use osq_kernel_specs::{SpecFinding, validate_change, validate_merged_change};
-use osq_kernel_storage::{ChangeEntry, StorageError, change_folder_seal, read_change};
+use osq_kernel_storage::{ChangeEntry, Location, StorageError, change_folder_seal, read_change};
 use osq_kernel_vcs::project_git_root;
 
 /// The two flags an `approve` invocation may carry anywhere.
@@ -42,6 +43,8 @@ pub(crate) struct ApproveOptions {
 ///
 /// Implements: rust-approve/approve-lookup
 /// Implements: rust-approve/steering-refusal
+/// Implements: rust-approve/steered-approval
+/// Implements: rust-approve/default-branch-approval
 /// Implements: rust-approve/approve-validation
 /// Implements: rust-approve/approval-marker
 /// Implements: rust-approve/worktree-approval
@@ -56,18 +59,19 @@ pub(crate) fn run_approve(
     let config = load_config(root).map_err(|error| failed(&error.to_string()))?;
     let repo = project_git_root(root, &config).map_err(|error| failed(&error.to_string()))?;
     let located = lookup::list(root, &config, repo.as_deref())?;
-    let found = located
-        .iter()
-        .find(|candidate| {
-            candidate.entry.location == osq_kernel_storage::Location::Active
-                && find::matches(&candidate.entry.folder, query)
-        })
-        .ok_or_else(|| {
+    let active = located.iter().find(|candidate| {
+        candidate.entry.location == Location::Active
+            && find::matches(&candidate.entry.folder, query)
+    });
+    let found = match active {
+        Some(found) => found,
+        None => archived_match(&located, query, repo.is_some()).ok_or_else(|| {
             FeatureError::failed(
                 "approve",
                 text::not_found(query, &root.join("openspec").join("changes")),
             )
-        })?;
+        })?,
+    };
     let entry = &found.entry;
     let snapshot = read_change(entry).map_err(|error| failed(&error.to_string()))?;
     let in_worktree = found
@@ -78,6 +82,12 @@ pub(crate) fn run_approve(
     if !triggers.is_empty() {
         refuse_steering(entry, &snapshot, &triggers, in_worktree, repo.is_some())?;
         validate(entry, &root.join("openspec").join("specs"))?;
+        if in_worktree && triggers.iter().any(steering::Trigger::is_default_branch) {
+            let (Some(repo), Some(tree)) = (repo.as_deref(), found.tree.as_ref()) else {
+                return Err(failed("a worktree approval needs git and its worktree"));
+            };
+            return default_branch::approve(root, entry, &snapshot, &triggers, &config, repo, tree);
+        }
         return steered::approve(
             entry,
             &snapshot,
@@ -112,7 +122,30 @@ pub(crate) fn run_approve(
     Ok(text::approved(&entry.folder, seal.as_str()))
 }
 
-/// Refuses a steered change that a running task, the default branch or git stops.
+/// The first archived worktree change that matches the query and needs steering.
+///
+/// Implements: rust-approve/approve-lookup
+fn archived_match<'a>(
+    located: &'a [lookup::Located],
+    query: &str,
+    git_on: bool,
+) -> Option<&'a lookup::Located> {
+    if !git_on {
+        return None;
+    }
+    located.iter().find(|candidate| {
+        candidate.entry.location == Location::Archived
+            && candidate
+                .tree
+                .as_ref()
+                .is_some_and(|tree| tree.folder.is_some())
+            && find::matches(&candidate.entry.folder, query)
+            && read_change(&candidate.entry)
+                .is_ok_and(|snapshot| !steering::human_triggers(&snapshot, true).is_empty())
+    })
+}
+
+/// Refuses a steered change that a running task, the archive or git stops.
 ///
 /// Implements: rust-approve/steering-refusal
 fn refuse_steering(
@@ -125,8 +158,10 @@ fn refuse_steering(
     if task_running(entry, snapshot) {
         return Err(failed(&text::running(&entry.folder)));
     }
-    if triggers.iter().any(steering::Trigger::is_default_branch) {
-        return Err(failed(&text::default_branch(&entry.folder, triggers)));
+    if entry.location == Location::Archived
+        && !triggers.iter().any(steering::Trigger::is_default_branch)
+    {
+        return Err(failed(&text::archived_steering(&entry.folder, triggers)));
     }
     if git_on && !in_worktree {
         return Err(failed(&text::checkout_steering(&entry.folder, triggers)));

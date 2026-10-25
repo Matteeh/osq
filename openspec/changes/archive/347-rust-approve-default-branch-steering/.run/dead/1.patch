@@ -1,0 +1,468 @@
+diff --git a/crates/kernel/sync/src/lib.rs b/crates/kernel/sync/src/lib.rs
+index 1e7506f03..af47e447c 100644
+--- a/crates/kernel/sync/src/lib.rs
++++ b/crates/kernel/sync/src/lib.rs
+@@ -95,8 +95,24 @@ pub struct SyncStop {
+ /// sync's own writes.
+ ///
+ /// Implements: rust-sync/sync-change
++/// Implements: rust-sync/default-branch-resolution
+ pub fn sync_change(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
+-    sync::run(request)
++    sync_change_taking_default(request, &[])
++}
++
++/// Takes the default branch into the branch, resolving the listed conflicts to it.
++///
++/// # Errors
++///
++/// Returns a `SyncStop` for every stop and every other error, after undoing the
++/// sync's own writes.
++///
++/// Implements: rust-sync/default-branch-resolution
++pub fn sync_change_taking_default(
++    request: &SyncRequest<'_>,
++    paths: &[String],
++) -> Result<SyncOutcome, SyncStop> {
++    sync::run(request, paths)
+ }
+ 
+ /// Appends the active sync's uncommitted `sync_stopped` event.
+diff --git a/crates/kernel/sync/src/sync.rs b/crates/kernel/sync/src/sync.rs
+index ef00d6db9..cbc93e05e 100644
+--- a/crates/kernel/sync/src/sync.rs
++++ b/crates/kernel/sync/src/sync.rs
+@@ -50,6 +50,8 @@ struct Sync<'a> {
+     change_rel: String,
+     /// The default branch the sync merges.
+     default_branch: &'a str,
++    /// The conflicted paths the sync resolves to the default branch's version.
++    paths: &'a [String],
+     /// The change stream's path in the change folder.
+     events: PathBuf,
+     /// The change stream's bytes before the sync, or none when it was absent.
+@@ -71,7 +73,7 @@ struct Sync<'a> {
+ }
+ 
+ /// Syncs one change of either kind, giving the outcome its caller sees.
+-pub(crate) fn run(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
++pub(crate) fn run(request: &SyncRequest<'_>, paths: &[String]) -> Result<SyncOutcome, SyncStop> {
+     let vcs = GitVcs::new(request.worktree).with_timeouts(request.timeouts);
+     let head = vcs.head().map_err(|error| failed(error.to_string()))?.sha;
+     if let Some(head) = head.as_deref() {
+@@ -97,6 +99,7 @@ pub(crate) fn run(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
+         change,
+         change_rel,
+         default_branch: request.default_branch,
++        paths,
+         events,
+         kept_events,
+         picked: Vec::new(),
+@@ -149,6 +152,10 @@ impl Sync<'_> {
+             MergeOutcome::Clean => Vec::new(),
+             MergeOutcome::Conflict { paths } => paths,
+         };
++        let conflicts = match self.resolve(&conflicts) {
++            Ok(conflicts) => conflicts,
++            Err(stop) => return Err(self.finish(&stop)),
++        };
+         if let Some(stop) = text::conflict_stop(self.folder, self.default_branch, &conflicts) {
+             return Err(self.finish(&stop));
+         }
+@@ -158,6 +165,31 @@ impl Sync<'_> {
+         }
+     }
+ 
++    /// Writes the default branch's version of each listed conflicted path.
++    ///
++    /// # Errors
++    ///
++    /// Returns the stop a git read, a write, a removal or a stage raises.
++    ///
++    /// Implements: rust-sync/default-branch-resolution
++    fn resolve(&self, conflicts: &[String]) -> Result<Vec<String>, Stop> {
++        let mut remaining = Vec::new();
++        for path in conflicts {
++            if !self.paths.contains(path) {
++                remaining.push(path.clone());
++                continue;
++            }
++            let content = self
++                .vcs
++                .show(self.default_branch, path)
++                .map_err(|error| Stop::vcs(&error))?;
++            files::write_or_remove(&self.worktree.join(path), content.as_deref())
++                .map_err(|error| Stop::failed(error.to_string()))?;
++            self.vcs.stage(&[path]).map_err(|error| Stop::vcs(&error))?;
++        }
++        Ok(remaining)
++    }
++
+     /// Steps 3 through 6 of a started merge, giving the sync commit.
+     ///
+     /// # Errors
+diff --git a/crates/kernel/sync/tests/default_branch_resolution.rs b/crates/kernel/sync/tests/default_branch_resolution.rs
+new file mode 100644
+index 000000000..c013baf24
+--- /dev/null
++++ b/crates/kernel/sync/tests/default_branch_resolution.rs
+@@ -0,0 +1,222 @@
++//! Proves listed conflicts resolve to the default branch's version.
++
++mod support;
++
++use std::path::Path;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_config::{Limits, Timeouts, VcsConfig};
++use osq_kernel_sync::{
++    SyncKind, SyncOptions, SyncOutcome, SyncRequest, SyncStop, sync_change_taking_default,
++};
++use support::{ChangeTree, SyncRepo};
++
++/// The folder every row uses.
++const FOLDER: &str = "001-alpha-orders";
++/// The author every sync commit carries.
++const AUTHOR: &str = "osq <osq@example.invalid>";
++
++/// The options "Conflicts resolved to the default branch" uses.
++fn options() -> SyncOptions {
++    SyncOptions {
++        records: false,
++        verify: true,
++        tasks: None,
++    }
++}
++
++/// The sync repository of "Conflicts resolved to the default branch".
++fn repository(name: &str) -> (SyncRepo, ChangeTree) {
++    let repo = SyncRepo::new(name);
++    repo.main_file("src/two.txt", "one\n", "main adds two");
++    let change = repo.add_worktree(FOLDER);
++    repo.write(&change.path, "src/one.txt", "two\n");
++    repo.write(&change.path, "src/two.txt", "two\n");
++    repo.write(
++        &change.path,
++        &format!("openspec/changes/archive/{FOLDER}/proposal.md"),
++        "---\ntitle: A\nverify: \"true\"\n---\n## Verify\n\nx\n",
++    );
++    repo.commit_all(&change.path, &format!("work on {FOLDER}"));
++    (repo, change)
++}
++
++/// Runs `sync_change_taking_default` on the row's change and paths.
++fn sync(change: &ChangeTree, paths: &[&str]) -> Result<SyncOutcome, SyncStop> {
++    let settings = VcsConfig {
++        author: Some(AUTHOR.to_owned()),
++        ..VcsConfig::default()
++    };
++    let timeouts = Timeouts::default();
++    let limits = Limits::default();
++    let paths: Vec<String> = paths.iter().map(|path| (*path).to_owned()).collect();
++    let request = SyncRequest {
++        worktree: &change.path,
++        folder: &change.folder,
++        kind: SyncKind::Archived,
++        default_branch: "main",
++        settings: &settings,
++        timeouts: &timeouts,
++        limits: &limits,
++        options: options(),
++    };
++    sync_change_taking_default(&request, &paths)
++}
++
++/// One file's text at a commit in `dir`.
++fn file_at(repo: &SyncRepo, dir: &Path, commit: &str, path: &str) -> String {
++    repo.git(dir, &["show", &format!("{commit}:{path}")])
++}
++
++/// Every file a commit holds, in git's order.
++fn tree_files(repo: &SyncRepo, dir: &Path, commit: &str) -> Vec<String> {
++    repo.git(dir, &["ls-tree", "-r", "--name-only", commit])
++        .lines()
++        .map(str::to_owned)
++        .collect()
++}
++
++/// The first row: the listed conflict takes the default branch's text.
++///
++/// Covers: rust-sync/conflicts-resolved-to-the-default-branch
++#[test]
++fn listed_conflict_takes_the_default_branch_version() {
++    let (repo, change) = repository("default_branch_resolution_row_1_listed_conflict");
++    let branch = repo.head(&change.path);
++    repo.main_file("src/one.txt", "main\n", "main edits one");
++    let main = repo.head(repo.checkout());
++
++    let result = sync(&change, &["src/one.txt"]);
++
++    let commit = match result {
++        Ok(SyncOutcome::Synced { commit }) => commit,
++        other => panic!("the sync commits: {other:?}"),
++    };
++    assert_eq!(repo.head(&change.path), commit);
++    assert_eq!(
++        repo.message(&commit),
++        "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n"
++    );
++    assert_eq!(
++        file_at(&repo, &change.path, &commit, "src/one.txt"),
++        "main\n"
++    );
++    assert_eq!(
++        file_at(&repo, &change.path, &commit, "src/two.txt"),
++        "two\n"
++    );
++    let parents = repo.git(&change.path, &["rev-list", "--parents", "-n", "1", &commit]);
++    let parents: Vec<&str> = parents.split_whitespace().collect();
++    assert_eq!(parents.len(), 3);
++    assert_eq!(parents[1], branch);
++    assert_eq!(parents[2], main);
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
++
++/// The second row: a listed conflict the default branch removed is removed.
++///
++/// Covers: rust-sync/conflicts-resolved-to-the-default-branch
++#[test]
++fn listed_conflict_removed_on_the_default_branch_is_removed() {
++    let (repo, change) = repository("default_branch_resolution_row_2_removed");
++    repo.git(repo.checkout(), &["rm", "-q", "src/one.txt"]);
++    repo.commit_all(repo.checkout(), "main removes one");
++
++    let result = sync(&change, &["src/one.txt"]);
++
++    let commit = match result {
++        Ok(SyncOutcome::Synced { commit }) => commit,
++        other => panic!("the sync commits: {other:?}"),
++    };
++    assert_eq!(repo.head(&change.path), commit);
++    assert!(!tree_files(&repo, &change.path, &commit).contains(&"src/one.txt".to_owned()));
++    assert_eq!(
++        file_at(&repo, &change.path, &commit, "src/two.txt"),
++        "two\n"
++    );
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
++
++/// The third row: an unlisted conflict still stops the sync.
++///
++/// Covers: rust-sync/conflicts-resolved-to-the-default-branch
++#[test]
++fn unlisted_conflict_still_stops_the_sync() {
++    let (repo, change) = repository("default_branch_resolution_row_3_unlisted");
++    let branch = repo.head(&change.path);
++    repo.main_file("src/one.txt", "main\n", "main edits one");
++
++    let result = sync(&change, &["src/other.txt"]);
++
++    assert_eq!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncConflict,
++            message: "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main".to_owned(),
++            conflicts: vec!["src/one.txt".to_owned()],
++        })
++    );
++    assert_eq!(repo.head(&change.path), branch);
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
++
++/// The fourth row: only the unlisted conflict stops the sync.
++///
++/// Covers: rust-sync/conflicts-resolved-to-the-default-branch
++#[test]
++fn only_the_unlisted_conflict_stops_the_sync() {
++    let (repo, change) = repository("default_branch_resolution_row_4_remaining");
++    let branch = repo.head(&change.path);
++    repo.write(repo.checkout(), "src/one.txt", "main\n");
++    repo.write(repo.checkout(), "src/two.txt", "main\n");
++    repo.commit(
++        repo.checkout(),
++        "main edits both",
++        &["src/one.txt", "src/two.txt"],
++    );
++
++    let result = sync(&change, &["src/one.txt"]);
++
++    assert_eq!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncConflict,
++            message: "001-alpha-orders: src/two.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main".to_owned(),
++            conflicts: vec!["src/two.txt".to_owned()],
++        })
++    );
++    assert_eq!(repo.head(&change.path), branch);
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
++
++/// The fifth row: every listed conflict resolves and the merge commits.
++///
++/// Covers: rust-sync/conflicts-resolved-to-the-default-branch
++#[test]
++fn every_listed_conflict_resolves() {
++    let (repo, change) = repository("default_branch_resolution_row_5_every");
++    repo.write(repo.checkout(), "src/one.txt", "main\n");
++    repo.write(repo.checkout(), "src/two.txt", "main\n");
++    repo.commit(
++        repo.checkout(),
++        "main edits both",
++        &["src/one.txt", "src/two.txt"],
++    );
++
++    let result = sync(&change, &["src/one.txt", "src/two.txt"]);
++
++    let commit = match result {
++        Ok(SyncOutcome::Synced { commit }) => commit,
++        other => panic!("the sync commits: {other:?}"),
++    };
++    assert_eq!(repo.head(&change.path), commit);
++    assert_eq!(
++        file_at(&repo, &change.path, &commit, "src/one.txt"),
++        "main\n"
++    );
++    assert_eq!(
++        file_at(&repo, &change.path, &commit, "src/two.txt"),
++        "main\n"
++    );
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.md b/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.md
+new file mode 100644
+index 000000000..9a075eac2
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.md
+@@ -0,0 +1,48 @@
++---
++reason: change_verify_red
++command: "sh scripts/verify-rust.sh"
++exit_code: 101
++fingerprint: sha256:8bf5ab1b592aef44045e21ac8410908fece27c1d91521422197630a924086f7c
++---
++Change-level verification failed after task verification passed.
++
++test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++
++     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)
++
++running 1 test
++test stacked_folder_paths ... ok
++
++test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)
++
++running 3 tests
++test directory_outside_any_repository ... ok
++test unborn_repository ... ok
++test state_of_the_read_repository ... ok
++
++test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
++
++     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)
++
++running 2 tests
++test tree_record_without_git ... FAILED
++test tree_record_path_and_lines ... ok
++
++failures:
++
++---- tree_record_without_git stdout ----
++
++thread 'tree_record_without_git' (2978898) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:
++called `Result::unwrap()` on an `Err` value: Spawn { command: "target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir", source: Os { code: 26, kind: ExecutableFileBusy, message: "Text file busy" } }
++note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
++
++
++failures:
++    tree_record_without_git
++
++test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++
++error: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`
++Full output: .run/logs/change-1.log
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/1.jsonl b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/1.jsonl
+new file mode 100644
+index 000000000..efbeaf1e8
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/1.jsonl
+@@ -0,0 +1,55 @@
++{"type":"verify_ran","timestamp":"2026-10-25T17:02:24.671Z","data":{"command":"cargo test -p osq-kernel-sync","exitCode":0,"duration":8.68,"log":".run/logs/1-1.log","output":"test records_true_commits_the_stop_record ... ok\ntest active_tasks_keep_only_the_named_task ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s\n\n     Running tests/recertification_restores.rs (target/debug/deps/recertification_restores-26a3bbf619562f18)\n\nrunning 1 test\ntest a_stop_restores_the_recertified_files ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/stopped_event.rs (target/debug/deps/stopped_event-dc00df6a6d673622)\n\nrunning 1 test\ntest stopped_event_is_appended_uncommitted ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/sync_outcomes.rs (target/debug/deps/sync_outcomes-9cf07f6ccb27626b)\n\nrunning 3 tests\ntest already_synced_writes_nothing ... ok\ntest conflict_returns_its_paths_and_leaves_the_branch ... ok\ntest synced_returns_the_merge_commit ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/time.rs (target/debug/deps/time-11a0cf9bcac9569e)\n\nrunning 1 test\ntest utc_text_for_fixed_times ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s","phase":"pre_spawn","expected":"red","mismatch":true}}
++{"type":"measures","timestamp":"2026-10-25T17:02:29.009Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":15,"scopeLines":1877,"repoFiles":13568,"repoLines":1070188,"importFanIn":0,"proposalWords":1180,"taskWords":323,"deltaRequirements":8,"deltaScenarios":20}}
++{"type":"started","timestamp":"2026-10-25T17:02:29.316Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"7eec5121","pid":2869675,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"38b5f686"}}
++{"type":"text","timestamp":"2026-10-25T17:02:31.049Z","data":{"text":"I'll start by reading the task file, proposal, and relevant specs."}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:31.049Z","data":{"promptTokens":9847,"candidateTokens":264,"totalTokens":10623,"cachedTokens":512,"reasoningTokens":0,"cost":0.0032739719999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:31.050Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/ta"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:31.050Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/pr"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:31.051Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/sp"}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:32.605Z","data":{"promptTokens":3727,"candidateTokens":293,"totalTokens":14516,"cachedTokens":10496,"reasoningTokens":11,"cost":0.001532676,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:32.606Z","data":{"tool":"read","summary":"crates/kernel/sync/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:32.606Z","data":{"tool":"read","summary":"crates/kernel/sync/src/sync.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:32.606Z","data":{"tool":"read","summary":"crates/kernel/sync/src/text.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:32.607Z","data":{"tool":"read","summary":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:34.120Z","data":{"promptTokens":7004,"candidateTokens":206,"totalTokens":21674,"cachedTokens":14464,"reasoningTokens":28,"cost":0.002435184,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:34.121Z","data":{"tool":"read","summary":"crates/kernel/sync/tests/sync_outcomes.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:34.122Z","data":{"tool":"bash","summary":"ls crates/kernel/sync/tests/ crates/kernel/sync/src/; cat op"}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:35.799Z","data":{"promptTokens":880,"candidateTokens":203,"totalTokens":22715,"cachedTokens":21632,"reasoningTokens":13,"cost":0.000637392,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:35.800Z","data":{"tool":"bash","summary":"cd crates/kernel/vcs && ls src && grep -rn \"fn show\\|fn stag"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:35.800Z","data":{"tool":"bash","summary":"cat openspec/specs/rust-sync/spec.md | sed -n '1,80p'; grep "}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:37.667Z","data":{"promptTokens":1918,"candidateTokens":220,"totalTokens":24794,"cachedTokens":22656,"reasoningTokens":33,"cost":0.0009753359999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:37.668Z","data":{"tool":"bash","summary":"cd crates/kernel/vcs && sed -n '140,180p' src/port.rs && sed"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:37.668Z","data":{"tool":"read","summary":"crates/kernel/sync/src/files.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:43.632Z","data":{"promptTokens":2409,"candidateTokens":1046,"totalTokens":28159,"cachedTokens":24704,"reasoningTokens":883,"cost":0.002126124,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:43.632Z","data":{"tool":"read","summary":"crates/kernel/sync/src/stop.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:43.633Z","data":{"tool":"bash","summary":"cd crates/kernel/sync && grep -rn \"write_or_remove\\|Stop::io"}}
++{"type":"tokens","timestamp":"2026-10-25T17:02:53.836Z","data":{"promptTokens":3071,"candidateTokens":1717,"totalTokens":32820,"cachedTokens":28032,"reasoningTokens":1636,"cost":0.003149892,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:02:53.837Z","data":{"tool":"bash","summary":"cat scripts/verify-rust.sh; sed -n '1,200p' crates/kernel/sy"}}
++{"type":"text","timestamp":"2026-10-25T17:03:08.708Z","data":{"text":"Now I'll implement the kernel change and the new test file."}}
++{"type":"tokens","timestamp":"2026-10-25T17:03:08.708Z","data":{"promptTokens":1668,"candidateTokens":3635,"totalTokens":38071,"cachedTokens":32768,"reasoningTokens":2392,"cost":0.005059007999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:08.709Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:08.709Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/sync.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T17:03:08.712Z","data":{"path":"crates/kernel/sync/src/lib.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T17:03:08.714Z","data":{"path":"crates/kernel/sync/src/sync.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T17:03:17.043Z","data":{"promptTokens":240,"candidateTokens":2482,"totalTokens":40610,"cachedTokens":37888,"reasoningTokens":274,"cost":0.003277728,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:17.044Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/default_branch_resolution.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T17:03:17.045Z","data":{"path":"crates/kernel/sync/tests/default_branch_resolution.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T17:03:18.416Z","data":{"promptTokens":192,"candidateTokens":89,"totalTokens":40729,"cachedTokens":40448,"reasoningTokens":20,"cost":0.000407088,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:18.416Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-kernel-sync"}}
++{"type":"tokens","timestamp":"2026-10-25T17:03:22.452Z","data":{"promptTokens":1140,"candidateTokens":266,"totalTokens":42110,"cachedTokens":40704,"reasoningTokens":42,"cost":0.000905424,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:22.452Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T17:03:25.896Z","data":{"promptTokens":1068,"candidateTokens":206,"totalTokens":43258,"cachedTokens":41984,"reasoningTokens":124,"cost":0.000819504,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:03:25.897Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/347-rust-approve-default-branch-"}}
++{"type":"text","timestamp":"2026-10-25T17:05:59.953Z","data":{"text":"Proposal verify passed. The mutation check was skipped without `OSQ_DIFF`, so I'll run cargo-mutants by hand on the two changed source files."}}
++{"type":"tokens","timestamp":"2026-10-25T17:05:59.953Z","data":{"promptTokens":16274,"candidateTokens":1213,"totalTokens":60623,"cachedTokens":43136,"reasoningTokens":1081,"cost":0.006596616,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:05:59.954Z","data":{"tool":"bash","summary":"cargo mutants -p osq-kernel-sync -f crates/kernel/sync/src/s"}}
++{"type":"tokens","timestamp":"2026-10-25T17:06:25.627Z","data":{"promptTokens":143,"candidateTokens":481,"totalTokens":61168,"cachedTokens":60544,"reasoningTokens":239,"cost":0.000983364,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T17:06:25.627Z","data":{"tool":"write","summary":"openspec/changes/347-rust-approve-default-branch-steering/.r"}}
++{"type":"file_changed","timestamp":"2026-10-25T17:06:25.628Z","data":{"path":"openspec/changes/347-rust-approve-default-branch-steering/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-25T17:06:27.400Z","data":{"text":"Implemented and verified.\n\n- Added `sync_change_taking_default` in `osq-kernel-sync`, with `sync_change` delegating to it with no paths.\n- Threaded listed paths into the merge: listed conflicts take the default branch's version via `show`, `write_or_remove`, and `stage`; unlisted conflicts still stop the sync.\n- Added `crates/kernel/sync/tests/default_branch_resolution.rs` with one test per scenario row.\n- `cargo test -p osq-kernel-sync` passed.\n- Proposal verify (`OSQ_CHANGE=... sh scripts/verify-rust.sh`) passed.\n- Manual cargo-mutants run on the changed source files: 20 mutants, 11 caught, 9 unviable, no misses.\n- Result written to `openspec/changes/347-rust-approve-default-branch-steering/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-25T17:06:27.400Z","data":{"promptTokens":151,"candidateTokens":196,"totalTokens":61403,"cachedTokens":61056,"reasoningTokens":0,"cost":0.000646836,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-25T17:06:27.416Z","data":{"exitCode":0,"pid":2869675,"timedOut":false,"elapsedSeconds":238.1}}
++{"type":"format_ran","timestamp":"2026-10-25T17:06:30.518Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/kernel/sync/src/lib.rs' 'crates/kernel/sync/src/sync.rs' 'crates/kernel/sync/tests/default_branch_resolution.rs'","files":["crates/kernel/sync/src/lib.rs","crates/kernel/sync/src/sync.rs","crates/kernel/sync/tests/default_branch_resolution.rs"],"exitCode":0,"duration":1.32,"timedOut":false,"output":"Checked 0 files in 214µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:06:35.225Z","data":{"command":"cargo test -p osq-kernel-sync","exitCode":0,"duration":1.22,"log":".run/logs/1-2.log","output":"test records_true_commits_the_stop_record ... ok\ntest active_tasks_keep_only_the_named_task ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s\n\n     Running tests/recertification_restores.rs (target/debug/deps/recertification_restores-26a3bbf619562f18)\n\nrunning 1 test\ntest a_stop_restores_the_recertified_files ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/stopped_event.rs (target/debug/deps/stopped_event-dc00df6a6d673622)\n\nrunning 1 test\ntest stopped_event_is_appended_uncommitted ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/sync_outcomes.rs (target/debug/deps/sync_outcomes-9cf07f6ccb27626b)\n\nrunning 3 tests\ntest already_synced_writes_nothing ... ok\ntest conflict_returns_its_paths_and_leaves_the_branch ... ok\ntest synced_returns_the_merge_commit ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/time.rs (target/debug/deps/time-11a0cf9bcac9569e)\n\nrunning 1 test\ntest utc_text_for_fixed_times ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"}}
++{"type":"measures","timestamp":"2026-10-25T17:08:27.804Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":15,"scopeLines":1877,"repoFiles":13568,"repoLines":1070188,"importFanIn":0,"proposalWords":1180,"taskWords":323,"deltaRequirements":8,"deltaScenarios":20,"changedFiles":3,"changedLines":271,"scopeHashes":{"crates/kernel/sync/src/active.rs":{"before":"sha256:c039c5128d9c8b8dc35fb7d1c8222e48a1296e9a834baf6b43f169fbf1b992fb","after":"sha256:c039c5128d9c8b8dc35fb7d1c8222e48a1296e9a834baf6b43f169fbf1b992fb"},"crates/kernel/sync/src/check.rs":{"before":"sha256:c04d260f50b7035b98dcd3c4d8c6b8986b14bd2b6b273426753126f6de17fad5","after":"sha256:c04d260f50b7035b98dcd3c4d8c6b8986b14bd2b6b273426753126f6de17fad5"},"crates/kernel/sync/src/command.rs":{"before":"sha256:ccfd8ed3b292e8b56baa80847a4e626ff26a8de77c7c74dc866d0b1d3dbb195b","after":"sha256:ccfd8ed3b292e8b56baa80847a4e626ff26a8de77c7c74dc866d0b1d3dbb195b"},"crates/kernel/sync/src/event.rs":{"before":"sha256:cc91adf1110b33b7531fd189139a6babfd6026883b99d9ffe82a0995e9a83566","after":"sha256:cc91adf1110b33b7531fd189139a6babfd6026883b99d9ffe82a0995e9a83566"},"crates/kernel/sync/src/files.rs":{"before":"sha256:f8774e7fb5d5fe36e8a2285428a402ea8f604ad3daca51c74dd12a2a04051b7b","after":"sha256:f8774e7fb5d5fe36e8a2285428a402ea8f604ad3daca51c74dd12a2a04051b7b"},"crates/kernel/sync/src/lib.rs":{"before":"sha256:ec645c477027a05433ed9a8d463a7703c410129cf1ec58ec8e34607cf0bd54b2","after":"sha256:8c34835f120117aadac8bd310c152464f906ab84a8fcc1fbd4f0195e4778f79c"},"crates/kernel/sync/src/locks.rs":{"before":"sha256:b9c7bbe4334a8c7e400fc9111ef036747cfc990b3197a97fe506ceb4b486c67c","after":"sha256:b9c7bbe4334a8c7e400fc9111ef036747cfc990b3197a97fe506ceb4b486c67c"},"crates/kernel/sync/src/prepare.rs":{"before":"sha256:29a6c0d2813bfbcdd158e668d2afe2649972d28c178485b006d4e41a5974bbf1","after":"sha256:29a6c0d2813bfbcdd158e668d2afe2649972d28c178485b006d4e41a5974bbf1"},"crates/kernel/sync/src/recertify.rs":{"before":"sha256:4e80e2053bcc3fbbb6848179a5197eee55b9088e620669042277d38128ed16d0","after":"sha256:4e80e2053bcc3fbbb6848179a5197eee55b9088e620669042277d38128ed16d0"},"crates/kernel/sync/src/specs.rs":{"before":"sha256:91df3246bea527ce8129f243e52f3c3444d1596d7cc1cf3c8e050d782631f827","after":"sha256:91df3246bea527ce8129f243e52f3c3444d1596d7cc1cf3c8e050d782631f827"},"crates/kernel/sync/src/stop.rs":{"before":"sha256:ba33e5b88cbbfc2a327ffaa81f4e9c9737872572668d87740d40ce76c321d63c","after":"sha256:ba33e5b88cbbfc2a327ffaa81f4e9c9737872572668d87740d40ce76c321d63c"},"crates/kernel/sync/src/sync.rs":{"before":"sha256:bde7bdb96c6b4ca384e2e19839103efe1d5697ba860754fc132ddc7754c0d1ca","after":"sha256:a3746a5927bc49bce0ff4cf3b74ac16c241229dd25a2020092ce65b836c992cc"},"crates/kernel/sync/src/text.rs":{"before":"sha256:e1d520671a8fdec315fd7f405747bbd533d941722c2c41763d11de566de03f52","after":"sha256:e1d520671a8fdec315fd7f405747bbd533d941722c2c41763d11de566de03f52"},"crates/kernel/sync/src/time.rs":{"before":"sha256:6717c6896afcb0a5df9ab3f3d2f44b615e98052d9d13fc0bbdbd4f12572ce351","after":"sha256:6717c6896afcb0a5df9ab3f3d2f44b615e98052d9d13fc0bbdbd4f12572ce351"},"crates/kernel/sync/src/verify.rs":{"before":"sha256:213969097a3425a86ccf12496e83ac7be7c4c2cd4b03110e9a394950563e5f53","after":"sha256:213969097a3425a86ccf12496e83ac7be7c4c2cd4b03110e9a394950563e5f53"},"crates/kernel/sync/tests/default_branch_resolution.rs":{"before":null,"after":"sha256:19d2ad4dd7c5f13a155335c87109941cfe6d0897fba62b28427cb344d86a8877"}}}}
++{"type":"dead","timestamp":"2026-10-25T17:08:27.806Z","data":{"task":"1","reason":"change_verify_red"}}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl
+new file mode 100644
+index 000000000..fdd4d443b
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-25T17:02:15.990Z","data":{"outcome":"passed","command":"pnpm verify","commit":"7eec5121b6986151857a8644f86e672464b5e65c","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":274.56}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:08:27.797Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":101,"duration":112.56,"log":".run/logs/change-1.log","output":"\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)\n\nrunning 1 test\ntest stacked_folder_paths ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)\n\nrunning 3 tests\ntest directory_outside_any_repository ... ok\ntest unborn_repository ... ok\ntest state_of_the_read_repository ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)\n\nrunning 2 tests\ntest tree_record_without_git ... FAILED\ntest tree_record_path_and_lines ... ok\n\nfailures:\n\n---- tree_record_without_git stdout ----\n\nthread 'tree_record_without_git' (2978898) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:\ncalled `Result::unwrap()` on an `Err` value: Spawn { command: \"target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir\", source: Os { code: 26, kind: ExecutableFileBusy, message: \"Text file busy\" } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    tree_record_without_git\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\nerror: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`"}}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/results/1.md b/openspec/changes/347-rust-approve-default-branch-steering/.run/results/1.md
+new file mode 100644
+index 000000000..fc7391c42
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/results/1.md
+@@ -0,0 +1,8 @@
++## Changed
++
++- Added `sync_change_taking_default` to `osq-kernel-sync`; `sync_change` now delegates to it with no paths.
++- Threaded the listed paths into the sync context and resolved each listed conflicted path to the default branch's text with `show` and `write_or_remove`, then `stage`, leaving all other conflicts to the existing stop.
++- Added `tests/default_branch_resolution.rs` with one test per row of "Conflicts resolved to the default branch".
++- Added the `Implements: rust-sync/default-branch-resolution` tags to the changed public functions.
++
++Touched: crates/kernel/sync/src/lib.rs, crates/kernel/sync/src/sync.rs, crates/kernel/sync/tests/default_branch_resolution.rs

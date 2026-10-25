@@ -390,9 +390,11 @@ parent's parent's parent and `<id>` the folder name's leading digits,
 - skip the target, writing nothing, when neither
   `.run/regressed/<target>.md` nor, for a task, `.run/dead/<target>.md`
   exists in the folder, or when the folder's `.run/events/<target>.jsonl`
-  holds a `retry` event for the target whose timestamp is not before the
-  `approved` event's, so an event delivered again changes nothing and never
-  clears a failure that came after the retry it led to;
+  holds, with a timestamp not before the `approved` event's, a `retry` event
+  whose `target` is the target, or a `regressed` or `dead` event whose
+  `task` is the target, so an event delivered again changes nothing and
+  never clears a failure recorded after the approval, such as the stop
+  rust-approve "Default-branch approval" records when its sync stops;
 - otherwise retry the target as `retry <id> <target>` retries a target of an
   active change in `<tree>`, as "Retry refusals", "Retry record" and "Scope
   recertification" say, without "Plan edits refusal", since the approval
@@ -435,3 +437,13 @@ nothing.
 #### Scenario: Other events are passed over
 - **WHEN** `react` runs for a `rejected` event on the folder of "Approval reaction retires triggers"
 - **THEN** it gives an `Output` with empty text and every file under `.run/` keeps its bytes
+
+#### Scenario: Failures recorded after the approval are kept
+- **WHEN** `react` runs for an `approved` event with the `targets` `change` and `1` on the folder of "Approval reaction retires triggers", after the row's line, timestamped one second after the event, is appended to the row's stream
+- **THEN** it gives an `Output` with empty text, the row's target keeps its marker and its stream gains no `retry` line, and the other target is retired with attempt 2:
+
+| Stream | Line | Kept target |
+|---|---|---|
+| `change.jsonl` | a `regressed` event whose `task` is `change` and whose `reason` is `sync_conflict` | `change` |
+| `1.jsonl` | a `dead` event whose `task` is `1` and whose `reason` is `blocked` | `1` |
+| `1.jsonl` | a `regressed` event whose `task` is `1` | `1` |

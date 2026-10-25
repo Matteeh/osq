@@ -1,0 +1,318 @@
+// Prints TypeScript's `osq approve` result on a change steered by a
+// default-branch trigger without a conflict, for each row of rust-cli
+// "Default-branch approvals equal TypeScript's" and the rust-approve scenarios
+// that name these goldens.
+// Run from the repository root after `pnpm build`:
+//   node print-default-branch-goldens.mjs <fixture approve-repo> <golden folder>
+// Each case builds a fresh scratch repository: `<root>/repo` is a copy of the
+// fixture on the branch `main`, whose one commit `fixture` holds every file
+// but the folder `openspec/changes/001-alpha-twice`, with the git settings
+// `user.name` `Osq Tester`, `user.email` `tester@example.com` and
+// `commit.gpgsign` `false`, and every commit dated DATE. TypeScript reads its
+// settings from `osq.config.mjs`, which git ignores through
+// `.git/info/exclude`, as the Rust tests ignore `osq.toml`. `node_modules`
+// links to this repository's, for TypeScript's pinned OpenSpec validator, and
+// is ignored too.
+// With git on, the worktree `<root>/worktrees/repo/001-alpha-twice` is added
+// on a new branch `osq/001-alpha-twice` at `main`. The checkout's folder
+// `001-alpha-twice` moves to that worktree's `openspec/changes/`, or to its
+// `openspec/changes/archive/` for an archived case, gains `.run/approved`
+// holding OLD_SEAL and a newline, `.run/done/1` holding task 1's scope hash
+// as `computeTaskScopeHash` gives it, and the case's marker, and is committed
+// there as `osq: 001 approved`. Then `main` gains the commit `main moved`,
+// which writes MAIN_SOURCE to `src/alpha/index.js` and MAIN_PURPOSE in place
+// of the purpose line of `openspec/specs/alpha/spec.md`. With git off, the
+// folder stays in the checkout with the same files and `main` does not move.
+// An edited case then appends EDIT, the human's plan edit, to `tasks/1.md`,
+// uncommitted. The case's `extra` runs last.
+// The built CLI runs `approve 1` with `repo` as the working directory and
+// `<root>/home` as an empty HOME.
+// A golden holds the outcome and the approval lines without the digest's
+// ` with <flags>` suffix, or the error message with its trailing blank lines
+// and any `Next:` hint dropped. Then, under `commits:`, each commit the run
+// added to `osq/001-alpha-twice`, oldest first along first parents: from the
+// branch's tip before the run when that is still an ancestor, or else from
+// `main`. Each is its subject, its author, and its changed files against its
+// first parent, sorted, leaving out `.run/manifest.json`, `.run/plan.jsonl`
+// and `.run/events/change.jsonl`; `none` when the run added none. Then, under
+// `branches:`, every `osq/` branch with its tip's subject. Then the lines of
+// `.git/osq-trees.jsonl` with each `at` written `<at>`. Then every file under
+// the change folder's `.run/` where the run left it, sorted by path, each
+// event line parsed, its `timestamp` written `<timestamp>` and its keys
+// sorted, and a `recertified_at` value written `<ts>`. `.run/manifest.json`
+// and `.run/plan.jsonl` are left out. Last, under `status:`, the worktree's
+// `git status --porcelain --untracked-files=all`, or the checkout's with git
+// off. `<root>` stands for the case's scratch root and `<main>` for `main`'s
+// tip.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const DIST = path.resolve('dist');
+const BIN = path.join(DIST, 'cli', 'bin.js');
+const { computeTaskScopeHash } = await import(path.join(DIST, 'core', 'run', 'scope-hash.js'));
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'Osq Bot <bot@example.com>';
+const DATE = '2026-10-25T10:00:00Z';
+const FOLDER = '001-alpha-twice';
+const BRANCH = `osq/${FOLDER}`;
+const OLD_SEAL = `sha256:${'0'.repeat(64)}`;
+const EDIT = '\nSteered past main.\n';
+const MAIN_SOURCE = "module.exports = { runs: 1, name: 'alpha' };\n";
+const OLD_PURPOSE = 'The alpha capability of the approve fixture repository.';
+const MAIN_PURPOSE = 'The alpha capability of the approve fixture repository, as main has it.';
+const LEFT_OUT = new Set(['.run/manifest.json', '.run/plan.jsonl']);
+const COMMIT_LEFT_OUT = new Set([...LEFT_OUT, '.run/events/change.jsonl']);
+const KEPT_LINES = [
+  'Approved ',
+  '  Hash: ',
+  '  Worktree: ',
+  '  Branch: ',
+  '  Restarted from ',
+  '  Merged ',
+  '  Continues from task ',
+];
+
+const marker = (reason) => [
+  'regressed/change.md',
+  `---\nreason: ${reason}\n---\n${reason} on main\n`,
+];
+const CONFLICT = marker('sync_conflict');
+const VERIFY_RED = marker('sync_verify_red');
+const REQUIREMENT = marker('requirement_changed');
+
+// TypeScript restarts on a `sync_conflict` trigger, which Rust never does, so
+// no worktree case here has that marker.
+const cases = [
+  { name: 'merge-001', git: true, archived: true, marker: VERIFY_RED, edit: true },
+  { name: 'merge-noedit-001', git: true, archived: true, marker: VERIFY_RED, edit: false },
+  { name: 'requirement-001', git: true, archived: false, marker: REQUIREMENT, edit: true },
+  { name: 'git-off-001', git: false, archived: false, marker: CONFLICT, edit: true },
+];
+
+function git(cwd, args) {
+  const env = {
+    ...process.env,
+    GIT_AUTHOR_DATE: DATE,
+    GIT_COMMITTER_DATE: DATE,
+    GIT_AUTHOR_NAME: 'Osq Tester',
+    GIT_AUTHOR_EMAIL: 'tester@example.com',
+    GIT_COMMITTER_NAME: 'Osq Tester',
+    GIT_COMMITTER_EMAIL: 'tester@example.com',
+  };
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8', env });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function configText(root, gitOn) {
+  const settings = { enabled: gitOn, author: AUTHOR, worktreeRoot: path.join(root, 'worktrees') };
+  return `export default { vcs: ${JSON.stringify(settings)} };\n`;
+}
+
+async function writeMarkers(tree, folder, c) {
+  fs.mkdirSync(path.join(folder, '.run', 'regressed'), { recursive: true });
+  fs.mkdirSync(path.join(folder, '.run', 'done'), { recursive: true });
+  fs.writeFileSync(path.join(folder, '.run', 'approved'), `${OLD_SEAL}\n`);
+  const hash = await computeTaskScopeHash(tree, ['src/alpha/index.js']);
+  const files = Object.entries(hash.fileHashes)
+    .map(([file, value]) => `  ${file}: ${value}\n`)
+    .join('');
+  fs.writeFileSync(
+    path.join(folder, '.run', 'done', '1'),
+    `---\nscope_hash: ${hash.hash}\nscope_files:\n${files}scope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n`,
+  );
+  const [relative, text] = c.marker;
+  fs.writeFileSync(path.join(folder, '.run', relative), text);
+}
+
+function moveMain(repo) {
+  fs.writeFileSync(path.join(repo, 'src', 'alpha', 'index.js'), MAIN_SOURCE);
+  const spec = path.join(repo, 'openspec', 'specs', 'alpha', 'spec.md');
+  fs.writeFileSync(spec, fs.readFileSync(spec, 'utf8').replace(OLD_PURPOSE, MAIN_PURPOSE));
+  git(repo, ['commit', '-q', '-a', '-m', 'main moved']);
+}
+
+async function buildRepo(root, c) {
+  const repo = path.join(root, 'repo');
+  fs.cpSync(fixture, repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'Osq Tester']);
+  git(repo, ['config', 'user.email', 'tester@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.appendFileSync(path.join(repo, '.git/info/exclude'), 'osq.config.mjs\nosq.toml\nnode_modules\n');
+  fs.symlinkSync(path.resolve('node_modules'), path.join(repo, 'node_modules'));
+  fs.writeFileSync(path.join(repo, 'osq.config.mjs'), configText(root, c.git));
+  git(repo, ['add', '-A', '--', '.', `:!openspec/changes/${FOLDER}`]);
+  git(repo, ['commit', '-q', '-m', 'fixture']);
+  const checkout = path.join(repo, 'openspec', 'changes', FOLDER);
+  if (!c.git) {
+    await writeMarkers(repo, checkout, c);
+    if (c.edit) fs.appendFileSync(path.join(checkout, 'tasks', '1.md'), EDIT);
+    return { repo, tree: repo, folder: checkout };
+  }
+  const worktree = path.join(root, 'worktrees', 'repo', FOLDER);
+  fs.mkdirSync(path.dirname(worktree), { recursive: true });
+  git(repo, ['worktree', 'add', '-q', '-b', BRANCH, worktree, 'main']);
+  const changes = path.join(worktree, 'openspec', 'changes');
+  const folder = path.join(c.archived ? path.join(changes, 'archive') : changes, FOLDER);
+  fs.mkdirSync(path.dirname(folder), { recursive: true });
+  fs.cpSync(checkout, folder, { recursive: true });
+  fs.rmSync(checkout, { recursive: true, force: true });
+  await writeMarkers(worktree, folder, c);
+  git(worktree, ['add', '-A']);
+  git(worktree, ['commit', '-q', '-m', 'osq: 001 approved']);
+  moveMain(repo);
+  if (c.edit) fs.appendFileSync(path.join(folder, 'tasks', '1.md'), EDIT);
+  return { repo, tree: worktree, folder };
+}
+
+function files(base, dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sorted(value[key])]),
+    );
+  }
+  return value;
+}
+
+function eventLine(line) {
+  const parsed = JSON.parse(line);
+  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
+  return JSON.stringify(sorted(parsed));
+}
+
+/** The change folder where the run left it: the changes directory first. */
+function finalFolder(tree, c) {
+  if (!c.git) return path.join(tree, 'openspec', 'changes', FOLDER);
+  const active = path.join(tree, 'openspec', 'changes', FOLDER);
+  if (fs.existsSync(active)) return active;
+  return path.join(tree, 'openspec', 'changes', 'archive', FOLDER);
+}
+
+function runTree(folder) {
+  const lines = [];
+  const run = path.join(folder, '.run');
+  if (!fs.existsSync(run)) return lines;
+  for (const relative of files(folder, run, []).sort()) {
+    if (LEFT_OUT.has(relative)) continue;
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    if (relative.endsWith('.jsonl')) {
+      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
+    } else {
+      const shown = text.replace(/^recertified_at: .*$/m, 'recertified_at: <ts>');
+      lines.push(shown.endsWith('\n') ? shown.slice(0, -1) : shown);
+    }
+  }
+  return lines;
+}
+
+function leftOut(file) {
+  const run = file.match(/\/(\.run\/.*)$/);
+  return run !== null && COMMIT_LEFT_OUT.has(run[1]);
+}
+
+function commitLines(repo, c, before) {
+  if (!c.git) return ['none'];
+  const tip = git(repo, ['rev-parse', BRANCH]).trim();
+  const ancestor = spawnSync('git', ['merge-base', '--is-ancestor', before, tip], { cwd: repo });
+  const from = ancestor.status === 0 ? before : 'main';
+  const commits = git(repo, ['rev-list', '--reverse', '--first-parent', `${from}..${BRANCH}`])
+    .trim()
+    .split('\n')
+    .filter((sha) => sha !== '');
+  if (commits.length === 0) return ['none'];
+  const lines = [];
+  for (const sha of commits) {
+    const [subject, author] = git(repo, ['log', '-1', '--format=%s%n%an <%ae>', sha])
+      .trim()
+      .split('\n');
+    const changed = git(repo, ['diff', '--name-status', `${sha}^1`, sha])
+      .trim()
+      .split('\n')
+      .filter((line) => line !== '' && !leftOut(line.split('\t').at(-1)))
+      .sort();
+    lines.push(subject, author, ...changed.map((line) => `  ${line}`));
+  }
+  return lines;
+}
+
+function branchLines(repo, c) {
+  if (!c.git) return ['none'];
+  return git(repo, ['for-each-ref', '--format=%(refname:short) %(subject)', 'refs/heads/osq/'])
+    .trim()
+    .split('\n')
+    .filter((line) => line !== '');
+}
+
+function treeRecord(repo) {
+  const file = path.join(repo, '.git', 'osq-trees.jsonl');
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .filter((line) => line !== '')
+    .map((line) => JSON.stringify({ ...JSON.parse(line), at: '<at>' }));
+}
+
+function outcome(run, c) {
+  if (run.status === 0) {
+    const kept = run.stdout
+      .split('\n')
+      .filter((line) => KEPT_LINES.some((p) => line.startsWith(p)))
+      .map((line) => line.replace(/^(Approved \S+ \(\S+\)) with .*$/, '$1'));
+    return `outcome: output\n${kept.join('\n')}`;
+  }
+  const prefix = 'Error approving 1:\n  ';
+  if (!run.stderr.startsWith(prefix)) throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+  let message = run.stderr.slice(prefix.length);
+  const next = message.indexOf('\nNext: ');
+  if (next >= 0) message = message.slice(0, next + 1);
+  return `outcome: failed\n${message.replace(/\s+$/, '')}`;
+}
+
+for (const c of cases) {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-approve-default-')));
+  const home = path.join(root, 'home');
+  fs.mkdirSync(home);
+  const { repo, tree } = await buildRepo(root, c);
+  c.extra?.(repo);
+  const before = c.git ? git(repo, ['rev-parse', BRANCH]).trim() : '';
+  const mainTip = git(repo, ['rev-parse', 'main']).trim();
+  const run = spawnSync(process.execPath, [BIN, 'approve', '1'], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, HOME: home, NO_COLOR: '1', OSQ_SERVER: '' },
+  });
+  const text = [
+    outcome(run, c),
+    'commits:',
+    ...commitLines(repo, c, before),
+    'branches:',
+    ...branchLines(repo, c),
+    'record:',
+    ...treeRecord(repo),
+    'tree:',
+    ...runTree(finalFolder(tree, c)),
+    'status:',
+    git(tree, ['status', '--porcelain', '--untracked-files=all']).replace(/\n+$/, ''),
+  ].join('\n');
+  const placed = text.split(root).join('<root>').split(mainTip).join('<main>');
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${placed.replace(/\n+$/, '')}\n`);
+  fs.rmSync(root, { recursive: true, force: true });
+}

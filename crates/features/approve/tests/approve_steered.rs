@@ -28,11 +28,6 @@ const CHANGE_RED: (&str, &str) = (
     "regressed/change.md",
     "---\nreason: verify_red\n---\nchange verify failed\n",
 );
-/// A change-level sync conflict.
-const CHANGE_CONFLICT: (&str, &str) = (
-    "regressed/change.md",
-    "---\nreason: sync_conflict\n---\nchange verify failed\n",
-);
 /// Task one's done marker.
 const DONE_1: (&str, &str) = ("done/1", "done\n");
 /// Task one's running lock.
@@ -104,14 +99,6 @@ fn steered_worktree_refusals() {
     let failing = steered_repo("steered-refusals-commit-fails-001", &[DEAD_BLOCKED], true);
     lock_index(&failing);
     check_commit_failure(&failing);
-
-    let branch = steered_repo("steered-refusals-default-branch", &[CHANGE_CONFLICT], true);
-    check_refusal(
-        &branch,
-        "Change 001-alpha-twice needs steering: change conflict (sync_conflict). \
-         Rust approve does not approve default-branch steering yet.",
-        "default-branch",
-    );
 
     let checkout = steered_repo("steered-refusals-checkout", &[DEAD_BLOCKED], false);
     check_refusal(

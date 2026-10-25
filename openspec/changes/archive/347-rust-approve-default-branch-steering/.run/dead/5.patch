@@ -1,0 +1,1681 @@
+diff --git a/crates/apps/cli/tests/approve_default_branch.rs b/crates/apps/cli/tests/approve_default_branch.rs
+new file mode 100644
+index 000000000..d9b9b51a4
+--- /dev/null
++++ b/crates/apps/cli/tests/approve_default_branch.rs
+@@ -0,0 +1,850 @@
++//! Proves default-branch approvals through the CLI equal TypeScript's, reaction
++//! and all, and that a conflict reopens only the owning tasks.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++use std::process::Command;
++
++use osq_cli::{features, run_cli};
++use osq_core::event::Event;
++use osq_core::{Envelope, EventKind, parse_event_line};
++
++/// The change every case approves.
++const FOLDER: &str = "001-alpha-twice";
++/// The change's branch.
++const BRANCH: &str = "osq/001-alpha-twice";
++/// The seal the case writes before the human's plan edit.
++const OLD_SEAL: &str = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
++/// The human's uncommitted plan edit.
++const EDIT: &str = "\nSteered past main.\n";
++/// The author the fixture's commits carry.
++const AUTHOR: &str = "Osq Bot <bot@example.com>";
++/// The date every commit a test makes carries.
++const DATE: &str = "2026-10-25T10:00:00Z";
++/// The fixture source `main` leaves in the alpha file.
++const MAIN_SOURCE: &str = "module.exports = { runs: 1, name: 'alpha' };\n";
++/// The fixture purpose `main` rewrites.
++const OLD_PURPOSE: &str = "The alpha capability of the approve fixture repository.";
++/// The purpose `main` leaves in the living spec.
++const MAIN_PURPOSE: &str =
++    "The alpha capability of the approve fixture repository, as main has it.";
++/// A change-level verify regression.
++const VERIFY_RED: Marker = (
++    "regressed/change.md",
++    "---\nreason: sync_verify_red\n---\nsync_verify_red on main\n",
++);
++/// A change-level requirement change.
++const REQUIREMENT: Marker = (
++    "regressed/change.md",
++    "---\nreason: requirement_changed\n---\nrequirement_changed on main\n",
++);
++/// A change-level sync conflict.
++const CONFLICT: Marker = (
++    "regressed/change.md",
++    "---\nreason: sync_conflict\n---\nsync_conflict on main\n",
++);
++/// Task one's done marker on the pre-main tree.
++const DONE_1: &str = "---\nscope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80\nscope_files:\n  src/alpha/index.js: sha256:66aebacd1be118f36b5d94774f5d48dda30e28391c410914ecb0384a58e1cf5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n";
++/// The fixture source the conflict case gives the shared files.
++const FIXTURE_SOURCE: &str = "module.exports = 1;\n";
++/// The source the branch writes to a conflicted file.
++const BRANCH_SOURCE: &str = "module.exports = 'branch';\n";
++/// The source `main` writes to a conflicted file.
++const MAIN_FILE_SOURCE: &str = "module.exports = 'main';\n";
++/// The message "Conflicts no task owns stop for planning" gives.
++const DELTA_MESSAGE: &str = "001-alpha-twice: src/delta.js conflict with main, and no task's scope holds them; run osq plan 001 so a task owns each file, then approve the revised plan";
++
++/// A marker's path under `.run/` and the text it holds.
++type Marker = (&'static str, &'static str);
++
++/// One row of "Default-branch approvals equal TypeScript's".
++struct Row {
++    /// The row's golden and scratch folder name.
++    name: &'static str,
++    /// Whether the row enables git.
++    git: bool,
++    /// Whether the change starts archived.
++    archived: bool,
++    /// The change-level marker the case writes.
++    marker: Marker,
++    /// Whether the human edited the plan.
++    edit: bool,
++}
++
++/// Every row of "Default-branch approvals equal TypeScript's".
++const ROWS: [Row; 4] = [
++    Row {
++        name: "merge-001",
++        git: true,
++        archived: true,
++        marker: VERIFY_RED,
++        edit: true,
++    },
++    Row {
++        name: "merge-noedit-001",
++        git: true,
++        archived: true,
++        marker: VERIFY_RED,
++        edit: false,
++    },
++    Row {
++        name: "requirement-001",
++        git: true,
++        archived: false,
++        marker: REQUIREMENT,
++        edit: true,
++    },
++    Row {
++        name: "git-off-001",
++        git: false,
++        archived: false,
++        marker: CONFLICT,
++        edit: true,
++    },
++];
++
++/// One row of "Conflicts through the CLI".
++struct ConflictRow {
++    /// The row's scratch folder name.
++    name: &'static str,
++    /// The file both sides change.
++    file: &'static str,
++    /// The exit code the run gives.
++    code: i32,
++}
++
++/// Every row of "Conflicts through the CLI".
++const CONFLICT_ROWS: [ConflictRow; 2] = [
++    ConflictRow {
++        name: "beta",
++        file: "src/beta.js",
++        code: 0,
++    },
++    ConflictRow {
++        name: "delta",
++        file: "src/delta.js",
++        code: 1,
++    },
++];
++
++/// One scratch repository and the change folder it holds.
++struct Repo {
++    /// The scratch root that holds `repo` and `worktrees`.
++    root: PathBuf,
++    /// The git repository under `root/repo`.
++    path: PathBuf,
++    /// The osq worktree of the change, or the checkout with git off.
++    worktree: PathBuf,
++    /// The change folder where the case writes its markers.
++    change: PathBuf,
++}
++
++/// A golden split into the parts the scenarios compare.
++struct Golden {
++    /// The outcome line followed by the approval lines.
++    outcome: Vec<String>,
++    /// Every commit the run added.
++    commits: Vec<String>,
++    /// Every `osq/` branch and its tip's subject.
++    branches: Vec<String>,
++    /// The tree record's lines.
++    record: Vec<String>,
++    /// Every `.run/` path and its lines.
++    tree: Vec<(String, Vec<String>)>,
++}
++
++/// Proves every row of "Default-branch approvals equal TypeScript's".
++///
++/// Covers: rust-cli/default-branch-approvals-equal-typescript-s
++#[test]
++fn default_branch_approvals_equal_typescript() {
++    for row in &ROWS {
++        check_row(row);
++    }
++}
++
++/// Compares one row's output, commits, branches, record and tree.
++fn check_row(row: &Row) {
++    let repo = build_golden(row);
++    let before = if row.git {
++        git(&repo.path, &["rev-parse", BRANCH]).trim().to_owned()
++    } else {
++        String::new()
++    };
++    let main = git(&repo.path, &["rev-parse", "main"]).trim().to_owned();
++    let result = run_cli(&features(), &repo.path, &args(&["approve", "1"]));
++    let golden = golden(&repo.root, &main, row.name);
++    assert_eq!(
++        golden.outcome[0], "outcome: output",
++        "{}: outcome",
++        row.name
++    );
++    let expected_stdout = format!("{}\n", golden.outcome[1..].join("\n"));
++    assert_eq!(result.stdout, expected_stdout, "{}: stdout", row.name);
++    assert_eq!(result.stderr, "", "{}: stderr", row.name);
++    assert_eq!(result.code, 0, "{}: code", row.name);
++    assert_eq!(
++        commit_lines(&repo, row.git, &before),
++        golden.commits,
++        "{}: commits",
++        row.name
++    );
++    assert_eq!(
++        branch_lines(&repo, row.git),
++        golden.branches,
++        "{}: branches",
++        row.name
++    );
++    assert_eq!(record_lines(&repo), golden.record, "{}: record", row.name);
++    let change = final_folder(&repo, row);
++    let tree = actual_tree(&change);
++    assert_eq!(
++        tree_paths(&tree),
++        tree_paths(&golden.tree),
++        "{}: tree paths",
++        row.name
++    );
++    for ((path, actual), (_, expected)) in tree.iter().zip(&golden.tree) {
++        if is_jsonl(path) {
++            compare_events(actual, expected, row.name, path);
++        } else {
++            assert_eq!(actual, expected, "{}: {path}", row.name);
++        }
++    }
++}
++
++/// Proves every row of "Conflicts through the CLI".
++///
++/// Covers: rust-cli/conflicts-through-the-cli
++#[test]
++fn conflicts_through_the_cli() {
++    for row in &CONFLICT_ROWS {
++        let repo = build_conflict(row);
++        let result = run_cli(&features(), &repo.path, &args(&["approve", "1"]));
++        assert_eq!(result.code, row.code, "{}: code", row.name);
++        if row.code == 0 {
++            check_reopened(&repo, row, &result.stdout, &result.stderr);
++        } else {
++            assert_eq!(result.stdout, "", "{}: stdout", row.name);
++            check_planning_stop(&repo, row, &result.stderr);
++        }
++    }
++}
++
++/// Checks the reopened tasks, the output and the reaction that clears the trigger.
++fn check_reopened(repo: &Repo, row: &ConflictRow, stdout: &str, stderr: &str) {
++    let run = repo.change.join(".run");
++    assert_eq!(stderr, "", "{}: stderr", row.name);
++    assert!(
++        stdout.ends_with(
++            "  Reopened tasks 2 and 3 (src/beta.js conflicted); kept task 1\n  Continues from task 2\n"
++        ),
++        "{}: stdout",
++        row.name
++    );
++    assert!(run.join("regressed/change.1.md").exists(), "{}", row.name);
++    assert!(
++        !run.join("regressed/change.md").exists(),
++        "{}: the trigger is retired",
++        row.name
++    );
++    assert_eq!(
++        fs::read_to_string(run.join("regressed/change.1.md"))
++            .expect("the retained marker reads")
++            .matches("reason: sync_conflict")
++            .count(),
++        1,
++        "{}: the retained marker's reason",
++        row.name
++    );
++    let events = fs::read_to_string(run.join("events/change.jsonl")).expect("the events read");
++    let last = events.lines().last().expect("the events hold a line");
++    let envelope = parse_event_line(last).expect("the last event parses");
++    let Event::Retry(retry) = envelope.event else {
++        panic!("{}: the last event is a retry", row.name);
++    };
++    assert_eq!(retry.target, "change", "{}: the retry's target", row.name);
++    assert_eq!(retry.reason.as_str(), "sync_conflict", "{}", row.name);
++    assert_eq!(retry.attempt, 2, "{}: the retry's attempt", row.name);
++    for path in ["done/1", "done/2.1", "done/3.1"] {
++        assert!(run.join(path).exists(), "{}: {path}", row.name);
++    }
++    for path in ["done/2", "done/3"] {
++        assert!(!run.join(path).exists(), "{}: {path} is retained", row.name);
++    }
++}
++
++/// Checks the planning stop's marker and that nothing was retired.
++fn check_planning_stop(repo: &Repo, row: &ConflictRow, stderr: &str) {
++    let run = repo.change.join(".run");
++    assert_eq!(
++        fs::read_to_string(run.join("regressed/change.md")).expect("the marker reads"),
++        format!("---\nreason: sync_conflict\n---\n{DELTA_MESSAGE}\n"),
++        "{}: the stop marker",
++        row.name
++    );
++    assert!(
++        !run.join("regressed/change.1.md").exists(),
++        "{}: the trigger is kept",
++        row.name
++    );
++    assert_eq!(
++        stderr,
++        format!("approve failed: {DELTA_MESSAGE}\n"),
++        "{}: stderr",
++        row.name
++    );
++    let events = fs::read_to_string(run.join("events/change.jsonl")).expect("the events read");
++    assert!(
++        !events.lines().any(is_retry),
++        "{}: no retry is recorded",
++        row.name
++    );
++    for path in ["done/1", "done/2", "done/3"] {
++        assert!(run.join(path).exists(), "{}: {path}", row.name);
++    }
++}
++
++/// Whether an event line is a `retry` event.
++fn is_retry(line: &str) -> bool {
++    parse_event_line(line).is_ok_and(|envelope| envelope.event.kind() == EventKind::Retry)
++}
++
++/// Builds the golden script's repository for one row.
++fn build_golden(row: &Row) -> Repo {
++    let root = scratch(&format!("approvals-{}", row.name));
++    let path = root.join("repo");
++    prepare(&root, &path, row.git);
++    let checkout = path.join("openspec/changes").join(FOLDER);
++    if !row.git {
++        write_markers(&checkout, row.marker);
++        if row.edit {
++            edit(&checkout);
++        }
++        return Repo {
++            root,
++            worktree: path.clone(),
++            path,
++            change: checkout,
++        };
++    }
++    let worktree = root.join("worktrees/repo").join(FOLDER);
++    fs::create_dir_all(worktree.parent().expect("the worktree has a parent"))
++        .expect("the worktree parent is created");
++    let target = worktree.to_string_lossy().into_owned();
++    git(
++        &path,
++        &["worktree", "add", "-q", "-b", BRANCH, &target, "main"],
++    );
++    let changes = worktree.join("openspec/changes");
++    let change = if row.archived {
++        changes.join("archive").join(FOLDER)
++    } else {
++        changes.join(FOLDER)
++    };
++    fs::create_dir_all(change.parent().expect("the change folder has a parent"))
++        .expect("the change folder parent is created");
++    copy_tree(&checkout, &change);
++    fs::remove_dir_all(&checkout).expect("the checkout copy is removed");
++    write_markers(&change, row.marker);
++    git(&worktree, &["add", "-A"]);
++    git(&worktree, &["commit", "-q", "-m", "osq: 001 approved"]);
++    move_main(&path);
++    if row.edit {
++        edit(&change);
++    }
++    Repo {
++        root,
++        path,
++        worktree,
++        change,
++    }
++}
++
++/// Builds the conflict scenario's repository for one row.
++fn build_conflict(row: &ConflictRow) -> Repo {
++    let root = scratch(&format!("conflicts-{}", row.name));
++    let path = root.join("repo");
++    prepare(&root, &path, true);
++    for file in ["src/beta.js", "src/gamma.js"] {
++        write_source(&path.join(file), FIXTURE_SOURCE);
++    }
++    git(&path, &["add", "--", "src/beta.js", "src/gamma.js"]);
++    git(&path, &["commit", "-q", "--amend", "--no-edit"]);
++    let checkout = path.join("openspec/changes").join(FOLDER);
++    let worktree = root.join("worktrees/repo").join(FOLDER);
++    fs::create_dir_all(worktree.parent().expect("the worktree has a parent"))
++        .expect("the worktree parent is created");
++    let target = worktree.to_string_lossy().into_owned();
++    git(
++        &path,
++        &["worktree", "add", "-q", "-b", BRANCH, &target, "main"],
++    );
++    let change = worktree.join("openspec/changes").join(FOLDER);
++    fs::create_dir_all(change.parent().expect("the change folder has a parent"))
++        .expect("the change folder parent is created");
++    copy_tree(&checkout, &change);
++    fs::remove_dir_all(&checkout).expect("the checkout copy is removed");
++    write_tasks(&change);
++    write_source(&worktree.join(row.file), BRANCH_SOURCE);
++    write_conflict_markers(&change, &["1", "2", "3"]);
++    git(&worktree, &["add", "-A"]);
++    git(&worktree, &["commit", "-q", "-m", "osq: 001 approved"]);
++    move_main_with(&path, &[row.file]);
++    edit(&change);
++    Repo {
++        root,
++        path,
++        worktree,
++        change,
++    }
++}
++
++/// Creates the fixture repository, its settings and its first commit.
++fn prepare(root: &Path, path: &Path, git_on: bool) {
++    copy_tree(&fixture(), path);
++    git(path, &["init", "-q", "-b", "main"]);
++    git(path, &["config", "user.name", "Osq Tester"]);
++    git(path, &["config", "user.email", "tester@example.com"]);
++    git(path, &["config", "commit.gpgsign", "false"]);
++    exclude(path);
++    write_config(path, &root.join("worktrees"), git_on);
++    git(
++        path,
++        &["add", "-A", "--", ".", ":!openspec/changes/001-alpha-twice"],
++    );
++    git(path, &["commit", "-q", "-m", "fixture"]);
++}
++
++/// Writes the old seal, task one's done marker and the change marker.
++fn write_markers(folder: &Path, marker: Marker) {
++    let run = folder.join(".run");
++    fs::create_dir_all(run.join("done")).expect("the done folder is created");
++    fs::create_dir_all(run.join("regressed")).expect("the regressed folder is created");
++    fs::write(run.join("approved"), format!("{OLD_SEAL}\n")).expect("the old seal is written");
++    fs::write(run.join("done/1"), DONE_1).expect("the done marker is written");
++    let (relative, text) = marker;
++    fs::write(run.join(relative), text).expect("the change marker is written");
++}
++
++/// Writes the old seal, the conflict marker and every done marker.
++fn write_conflict_markers(folder: &Path, ids: &[&str]) {
++    let run = folder.join(".run");
++    fs::create_dir_all(run.join("done")).expect("the done folder is created");
++    fs::create_dir_all(run.join("regressed")).expect("the regressed folder is created");
++    fs::write(run.join("approved"), format!("{OLD_SEAL}\n")).expect("the old seal is written");
++    fs::write(run.join("regressed/change.md"), CONFLICT.1).expect("the marker is written");
++    for id in ids {
++        fs::write(run.join("done").join(id), DONE_1).expect("the done marker is written");
++    }
++}
++
++/// Writes tasks two and three as copies of task one with their own scopes.
++fn write_tasks(folder: &Path) {
++    let base = fs::read_to_string(folder.join("tasks/1.md")).expect("task one reads");
++    for (id, scope) in [("2", "src/beta.js"), ("3", "src/gamma.js")] {
++        let text = base.replace("src/alpha/index.js", scope);
++        fs::write(folder.join("tasks").join(format!("{id}.md")), text)
++            .expect("the extra task is written");
++    }
++}
++
++/// Appends the human's uncommitted edit to task one.
++fn edit(folder: &Path) {
++    let path = folder.join("tasks/1.md");
++    let mut text = fs::read_to_string(&path).expect("the task reads");
++    text.push_str(EDIT);
++    fs::write(path, text).expect("the plan edit is written");
++}
++
++/// Writes the `osq.toml` the scenarios read.
++fn write_config(repo: &Path, worktrees: &Path, git_on: bool) {
++    let text = format!(
++        "[vcs]\nenabled = {git_on}\nauthor = \"{AUTHOR}\"\nworktreeRoot = \"{}\"\n",
++        worktrees.display()
++    );
++    fs::write(repo.join("osq.toml"), text).expect("osq.toml is written");
++}
++
++/// Appends the settings files a repository ignores to `.git/info/exclude`.
++fn exclude(repo: &Path) {
++    let path = repo.join(".git/info/exclude");
++    let mut text = fs::read_to_string(&path).unwrap_or_default();
++    text.push_str("osq.config.mjs\nosq.toml\nnode_modules\n");
++    fs::write(path, text).expect("the exclude file is written");
++}
++
++/// Moves `main` as the golden script does.
++fn move_main(repo: &Path) {
++    write_source(&repo.join("src/alpha/index.js"), MAIN_SOURCE);
++    rewrite_purpose(repo);
++    git(repo, &["commit", "-q", "-a", "-m", "main moved"]);
++}
++
++/// Moves `main` as the conflict scenario does, writing the row's file too.
++fn move_main_with(repo: &Path, files: &[&str]) {
++    write_source(&repo.join("src/alpha/index.js"), MAIN_SOURCE);
++    rewrite_purpose(repo);
++    for file in files {
++        write_source(&repo.join(file), MAIN_FILE_SOURCE);
++    }
++    git(repo, &["add", "-A"]);
++    git(repo, &["commit", "-q", "-m", "main moved"]);
++}
++
++/// Rewrites the living spec's purpose as `main` does.
++fn rewrite_purpose(repo: &Path) {
++    let spec = repo.join("openspec/specs/alpha/spec.md");
++    let text = fs::read_to_string(&spec).expect("the living spec reads");
++    fs::write(spec, text.replace(OLD_PURPOSE, MAIN_PURPOSE)).expect("the living spec is written");
++}
++
++/// Writes one source file, creating its folders.
++fn write_source(path: &Path, source: &str) {
++    if let Some(parent) = path.parent() {
++        fs::create_dir_all(parent).expect("the source folder is created");
++    }
++    fs::write(path, source).expect("the source is written");
++}
++
++/// A golden with `<root>` and `<main>` replaced by the scratch repository's.
++fn golden(root: &Path, main: &str, case: &str) -> Golden {
++    let path = fixtures()
++        .join("default-branch-golden")
++        .join(format!("{case}.txt"));
++    let text = fs::read_to_string(path).expect("the golden reads");
++    let text = text
++        .replace("<root>", &root.display().to_string())
++        .replace("<main>", main);
++    parse_golden(&text)
++}
++
++/// Splits a golden into its outcome, commit, branch, record and tree sections.
++fn parse_golden(text: &str) -> Golden {
++    let mut golden = Golden {
++        outcome: Vec::new(),
++        commits: Vec::new(),
++        branches: Vec::new(),
++        record: Vec::new(),
++        tree: Vec::new(),
++    };
++    let mut section = 0;
++    for line in text.lines() {
++        match line {
++            "commits:" => section = 1,
++            "branches:" => section = 2,
++            "record:" => section = 3,
++            "tree:" => section = 4,
++            "status:" => section = 5,
++            _ => match section {
++                0 => golden.outcome.push(line.to_owned()),
++                1 => golden.commits.push(line.to_owned()),
++                2 => golden.branches.push(line.to_owned()),
++                3 => golden.record.push(line.to_owned()),
++                4 => match line.strip_prefix("--- ") {
++                    Some(path) => golden.tree.push((path.to_owned(), Vec::new())),
++                    None => golden
++                        .tree
++                        .last_mut()
++                        .expect("a golden tree line follows a path")
++                        .1
++                        .push(line.to_owned()),
++                },
++                _ => {}
++            },
++        }
++    }
++    golden
++}
++
++/// The commits the run added to the branch, as the golden script writes them.
++fn commit_lines(repo: &Repo, git_on: bool, before: &str) -> Vec<String> {
++    if !git_on {
++        return vec!["none".to_owned()];
++    }
++    let tip = git(&repo.path, &["rev-parse", BRANCH]).trim().to_owned();
++    let from = if git_succeeds(&repo.path, &["merge-base", "--is-ancestor", before, &tip]) {
++        before
++    } else {
++        "main"
++    };
++    let range = format!("{from}..{BRANCH}");
++    let commits: Vec<String> = git(
++        &repo.path,
++        &["rev-list", "--reverse", "--first-parent", &range],
++    )
++    .lines()
++    .filter(|sha| !sha.is_empty())
++    .map(str::to_owned)
++    .collect();
++    if commits.is_empty() {
++        return vec!["none".to_owned()];
++    }
++    let mut lines = Vec::new();
++    for sha in commits {
++        let log = git(&repo.path, &["log", "-1", "--format=%s%n%an <%ae>", &sha]);
++        lines.extend(log.trim().lines().map(str::to_owned));
++        let parent = format!("{sha}^1");
++        let changed = git(&repo.path, &["diff", "--name-status", &parent, &sha]);
++        let mut entries: Vec<String> = changed
++            .trim()
++            .lines()
++            .filter(|line| !line.is_empty() && !left_out(line))
++            .map(str::to_owned)
++            .collect();
++        entries.sort();
++        lines.extend(entries.into_iter().map(|line| format!("  {line}")));
++    }
++    lines
++}
++
++/// Whether a commit line names a `.run` file the goldens leave out.
++fn left_out(line: &str) -> bool {
++    let path = line.split('\t').next_back().unwrap_or_default();
++    path.ends_with("/.run/manifest.json")
++        || path.ends_with("/.run/plan.jsonl")
++        || path.ends_with("/.run/events/change.jsonl")
++}
++
++/// Every `osq/` branch with its tip's subject, as the golden script writes them.
++fn branch_lines(repo: &Repo, git_on: bool) -> Vec<String> {
++    if !git_on {
++        return vec!["none".to_owned()];
++    }
++    git(
++        &repo.path,
++        &[
++            "for-each-ref",
++            "--format=%(refname:short) %(subject)",
++            "refs/heads/osq/",
++        ],
++    )
++    .lines()
++    .filter(|line| !line.is_empty())
++    .map(str::to_owned)
++    .collect()
++}
++
++/// The tree record's lines with each `at` as `<at>`.
++fn record_lines(repo: &Repo) -> Vec<String> {
++    let Ok(text) = fs::read_to_string(repo.path.join(".git/osq-trees.jsonl")) else {
++        return Vec::new();
++    };
++    text.lines()
++        .filter(|line| !line.is_empty())
++        .map(blank_at)
++        .collect()
++}
++
++/// Writes the value of a record line's first `at` field as `<at>`.
++fn blank_at(line: &str) -> String {
++    let Some(start) = line.find("\"at\":\"") else {
++        return line.to_owned();
++    };
++    let value = start + "\"at\":\"".len();
++    let Some(end) = line[value..].find('"') else {
++        return line.to_owned();
++    };
++    format!(
++        "{}\"at\":\"<at>\"{}",
++        &line[..start],
++        &line[value + end + 1..]
++    )
++}
++
++/// The change folder where the run left it.
++fn final_folder(repo: &Repo, row: &Row) -> PathBuf {
++    if !row.git {
++        return repo.path.join("openspec/changes").join(FOLDER);
++    }
++    let active = repo.worktree.join("openspec/changes").join(FOLDER);
++    if active.exists() {
++        active
++    } else {
++        repo.worktree.join("openspec/changes/archive").join(FOLDER)
++    }
++}
++
++/// Every `.run/` path an approval left, with the lines the golden compares.
++fn actual_tree(change: &Path) -> Vec<(String, Vec<String>)> {
++    let mut files = Vec::new();
++    files_under(change, &change.join(".run"), &mut files);
++    files.sort();
++    let mut sections = Vec::new();
++    for relative in files {
++        if left_out_of_tree(&relative) {
++            continue;
++        }
++        let text = fs::read_to_string(change.join(&relative)).expect("a .run file is text");
++        let lines: Vec<String> = if is_jsonl(&relative) {
++            text.lines()
++                .filter(|line| !line.is_empty() && !approved(line))
++                .map(str::to_owned)
++                .collect()
++        } else {
++            text.strip_suffix('\n')
++                .unwrap_or(&text)
++                .split('\n')
++                .map(normalized_line)
++                .collect()
++        };
++        if !lines.is_empty() {
++            sections.push((relative, lines));
++        }
++    }
++    sections
++}
++
++/// One text line as the golden script writes it.
++fn normalized_line(line: &str) -> String {
++    if line.starts_with("recertified_at: ") {
++        "recertified_at: <ts>".to_owned()
++    } else {
++        line.to_owned()
++    }
++}
++
++/// Whether a `.run/` path is left out of the comparison.
++fn left_out_of_tree(relative: &str) -> bool {
++    relative == ".run/delivery.lock" || relative.starts_with(".run/delivered/")
++}
++
++/// Whether an event line is an `approved` event.
++fn approved(line: &str) -> bool {
++    parse_event_line(line).is_ok_and(|envelope| envelope.event.kind() == EventKind::Approved)
++}
++
++/// Whether a path names a JSON-lines event file.
++fn is_jsonl(path: &str) -> bool {
++    path.rsplit_once('.')
++        .is_some_and(|(_, extension)| extension == "jsonl")
++}
++
++/// The paths of a tree section list.
++fn tree_paths(tree: &[(String, Vec<String>)]) -> Vec<&str> {
++    tree.iter().map(|(path, _)| path.as_str()).collect()
++}
++
++/// Compares two event sections through their parsed events.
++fn compare_events(actual: &[String], expected: &[String], case: &str, path: &str) {
++    assert_eq!(actual.len(), expected.len(), "{case}: {path}: event count");
++    for (actual, expected) in actual.iter().zip(expected) {
++        assert_event(actual, expected, case, path);
++    }
++}
++
++/// Compares one event line, accepting any `synced` duration.
++fn assert_event(actual: &str, expected: &str, case: &str, path: &str) {
++    let actual: Envelope = parse_event_line(actual).expect("the event line parses");
++    let expected: Envelope = parse_event_line(expected).expect("the golden event parses");
++    assert_eq!(
++        actual.event.kind(),
++        expected.event.kind(),
++        "{case}: {path}: kind"
++    );
++    match (&actual.event, &expected.event) {
++        (Event::Synced(actual), Event::Synced(expected)) => {
++            assert_eq!(
++                actual.default_branch, expected.default_branch,
++                "{case}: {path}: branch"
++            );
++            assert_eq!(actual.commits, expected.commits, "{case}: {path}: commits");
++        }
++        (actual, expected) => assert_eq!(actual, expected, "{case}: {path}"),
++    }
++}
++
++/// Adds every file under `dir` to `files`, relative to `base`.
++fn files_under(base: &Path, dir: &Path, files: &mut Vec<String>) {
++    let Ok(entries) = fs::read_dir(dir) else {
++        return;
++    };
++    for entry in entries.flatten() {
++        let path = entry.path();
++        if path.is_dir() {
++            files_under(base, &path, files);
++        } else {
++            let relative = path
++                .strip_prefix(base)
++                .expect("the file sits under the base folder")
++                .to_string_lossy()
++                .replace('\\', "/");
++            files.push(relative);
++        }
++    }
++}
++
++/// Runs git in `cwd` with the golden script's dates and identity, giving stdout.
++fn git(cwd: &Path, args: &[&str]) -> String {
++    let output = command(cwd, args).output().expect("git starts");
++    assert!(
++        output.status.success(),
++        "git {} failed: {}",
++        args.join(" "),
++        String::from_utf8_lossy(&output.stderr)
++    );
++    String::from_utf8(output.stdout).expect("git writes text")
++}
++
++/// Whether git succeeds in `cwd` with the golden script's dates and identity.
++fn git_succeeds(cwd: &Path, args: &[&str]) -> bool {
++    command(cwd, args)
++        .output()
++        .expect("git starts")
++        .status
++        .success()
++}
++
++/// A git command with the golden script's dates and identity.
++fn command(cwd: &Path, args: &[&str]) -> Command {
++    let mut command = Command::new("git");
++    command
++        .args(args)
++        .current_dir(cwd)
++        .env("GIT_AUTHOR_DATE", DATE)
++        .env("GIT_COMMITTER_DATE", DATE)
++        .env("GIT_AUTHOR_NAME", "Osq Tester")
++        .env("GIT_AUTHOR_EMAIL", "tester@example.com")
++        .env("GIT_COMMITTER_NAME", "Osq Tester")
++        .env("GIT_COMMITTER_EMAIL", "tester@example.com");
++    command
++}
++
++/// The command line's arguments as owned strings.
++fn args(values: &[&str]) -> Vec<String> {
++    values.iter().map(|value| (*value).to_owned()).collect()
++}
++
++/// A fresh scratch root under `CARGO_TARGET_TMPDIR`, named after its test and row.
++fn scratch(name: &str) -> PathBuf {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR"))
++        .join("approve_default_branch")
++        .join(name);
++    let _ = fs::remove_dir_all(&root);
++    fs::create_dir_all(&root).expect("the scratch root is created");
++    fs::canonicalize(root).expect("the scratch root canonicalizes")
++}
++
++/// The crate's `tests/fixtures` folder.
++fn fixtures() -> PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
++}
++
++/// The `steered-repo` fixture every case starts from.
++fn fixture() -> PathBuf {
++    fixtures().join("steered-repo")
++}
++
++/// Copies a folder tree, dot folders and files included.
++fn copy_tree(from: &Path, to: &Path) {
++    fs::create_dir_all(to).expect("the target folder is created");
++    for entry in fs::read_dir(from).expect("the source folder is read") {
++        let entry = entry.expect("the folder entry is read");
++        let target = to.join(entry.file_name());
++        if entry.file_type().expect("the entry type is read").is_dir() {
++            copy_tree(&entry.path(), &target);
++        } else {
++            fs::copy(entry.path(), target).expect("the file is copied");
++        }
++    }
++}
+diff --git a/crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt b/crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt
+new file mode 100644
+index 000000000..e39961b7b
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt
+@@ -0,0 +1,37 @@
++outcome: output
++Approved 001 (001-alpha-twice)
++  Hash: sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++commits:
++none
++branches:
++none
++record:
++tree:
++--- .run/approved
++sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++--- .run/done/1
++---
++scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
++scope_files:
++  src/alpha/index.js: sha256:66aebacd1be118f36b5d94774f5d48dda30e28391c410914ecb0384a58e1cf5a
++scope_resolver: 2
++---
++2026-10-20T08:00:00.000Z
++--- .run/events/change.jsonl
++{"data":{"attempt":2,"reason":"sync_conflict","target":"change"},"timestamp":"<timestamp>","type":"retry"}
++--- .run/regressed/change.1.md
++---
++reason: sync_conflict
++---
++sync_conflict on main
++status:
++?? openspec/changes/001-alpha-twice/.run/approved
++?? openspec/changes/001-alpha-twice/.run/done/1
++?? openspec/changes/001-alpha-twice/.run/events/change.jsonl
++?? openspec/changes/001-alpha-twice/.run/manifest.json
++?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md
++?? openspec/changes/001-alpha-twice/plan-prompt.md
++?? openspec/changes/001-alpha-twice/proposal.md
++?? openspec/changes/001-alpha-twice/specs/alpha/spec.md
++?? openspec/changes/001-alpha-twice/tasks.md
++?? openspec/changes/001-alpha-twice/tasks/1.md
+diff --git a/crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt b/crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt
+new file mode 100644
+index 000000000..a7b914c7e
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt
+@@ -0,0 +1,61 @@
++outcome: output
++Approved 001 (001-alpha-twice)
++  Hash: sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++  Worktree: <root>/worktrees/repo/001-alpha-twice
++  Branch: osq/001-alpha-twice
++  Merged main into osq/001-alpha-twice
++commits:
++osq: 001 replanned
++Osq Bot <bot@example.com>
++  M	openspec/changes/archive/001-alpha-twice/tasks/1.md
++osq: 001 approved
++Osq Bot <bot@example.com>
++  A	openspec/changes/001-alpha-twice/.run/approved
++  A	openspec/changes/001-alpha-twice/.run/requirements-base
++  D	openspec/changes/archive/001-alpha-twice/.run/approved
++  M	openspec/specs/alpha/spec.md
++  R100	openspec/changes/archive/001-alpha-twice/.run/done/1	openspec/changes/001-alpha-twice/.run/done/1
++  R100	openspec/changes/archive/001-alpha-twice/.run/regressed/change.md	openspec/changes/001-alpha-twice/.run/regressed/change.md
++  R100	openspec/changes/archive/001-alpha-twice/plan-prompt.md	openspec/changes/001-alpha-twice/plan-prompt.md
++  R100	openspec/changes/archive/001-alpha-twice/proposal.md	openspec/changes/001-alpha-twice/proposal.md
++  R100	openspec/changes/archive/001-alpha-twice/specs/alpha/spec.md	openspec/changes/001-alpha-twice/specs/alpha/spec.md
++  R100	openspec/changes/archive/001-alpha-twice/tasks.md	openspec/changes/001-alpha-twice/tasks.md
++  R100	openspec/changes/archive/001-alpha-twice/tasks/1.md	openspec/changes/001-alpha-twice/tasks/1.md
++osq: 001 sync main
++Osq Bot <bot@example.com>
++  M	src/alpha/index.js
++branches:
++osq/001-alpha-twice osq: 001 sync main
++record:
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++tree:
++--- .run/approved
++sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++--- .run/done/1
++---
++scope_hash: sha256:18e5f8a23226e2fae322aad8b99e857452038c2f3c3c8d1d377778234385c881
++scope_files:
++  src/alpha/index.js: sha256:4a88f4efd4d1e40d16fa47398f26e47d8c46a75af53c3f8b4f2e7450ff3d462b
++scope_resolver: 2
++original_scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
++recertified_at: <ts>
++recertification_count: 1
++---
++2026-10-20T08:00:00.000Z
++--- .run/events/change.jsonl
++{"data":{"commits":1,"defaultBranch":"main","duration":8},"timestamp":"<timestamp>","type":"synced"}
++{"data":{"attempt":2,"reason":"sync_verify_red","target":"change"},"timestamp":"<timestamp>","type":"retry"}
++--- .run/regressed/change.1.md
++---
++reason: sync_verify_red
++---
++sync_verify_red on main
++--- .run/requirements-base
++<main>
++status:
++ M openspec/changes/001-alpha-twice/.run/done/1
++ M openspec/changes/001-alpha-twice/.run/events/change.jsonl
++ D openspec/changes/001-alpha-twice/.run/regressed/change.md
++?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md
+diff --git a/crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt b/crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt
+new file mode 100644
+index 000000000..ce67733f3
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt
+@@ -0,0 +1,57 @@
++outcome: output
++Approved 001 (001-alpha-twice)
++  Hash: sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
++  Worktree: <root>/worktrees/repo/001-alpha-twice
++  Branch: osq/001-alpha-twice
++  Merged main into osq/001-alpha-twice
++commits:
++osq: 001 approved
++Osq Bot <bot@example.com>
++  A	openspec/changes/001-alpha-twice/.run/approved
++  A	openspec/changes/001-alpha-twice/.run/requirements-base
++  D	openspec/changes/archive/001-alpha-twice/.run/approved
++  M	openspec/specs/alpha/spec.md
++  R100	openspec/changes/archive/001-alpha-twice/.run/done/1	openspec/changes/001-alpha-twice/.run/done/1
++  R100	openspec/changes/archive/001-alpha-twice/.run/regressed/change.md	openspec/changes/001-alpha-twice/.run/regressed/change.md
++  R100	openspec/changes/archive/001-alpha-twice/plan-prompt.md	openspec/changes/001-alpha-twice/plan-prompt.md
++  R100	openspec/changes/archive/001-alpha-twice/proposal.md	openspec/changes/001-alpha-twice/proposal.md
++  R100	openspec/changes/archive/001-alpha-twice/specs/alpha/spec.md	openspec/changes/001-alpha-twice/specs/alpha/spec.md
++  R100	openspec/changes/archive/001-alpha-twice/tasks.md	openspec/changes/001-alpha-twice/tasks.md
++  R100	openspec/changes/archive/001-alpha-twice/tasks/1.md	openspec/changes/001-alpha-twice/tasks/1.md
++osq: 001 sync main
++Osq Bot <bot@example.com>
++  M	src/alpha/index.js
++branches:
++osq/001-alpha-twice osq: 001 sync main
++record:
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++tree:
++--- .run/approved
++sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
++--- .run/done/1
++---
++scope_hash: sha256:18e5f8a23226e2fae322aad8b99e857452038c2f3c3c8d1d377778234385c881
++scope_files:
++  src/alpha/index.js: sha256:4a88f4efd4d1e40d16fa47398f26e47d8c46a75af53c3f8b4f2e7450ff3d462b
++scope_resolver: 2
++original_scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
++recertified_at: <ts>
++recertification_count: 1
++---
++2026-10-20T08:00:00.000Z
++--- .run/events/change.jsonl
++{"data":{"commits":1,"defaultBranch":"main","duration":8},"timestamp":"<timestamp>","type":"synced"}
++{"data":{"attempt":2,"reason":"sync_verify_red","target":"change"},"timestamp":"<timestamp>","type":"retry"}
++--- .run/regressed/change.1.md
++---
++reason: sync_verify_red
++---
++sync_verify_red on main
++--- .run/requirements-base
++<main>
++status:
++ M openspec/changes/001-alpha-twice/.run/done/1
++ M openspec/changes/001-alpha-twice/.run/events/change.jsonl
++ D openspec/changes/001-alpha-twice/.run/regressed/change.md
++?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md
+diff --git a/crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt b/crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt
+new file mode 100644
+index 000000000..e1f36a1d5
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt
+@@ -0,0 +1,318 @@
++// Prints TypeScript's `osq approve` result on a change steered by a
++// default-branch trigger without a conflict, for each row of rust-cli
++// "Default-branch approvals equal TypeScript's" and the rust-approve scenarios
++// that name these goldens.
++// Run from the repository root after `pnpm build`:
++//   node print-default-branch-goldens.mjs <fixture approve-repo> <golden folder>
++// Each case builds a fresh scratch repository: `<root>/repo` is a copy of the
++// fixture on the branch `main`, whose one commit `fixture` holds every file
++// but the folder `openspec/changes/001-alpha-twice`, with the git settings
++// `user.name` `Osq Tester`, `user.email` `tester@example.com` and
++// `commit.gpgsign` `false`, and every commit dated DATE. TypeScript reads its
++// settings from `osq.config.mjs`, which git ignores through
++// `.git/info/exclude`, as the Rust tests ignore `osq.toml`. `node_modules`
++// links to this repository's, for TypeScript's pinned OpenSpec validator, and
++// is ignored too.
++// With git on, the worktree `<root>/worktrees/repo/001-alpha-twice` is added
++// on a new branch `osq/001-alpha-twice` at `main`. The checkout's folder
++// `001-alpha-twice` moves to that worktree's `openspec/changes/`, or to its
++// `openspec/changes/archive/` for an archived case, gains `.run/approved`
++// holding OLD_SEAL and a newline, `.run/done/1` holding task 1's scope hash
++// as `computeTaskScopeHash` gives it, and the case's marker, and is committed
++// there as `osq: 001 approved`. Then `main` gains the commit `main moved`,
++// which writes MAIN_SOURCE to `src/alpha/index.js` and MAIN_PURPOSE in place
++// of the purpose line of `openspec/specs/alpha/spec.md`. With git off, the
++// folder stays in the checkout with the same files and `main` does not move.
++// An edited case then appends EDIT, the human's plan edit, to `tasks/1.md`,
++// uncommitted. The case's `extra` runs last.
++// The built CLI runs `approve 1` with `repo` as the working directory and
++// `<root>/home` as an empty HOME.
++// A golden holds the outcome and the approval lines without the digest's
++// ` with <flags>` suffix, or the error message with its trailing blank lines
++// and any `Next:` hint dropped. Then, under `commits:`, each commit the run
++// added to `osq/001-alpha-twice`, oldest first along first parents: from the
++// branch's tip before the run when that is still an ancestor, or else from
++// `main`. Each is its subject, its author, and its changed files against its
++// first parent, sorted, leaving out `.run/manifest.json`, `.run/plan.jsonl`
++// and `.run/events/change.jsonl`; `none` when the run added none. Then, under
++// `branches:`, every `osq/` branch with its tip's subject. Then the lines of
++// `.git/osq-trees.jsonl` with each `at` written `<at>`. Then every file under
++// the change folder's `.run/` where the run left it, sorted by path, each
++// event line parsed, its `timestamp` written `<timestamp>` and its keys
++// sorted, and a `recertified_at` value written `<ts>`. `.run/manifest.json`
++// and `.run/plan.jsonl` are left out. Last, under `status:`, the worktree's
++// `git status --porcelain --untracked-files=all`, or the checkout's with git
++// off. `<root>` stands for the case's scratch root and `<main>` for `main`'s
++// tip.
++import { spawnSync } from 'node:child_process';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++
++const DIST = path.resolve('dist');
++const BIN = path.join(DIST, 'cli', 'bin.js');
++const { computeTaskScopeHash } = await import(path.join(DIST, 'core', 'run', 'scope-hash.js'));
++const [fixture, golden] = process.argv.slice(2);
++const AUTHOR = 'Osq Bot <bot@example.com>';
++const DATE = '2026-10-25T10:00:00Z';
++const FOLDER = '001-alpha-twice';
++const BRANCH = `osq/${FOLDER}`;
++const OLD_SEAL = `sha256:${'0'.repeat(64)}`;
++const EDIT = '\nSteered past main.\n';
++const MAIN_SOURCE = "module.exports = { runs: 1, name: 'alpha' };\n";
++const OLD_PURPOSE = 'The alpha capability of the approve fixture repository.';
++const MAIN_PURPOSE = 'The alpha capability of the approve fixture repository, as main has it.';
++const LEFT_OUT = new Set(['.run/manifest.json', '.run/plan.jsonl']);
++const COMMIT_LEFT_OUT = new Set([...LEFT_OUT, '.run/events/change.jsonl']);
++const KEPT_LINES = [
++  'Approved ',
++  '  Hash: ',
++  '  Worktree: ',
++  '  Branch: ',
++  '  Restarted from ',
++  '  Merged ',
++  '  Continues from task ',
++];
++
++const marker = (reason) => [
++  'regressed/change.md',
++  `---\nreason: ${reason}\n---\n${reason} on main\n`,
++];
++const CONFLICT = marker('sync_conflict');
++const VERIFY_RED = marker('sync_verify_red');
++const REQUIREMENT = marker('requirement_changed');
++
++// TypeScript restarts on a `sync_conflict` trigger, which Rust never does, so
++// no worktree case here has that marker.
++const cases = [
++  { name: 'merge-001', git: true, archived: true, marker: VERIFY_RED, edit: true },
++  { name: 'merge-noedit-001', git: true, archived: true, marker: VERIFY_RED, edit: false },
++  { name: 'requirement-001', git: true, archived: false, marker: REQUIREMENT, edit: true },
++  { name: 'git-off-001', git: false, archived: false, marker: CONFLICT, edit: true },
++];
++
++function git(cwd, args) {
++  const env = {
++    ...process.env,
++    GIT_AUTHOR_DATE: DATE,
++    GIT_COMMITTER_DATE: DATE,
++    GIT_AUTHOR_NAME: 'Osq Tester',
++    GIT_AUTHOR_EMAIL: 'tester@example.com',
++    GIT_COMMITTER_NAME: 'Osq Tester',
++    GIT_COMMITTER_EMAIL: 'tester@example.com',
++  };
++  const run = spawnSync('git', args, { cwd, encoding: 'utf8', env });
++  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
++  return run.stdout;
++}
++
++function configText(root, gitOn) {
++  const settings = { enabled: gitOn, author: AUTHOR, worktreeRoot: path.join(root, 'worktrees') };
++  return `export default { vcs: ${JSON.stringify(settings)} };\n`;
++}
++
++async function writeMarkers(tree, folder, c) {
++  fs.mkdirSync(path.join(folder, '.run', 'regressed'), { recursive: true });
++  fs.mkdirSync(path.join(folder, '.run', 'done'), { recursive: true });
++  fs.writeFileSync(path.join(folder, '.run', 'approved'), `${OLD_SEAL}\n`);
++  const hash = await computeTaskScopeHash(tree, ['src/alpha/index.js']);
++  const files = Object.entries(hash.fileHashes)
++    .map(([file, value]) => `  ${file}: ${value}\n`)
++    .join('');
++  fs.writeFileSync(
++    path.join(folder, '.run', 'done', '1'),
++    `---\nscope_hash: ${hash.hash}\nscope_files:\n${files}scope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n`,
++  );
++  const [relative, text] = c.marker;
++  fs.writeFileSync(path.join(folder, '.run', relative), text);
++}
++
++function moveMain(repo) {
++  fs.writeFileSync(path.join(repo, 'src', 'alpha', 'index.js'), MAIN_SOURCE);
++  const spec = path.join(repo, 'openspec', 'specs', 'alpha', 'spec.md');
++  fs.writeFileSync(spec, fs.readFileSync(spec, 'utf8').replace(OLD_PURPOSE, MAIN_PURPOSE));
++  git(repo, ['commit', '-q', '-a', '-m', 'main moved']);
++}
++
++async function buildRepo(root, c) {
++  const repo = path.join(root, 'repo');
++  fs.cpSync(fixture, repo, { recursive: true });
++  git(repo, ['init', '-q', '-b', 'main']);
++  git(repo, ['config', 'user.name', 'Osq Tester']);
++  git(repo, ['config', 'user.email', 'tester@example.com']);
++  git(repo, ['config', 'commit.gpgsign', 'false']);
++  fs.appendFileSync(path.join(repo, '.git/info/exclude'), 'osq.config.mjs\nosq.toml\nnode_modules\n');
++  fs.symlinkSync(path.resolve('node_modules'), path.join(repo, 'node_modules'));
++  fs.writeFileSync(path.join(repo, 'osq.config.mjs'), configText(root, c.git));
++  git(repo, ['add', '-A', '--', '.', `:!openspec/changes/${FOLDER}`]);
++  git(repo, ['commit', '-q', '-m', 'fixture']);
++  const checkout = path.join(repo, 'openspec', 'changes', FOLDER);
++  if (!c.git) {
++    await writeMarkers(repo, checkout, c);
++    if (c.edit) fs.appendFileSync(path.join(checkout, 'tasks', '1.md'), EDIT);
++    return { repo, tree: repo, folder: checkout };
++  }
++  const worktree = path.join(root, 'worktrees', 'repo', FOLDER);
++  fs.mkdirSync(path.dirname(worktree), { recursive: true });
++  git(repo, ['worktree', 'add', '-q', '-b', BRANCH, worktree, 'main']);
++  const changes = path.join(worktree, 'openspec', 'changes');
++  const folder = path.join(c.archived ? path.join(changes, 'archive') : changes, FOLDER);
++  fs.mkdirSync(path.dirname(folder), { recursive: true });
++  fs.cpSync(checkout, folder, { recursive: true });
++  fs.rmSync(checkout, { recursive: true, force: true });
++  await writeMarkers(worktree, folder, c);
++  git(worktree, ['add', '-A']);
++  git(worktree, ['commit', '-q', '-m', 'osq: 001 approved']);
++  moveMain(repo);
++  if (c.edit) fs.appendFileSync(path.join(folder, 'tasks', '1.md'), EDIT);
++  return { repo, tree: worktree, folder };
++}
++
++function files(base, dir, out) {
++  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++    const full = path.join(dir, entry.name);
++    const relative = path.relative(base, full).split(path.sep).join('/');
++    if (entry.isDirectory()) files(base, full, out);
++    else out.push(relative);
++  }
++  return out;
++}
++
++function sorted(value) {
++  if (Array.isArray(value)) return value.map(sorted);
++  if (value && typeof value === 'object') {
++    return Object.fromEntries(
++      Object.keys(value)
++        .sort()
++        .map((key) => [key, sorted(value[key])]),
++    );
++  }
++  return value;
++}
++
++function eventLine(line) {
++  const parsed = JSON.parse(line);
++  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
++  return JSON.stringify(sorted(parsed));
++}
++
++/** The change folder where the run left it: the changes directory first. */
++function finalFolder(tree, c) {
++  if (!c.git) return path.join(tree, 'openspec', 'changes', FOLDER);
++  const active = path.join(tree, 'openspec', 'changes', FOLDER);
++  if (fs.existsSync(active)) return active;
++  return path.join(tree, 'openspec', 'changes', 'archive', FOLDER);
++}
++
++function runTree(folder) {
++  const lines = [];
++  const run = path.join(folder, '.run');
++  if (!fs.existsSync(run)) return lines;
++  for (const relative of files(folder, run, []).sort()) {
++    if (LEFT_OUT.has(relative)) continue;
++    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
++    lines.push(`--- ${relative}`);
++    if (relative.endsWith('.jsonl')) {
++      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
++    } else {
++      const shown = text.replace(/^recertified_at: .*$/m, 'recertified_at: <ts>');
++      lines.push(shown.endsWith('\n') ? shown.slice(0, -1) : shown);
++    }
++  }
++  return lines;
++}
++
++function leftOut(file) {
++  const run = file.match(/\/(\.run\/.*)$/);
++  return run !== null && COMMIT_LEFT_OUT.has(run[1]);
++}
++
++function commitLines(repo, c, before) {
++  if (!c.git) return ['none'];
++  const tip = git(repo, ['rev-parse', BRANCH]).trim();
++  const ancestor = spawnSync('git', ['merge-base', '--is-ancestor', before, tip], { cwd: repo });
++  const from = ancestor.status === 0 ? before : 'main';
++  const commits = git(repo, ['rev-list', '--reverse', '--first-parent', `${from}..${BRANCH}`])
++    .trim()
++    .split('\n')
++    .filter((sha) => sha !== '');
++  if (commits.length === 0) return ['none'];
++  const lines = [];
++  for (const sha of commits) {
++    const [subject, author] = git(repo, ['log', '-1', '--format=%s%n%an <%ae>', sha])
++      .trim()
++      .split('\n');
++    const changed = git(repo, ['diff', '--name-status', `${sha}^1`, sha])
++      .trim()
++      .split('\n')
++      .filter((line) => line !== '' && !leftOut(line.split('\t').at(-1)))
++      .sort();
++    lines.push(subject, author, ...changed.map((line) => `  ${line}`));
++  }
++  return lines;
++}
++
++function branchLines(repo, c) {
++  if (!c.git) return ['none'];
++  return git(repo, ['for-each-ref', '--format=%(refname:short) %(subject)', 'refs/heads/osq/'])
++    .trim()
++    .split('\n')
++    .filter((line) => line !== '');
++}
++
++function treeRecord(repo) {
++  const file = path.join(repo, '.git', 'osq-trees.jsonl');
++  if (!fs.existsSync(file)) return [];
++  return fs
++    .readFileSync(file, 'utf8')
++    .split('\n')
++    .filter((line) => line !== '')
++    .map((line) => JSON.stringify({ ...JSON.parse(line), at: '<at>' }));
++}
++
++function outcome(run, c) {
++  if (run.status === 0) {
++    const kept = run.stdout
++      .split('\n')
++      .filter((line) => KEPT_LINES.some((p) => line.startsWith(p)))
++      .map((line) => line.replace(/^(Approved \S+ \(\S+\)) with .*$/, '$1'));
++    return `outcome: output\n${kept.join('\n')}`;
++  }
++  const prefix = 'Error approving 1:\n  ';
++  if (!run.stderr.startsWith(prefix)) throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
++  let message = run.stderr.slice(prefix.length);
++  const next = message.indexOf('\nNext: ');
++  if (next >= 0) message = message.slice(0, next + 1);
++  return `outcome: failed\n${message.replace(/\s+$/, '')}`;
++}
++
++for (const c of cases) {
++  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-approve-default-')));
++  const home = path.join(root, 'home');
++  fs.mkdirSync(home);
++  const { repo, tree } = await buildRepo(root, c);
++  c.extra?.(repo);
++  const before = c.git ? git(repo, ['rev-parse', BRANCH]).trim() : '';
++  const mainTip = git(repo, ['rev-parse', 'main']).trim();
++  const run = spawnSync(process.execPath, [BIN, 'approve', '1'], {
++    cwd: repo,
++    encoding: 'utf8',
++    env: { ...process.env, HOME: home, NO_COLOR: '1', OSQ_SERVER: '' },
++  });
++  const text = [
++    outcome(run, c),
++    'commits:',
++    ...commitLines(repo, c, before),
++    'branches:',
++    ...branchLines(repo, c),
++    'record:',
++    ...treeRecord(repo),
++    'tree:',
++    ...runTree(finalFolder(tree, c)),
++    'status:',
++    git(tree, ['status', '--porcelain', '--untracked-files=all']).replace(/\n+$/, ''),
++  ].join('\n');
++  const placed = text.split(root).join('<root>').split(mainTip).join('<main>');
++  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${placed.replace(/\n+$/, '')}\n`);
++  fs.rmSync(root, { recursive: true, force: true });
++}
+diff --git a/crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt b/crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt
+new file mode 100644
+index 000000000..24a09af96
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt
+@@ -0,0 +1,53 @@
++outcome: output
++Approved 001 (001-alpha-twice)
++  Hash: sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++  Worktree: <root>/worktrees/repo/001-alpha-twice
++  Branch: osq/001-alpha-twice
++  Merged main into osq/001-alpha-twice
++commits:
++osq: 001 replanned
++Osq Bot <bot@example.com>
++  M	openspec/changes/001-alpha-twice/tasks/1.md
++osq: 001 approved
++Osq Bot <bot@example.com>
++  A	openspec/changes/001-alpha-twice/.run/requirements-base
++  M	openspec/changes/001-alpha-twice/.run/approved
++  M	openspec/specs/alpha/spec.md
++osq: 001 sync main
++Osq Bot <bot@example.com>
++  M	src/alpha/index.js
++branches:
++osq/001-alpha-twice osq: 001 sync main
++record:
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
++tree:
++--- .run/approved
++sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
++--- .run/done/1
++---
++scope_hash: sha256:18e5f8a23226e2fae322aad8b99e857452038c2f3c3c8d1d377778234385c881
++scope_files:
++  src/alpha/index.js: sha256:4a88f4efd4d1e40d16fa47398f26e47d8c46a75af53c3f8b4f2e7450ff3d462b
++scope_resolver: 2
++original_scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
++recertified_at: <ts>
++recertification_count: 1
++---
++2026-10-20T08:00:00.000Z
++--- .run/events/change.jsonl
++{"data":{"commits":1,"defaultBranch":"main","duration":7},"timestamp":"<timestamp>","type":"synced"}
++{"data":{"attempt":2,"reason":"requirement_changed","target":"change"},"timestamp":"<timestamp>","type":"retry"}
++--- .run/regressed/change.1.md
++---
++reason: requirement_changed
++---
++requirement_changed on main
++--- .run/requirements-base
++<main>
++status:
++ M openspec/changes/001-alpha-twice/.run/done/1
++ M openspec/changes/001-alpha-twice/.run/events/change.jsonl
++ D openspec/changes/001-alpha-twice/.run/regressed/change.md
++?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.md b/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.1.md
+similarity index 100%
+rename from openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.md
+rename to openspec/changes/347-rust-approve-default-branch-steering/.run/dead/1.1.md
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/5.md b/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/5.md
+new file mode 100644
+index 000000000..123076d27
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/dead/5.md
+@@ -0,0 +1,48 @@
++---
++reason: change_verify_red
++command: "sh scripts/verify-rust.sh"
++exit_code: 101
++fingerprint: sha256:d6873958c534f1ba616f1843267e3e39fd946ea6bbecc0a524880fe453278bb1
++---
++Change-level verification failed after task verification passed.
++
++test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++
++     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)
++
++running 1 test
++test stacked_folder_paths ... ok
++
++test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)
++
++running 3 tests
++test directory_outside_any_repository ... ok
++test unborn_repository ... ok
++test state_of_the_read_repository ... ok
++
++test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
++
++     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)
++
++running 2 tests
++test tree_record_without_git ... FAILED
++test tree_record_path_and_lines ... ok
++
++failures:
++
++---- tree_record_without_git stdout ----
++
++thread 'tree_record_without_git' (1280961) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:
++called `Result::unwrap()` on an `Err` value: Spawn { command: "target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir", source: Os { code: 26, kind: ExecutableFileBusy, message: "Text file busy" } }
++note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
++
++
++failures:
++    tree_record_without_git
++
++test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++
++error: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`
++Full output: .run/logs/change-6.log
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/done/3 b/openspec/changes/347-rust-approve-default-branch-steering/.run/done/3
+index 076f962f6..232ce330f 100644
+--- a/openspec/changes/347-rust-approve-default-branch-steering/.run/done/3
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/done/3
+@@ -1,9 +1,58 @@
+ ---
+ scope_resolver: 2
+-scope_hash: "sha256:35f603e616de6b927f6ad8f02fbe97b4c381185c09bfb09a529788ddebc742e5"
+-build_stamp: "38b5f686"
+-project_commit: "ca2f24c0"
++scope_hash: sha256:51249af6828976b78bbd0e1fa31bd1c44e19422b7a9f0be1d9e704e0818e1efb
++build_stamp: 38b5f686
++project_commit: ca2f24c0
+ exit_code: 0
+-scope_files: {"crates/features/approve/Cargo.toml":"sha256:885f2204a6c208e330b73fdbaf99390f89f3e3a57d9c5ef2bfa3e68bffdb290a","crates/features/approve/src/approve.rs":"sha256:28bfd988841686c612d170fee46504c77fb69ea2afafa87eecc4193af23e10f2","crates/features/approve/src/approve/default_branch.rs":"sha256:bf45425c3ae1b08de619da7c0cd8388e1ba939515473e4560bc92a7029f27ff2","crates/features/approve/src/approve/find.rs":"sha256:60859d020ccd4c81892e712c5bea93c725d183f5e26b9d3c22b042abd1871d3a","crates/features/approve/src/approve/lint.rs":"sha256:5d3bb7db4d3cb8a0cf4561c62e715a8ab2564fe998c99397b7d048366b5087b6","crates/features/approve/src/approve/lookup.rs":"sha256:d754b118a8baf789ed2774226196a662fec1592b5db3db15c9d9b688b3c9854b","crates/features/approve/src/approve/refuse.rs":"sha256:a1c1b979a6924fde04fe22708a57e45e8fcdbe3161e2f209595b559fb82a0c2a","crates/features/approve/src/approve/refuse/kept.rs":"sha256:21bdccb3e7973517e4e3bebcde9c493156552f2aeebdbb55cbfd9f1e766936f1","crates/features/approve/src/approve/refuse/text.rs":"sha256:4e9534b41e705d2a43ac35b99e336892753832e8cf08061f52e2a6026f03261b","crates/features/approve/src/approve/stack.rs":"sha256:1f0dd8c1d9310fda23128b8b55d5c3e17ae51d80d534dc4cd25e95f46f8228bd","crates/features/approve/src/approve/stack/approve.rs":"sha256:85adbb6d6e9257ee7785e93fd66e3dbda566e1cded2852d5789c57e4ce3bce13","crates/features/approve/src/approve/stack/capabilities.rs":"sha256:19d2f537044c494e84e45c86946e83e0d4594669b4c36668d18b84bc616130cb","crates/features/approve/src/approve/stack/changes.rs":"sha256:1d7f023ff465c7e8639bb14eba93083fff697e16692ab9cb75b12d53a9ab47ce","crates/features/approve/src/approve/stack/select.rs":"sha256:54dcebf3ba5b89489dcf79c29a8813ee607e3e4141a6288710c8d6403588679a","crates/features/approve/src/approve/stack/state.rs":"sha256:62e5a96789ac0210f6dbea14d5caca51eb5fc15874afb4d1bee020eabfedf722","crates/features/approve/src/approve/stack/text.rs":"sha256:a78fc0b0195477ecd9135658d9d178bc176da32f30b1567b41ef0ec0d5925b52","crates/features/approve/src/approve/steered.rs":"sha256:0fc490c955f2f91a729fb353194cf1fbad091d97a7bd8ee7747ecc2b38c448c1","crates/features/approve/src/approve/steering.rs":"sha256:455f128f93bc40a0e4071cdf3eea371c8839a53d12d8cf0486fd910cd340830b","crates/features/approve/src/approve/text.rs":"sha256:d1d6f941d2012abcc393bc17491ab16cc94f4978ea42718bb5c0e5487fae572c","crates/features/approve/src/approve/worktree.rs":"sha256:ae999d5115b3ca590c7572086c07e3689e744cc3384832360a84a3c252a7e79f","crates/features/approve/src/approve/worktree/copy.rs":"sha256:6b2b79f4d23b946e247c5789a451d6791b0c68f8e53058bf00828c4a8d93dff5","crates/features/approve/src/approve/worktree/markers.rs":"sha256:d47de3779f4909a2fb3297ad439c9c630e0ebe953c59ffa80a44e5d693d0faf6","crates/features/approve/src/approve/worktree/path.rs":"sha256:359ac60e67113ecf69c86c1730628da72553209301b7ab2bdd9931306754697f","crates/features/approve/src/approve/worktree/prepare.rs":"sha256:36855d1516d8c0bbc61213406fa67c8aabcac0a9a8beddfe1059685feb20b71c","crates/features/approve/src/approve/worktree/record.rs":"sha256:ec01b8e842e50ac40a871dddac4dd4a7f2c67f08123456c244f1a29037b34133","crates/features/approve/src/approve/worktree/text.rs":"sha256:f9afaba5f9b596060a1853a0c95e4ccaccae46d79805456a20ddc38ddaf09ea2","crates/features/approve/src/feature.rs":"sha256:74d959ea4d90a0292ef1ccad1a68edcef2e2a7107e7e2dc1750584a6e32232c8","crates/features/approve/src/lib.rs":"sha256:c04e4c51b724462fadfd6decc24967e93bb02523644ee0b54756f11b547fd921","crates/features/approve/src/reject.rs":"sha256:300b06e9f13a8139100272d39746ae411b1ffc71acc3e3d953ca98545fc2b301","crates/features/approve/src/reject/args.rs":"sha256:337512389178995dfcc50b7a4e8c4d4ade9b169a6428d1c492bf831ac51c32cd","crates/features/approve/src/reject/eligibility.rs":"sha256:64df4c89c84a5e00d8bef4043262a01699aa040fabf0a6e9aa95ac123aa8580c","crates/features/approve/src/reject/markers.rs":"sha256:72d2fc649d0758d929c2a42316417588f0c1e3d8bb0daf2118f38040e2ecc878","crates/features/approve/src/reject/record.rs":"sha256:643fbbb194bb36f6e28dcb8c351962a43f09a4c83a7e30248b4816ded71f59a6","crates/features/approve/src/reject/text.rs":"sha256:f0802337aeb64f2f7ce49f9e566a8cf4fcfc6bcc98caf8c2152721fd6997164d","crates/features/approve/src/reject/time.rs":"sha256:5ccb21e93037e20ed22f83b0cb4bec87c671ed27c05aff7c5e0d77963438f3ea","crates/features/approve/src/reject/worktree.rs":"sha256:0ad9fa3d27c612e3d72b1d771ec74abf5bfafb9d653a7a668ea4c15377c06a11","crates/features/approve/tests/approve_archived_lookup.rs":"sha256:acf050429e7431357dd783ad87ef833138c9dde8db92b9a91bda3906afeff6b2","crates/features/approve/tests/approve_default_branch.rs":"sha256:bef747d8368a7d23c9546bef000485a2d5db0128c5e424bf46c01f7d7fb71f4f","crates/features/approve/tests/approve_steered.rs":"sha256:afe52244fe42abcc6068de245974b7b0d46ebf1d7174e4400e085baf93690be6","crates/features/approve/tests/approve_steering.rs":"sha256:1ab0d9971c19253059a4fb4c19d25b1814f76f69150d9016cb2bc8224eb4bff0","crates/features/approve/tests/fixtures/default-branch-golden/git-off-001.txt":"sha256:7d640b2f50b08e3c61999276d42f41df2c19c7221a92584f35fddbff83b9e874","crates/features/approve/tests/fixtures/default-branch-golden/merge-001.txt":"sha256:25525f02319a5279e87e1e87c24531129fd8577e7593ede4823f40792dcf0784","crates/features/approve/tests/fixtures/default-branch-golden/merge-noedit-001.txt":"sha256:0aa729a376f1c6befc33eff6411f6dbe15485fe2f62fa30c30db5591fb754096","crates/features/approve/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt":"sha256:269907a1af2d404e96e615827d3a07ae08422ea9a261b91879287adf194914fd","crates/features/approve/tests/fixtures/default-branch-golden/requirement-001.txt":"sha256:db6fe5895d40adadc9ed3c12909008bfcb4d2a29f823e84e8f51e0ca4302b5e9"}
++scope_files:
++  crates/features/approve/Cargo.toml: sha256:885f2204a6c208e330b73fdbaf99390f89f3e3a57d9c5ef2bfa3e68bffdb290a
++  crates/features/approve/src/approve.rs: sha256:28bfd988841686c612d170fee46504c77fb69ea2afafa87eecc4193af23e10f2
++  crates/features/approve/src/approve/default_branch.rs: sha256:858159ddbc7530e082726792b24d7eeb161d75e46aedca6c4d7b2903db48a81d
++  crates/features/approve/src/approve/default_branch/conflict.rs: sha256:66a77980ce39150df28b467d2f4a37ce62e2d96298d263dcd8d973a0964bd527
++  crates/features/approve/src/approve/find.rs: sha256:60859d020ccd4c81892e712c5bea93c725d183f5e26b9d3c22b042abd1871d3a
++  crates/features/approve/src/approve/lint.rs: sha256:5d3bb7db4d3cb8a0cf4561c62e715a8ab2564fe998c99397b7d048366b5087b6
++  crates/features/approve/src/approve/lookup.rs: sha256:d754b118a8baf789ed2774226196a662fec1592b5db3db15c9d9b688b3c9854b
++  crates/features/approve/src/approve/refuse.rs: sha256:a1c1b979a6924fde04fe22708a57e45e8fcdbe3161e2f209595b559fb82a0c2a
++  crates/features/approve/src/approve/refuse/kept.rs: sha256:21bdccb3e7973517e4e3bebcde9c493156552f2aeebdbb55cbfd9f1e766936f1
++  crates/features/approve/src/approve/refuse/text.rs: sha256:4e9534b41e705d2a43ac35b99e336892753832e8cf08061f52e2a6026f03261b
++  crates/features/approve/src/approve/stack.rs: sha256:1f0dd8c1d9310fda23128b8b55d5c3e17ae51d80d534dc4cd25e95f46f8228bd
++  crates/features/approve/src/approve/stack/approve.rs: sha256:85adbb6d6e9257ee7785e93fd66e3dbda566e1cded2852d5789c57e4ce3bce13
++  crates/features/approve/src/approve/stack/capabilities.rs: sha256:19d2f537044c494e84e45c86946e83e0d4594669b4c36668d18b84bc616130cb
++  crates/features/approve/src/approve/stack/changes.rs: sha256:1d7f023ff465c7e8639bb14eba93083fff697e16692ab9cb75b12d53a9ab47ce
++  crates/features/approve/src/approve/stack/select.rs: sha256:54dcebf3ba5b89489dcf79c29a8813ee607e3e4141a6288710c8d6403588679a
++  crates/features/approve/src/approve/stack/state.rs: sha256:62e5a96789ac0210f6dbea14d5caca51eb5fc15874afb4d1bee020eabfedf722
++  crates/features/approve/src/approve/stack/text.rs: sha256:a78fc0b0195477ecd9135658d9d178bc176da32f30b1567b41ef0ec0d5925b52
++  crates/features/approve/src/approve/steered.rs: sha256:0fc490c955f2f91a729fb353194cf1fbad091d97a7bd8ee7747ecc2b38c448c1
++  crates/features/approve/src/approve/steering.rs: sha256:455f128f93bc40a0e4071cdf3eea371c8839a53d12d8cf0486fd910cd340830b
++  crates/features/approve/src/approve/text.rs: sha256:6985fdd7b0dc76ed581a3f0feca2c829b79c08382929323856c8f0b3ae923821
++  crates/features/approve/src/approve/worktree.rs: sha256:ae999d5115b3ca590c7572086c07e3689e744cc3384832360a84a3c252a7e79f
++  crates/features/approve/src/approve/worktree/copy.rs: sha256:6b2b79f4d23b946e247c5789a451d6791b0c68f8e53058bf00828c4a8d93dff5
++  crates/features/approve/src/approve/worktree/markers.rs: sha256:d47de3779f4909a2fb3297ad439c9c630e0ebe953c59ffa80a44e5d693d0faf6
++  crates/features/approve/src/approve/worktree/path.rs: sha256:359ac60e67113ecf69c86c1730628da72553209301b7ab2bdd9931306754697f
++  crates/features/approve/src/approve/worktree/prepare.rs: sha256:36855d1516d8c0bbc61213406fa67c8aabcac0a9a8beddfe1059685feb20b71c
++  crates/features/approve/src/approve/worktree/record.rs: sha256:ec01b8e842e50ac40a871dddac4dd4a7f2c67f08123456c244f1a29037b34133
++  crates/features/approve/src/approve/worktree/text.rs: sha256:f9afaba5f9b596060a1853a0c95e4ccaccae46d79805456a20ddc38ddaf09ea2
++  crates/features/approve/src/feature.rs: sha256:74d959ea4d90a0292ef1ccad1a68edcef2e2a7107e7e2dc1750584a6e32232c8
++  crates/features/approve/src/lib.rs: sha256:c04e4c51b724462fadfd6decc24967e93bb02523644ee0b54756f11b547fd921
++  crates/features/approve/src/reject.rs: sha256:300b06e9f13a8139100272d39746ae411b1ffc71acc3e3d953ca98545fc2b301
++  crates/features/approve/src/reject/args.rs: sha256:337512389178995dfcc50b7a4e8c4d4ade9b169a6428d1c492bf831ac51c32cd
++  crates/features/approve/src/reject/eligibility.rs: sha256:64df4c89c84a5e00d8bef4043262a01699aa040fabf0a6e9aa95ac123aa8580c
++  crates/features/approve/src/reject/markers.rs: sha256:72d2fc649d0758d929c2a42316417588f0c1e3d8bb0daf2118f38040e2ecc878
++  crates/features/approve/src/reject/record.rs: sha256:643fbbb194bb36f6e28dcb8c351962a43f09a4c83a7e30248b4816ded71f59a6
++  crates/features/approve/src/reject/text.rs: sha256:f0802337aeb64f2f7ce49f9e566a8cf4fcfc6bcc98caf8c2152721fd6997164d
++  crates/features/approve/src/reject/time.rs: sha256:5ccb21e93037e20ed22f83b0cb4bec87c671ed27c05aff7c5e0d77963438f3ea
++  crates/features/approve/src/reject/worktree.rs: sha256:0ad9fa3d27c612e3d72b1d771ec74abf5bfafb9d653a7a668ea4c15377c06a11
++  crates/features/approve/tests/approve_archived_lookup.rs: sha256:acf050429e7431357dd783ad87ef833138c9dde8db92b9a91bda3906afeff6b2
++  crates/features/approve/tests/approve_default_branch.rs: sha256:bef747d8368a7d23c9546bef000485a2d5db0128c5e424bf46c01f7d7fb71f4f
++  crates/features/approve/tests/approve_steered.rs: sha256:afe52244fe42abcc6068de245974b7b0d46ebf1d7174e4400e085baf93690be6
++  crates/features/approve/tests/approve_steering.rs: sha256:1ab0d9971c19253059a4fb4c19d25b1814f76f69150d9016cb2bc8224eb4bff0
++  crates/features/approve/tests/fixtures/default-branch-golden/git-off-001.txt: sha256:7d640b2f50b08e3c61999276d42f41df2c19c7221a92584f35fddbff83b9e874
++  crates/features/approve/tests/fixtures/default-branch-golden/merge-001.txt: sha256:25525f02319a5279e87e1e87c24531129fd8577e7593ede4823f40792dcf0784
++  crates/features/approve/tests/fixtures/default-branch-golden/merge-noedit-001.txt: sha256:0aa729a376f1c6befc33eff6411f6dbe15485fe2f62fa30c30db5591fb754096
++  crates/features/approve/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt: sha256:269907a1af2d404e96e615827d3a07ae08422ea9a261b91879287adf194914fd
++  crates/features/approve/tests/fixtures/default-branch-golden/requirement-001.txt: sha256:db6fe5895d40adadc9ed3c12909008bfcb4d2a29f823e84e8f51e0ca4302b5e9
++original_scope_hash: sha256:35f603e616de6b927f6ad8f02fbe97b4c381185c09bfb09a529788ddebc742e5
++recertified_at: 2026-10-25T18:17:46.218Z
++recertification_count: 1
+ ---
+ 2026-10-25T17:57:10.294Z
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/3.jsonl b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/3.jsonl
+index 2b0a84c99..51b00e184 100644
+--- a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/3.jsonl
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/3.jsonl
+@@ -242,3 +242,5 @@
+ {"type":"verify_ran","timestamp":"2026-10-25T17:52:54.294Z","data":{"command":"cargo test -p osq-feature-approve --test approve_default_branch --test approve_archived_lookup --test approve_steering --test approve_steered --test approve_lookup --test approve_worktree","exitCode":0,"duration":1.84,"log":".run/logs/3-2.log","output":"test a_done_marker_without_a_numeric_id_is_kept ... ok\ntest living_specs_follow_the_default_branch ... ok\ntest approval_stops_are_recorded ... ok\ntest default_branch_worktree_approvals ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s\n\n     Running tests/approve_lookup.rs (target/debug/deps/approve_lookup-22b89798fcb9d744)\n\nrunning 1 test\ntest approved_folder_for_a_query ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/approve_steered.rs (target/debug/deps/approve_steered-b691378c8e4f3de7)\n\nrunning 3 tests\ntest commit_that_landed_is_kept ... ok\ntest steered_worktree_approvals ... ok\ntest steered_worktree_refusals ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s\n\n     Running tests/approve_steering.rs (target/debug/deps/approve_steering-f581d80c3f510ced)\n\nrunning 1 test\ntest steering_triggers ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/approve_worktree.rs (target/debug/deps/approve_worktree-a791d7a0665b0fb1)\n\nrunning 5 tests\ntest unreadable_config ... ok\ntest git_off_approves_in_the_checkout ... ok\ntest stacked_copy_removed ... ok\ntest prepare_failure_rolls_back ... ok\ntest worktree_approvals_equal_typescript ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s"}}
+ {"type":"measures","timestamp":"2026-10-25T17:57:10.268Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":37,"scopeLines":3618,"repoFiles":13577,"repoLines":1071508,"importFanIn":0,"proposalWords":1180,"taskWords":736,"deltaRequirements":8,"deltaScenarios":20,"dependencies":{"crates/features/approve/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-harnesses","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","serde_json"]},"changedFiles":16,"changedLines":2240,"scopeHashes":{"crates/features/approve/Cargo.toml":{"before":"sha256:1940fc7c807f8384da28a64b209028af0189034bec717f4d3b03a881abc01d3d","after":"sha256:885f2204a6c208e330b73fdbaf99390f89f3e3a57d9c5ef2bfa3e68bffdb290a"},"crates/features/approve/src/approve.rs":{"before":"sha256:090ddba5e5e496151c2f64ab781f6ac0df929e0312dc87e656e09a0f232a3974","after":"sha256:28bfd988841686c612d170fee46504c77fb69ea2afafa87eecc4193af23e10f2"},"crates/features/approve/src/approve/find.rs":{"before":"sha256:60859d020ccd4c81892e712c5bea93c725d183f5e26b9d3c22b042abd1871d3a","after":"sha256:60859d020ccd4c81892e712c5bea93c725d183f5e26b9d3c22b042abd1871d3a"},"crates/features/approve/src/approve/lint.rs":{"before":"sha256:5d3bb7db4d3cb8a0cf4561c62e715a8ab2564fe998c99397b7d048366b5087b6","after":"sha256:5d3bb7db4d3cb8a0cf4561c62e715a8ab2564fe998c99397b7d048366b5087b6"},"crates/features/approve/src/approve/lookup.rs":{"before":"sha256:8413040dba05767baa57211915d7b5c2a7bc05fa2a0a7f7077d2a0298015d460","after":"sha256:d754b118a8baf789ed2774226196a662fec1592b5db3db15c9d9b688b3c9854b"},"crates/features/approve/src/approve/refuse.rs":{"before":"sha256:a1c1b979a6924fde04fe22708a57e45e8fcdbe3161e2f209595b559fb82a0c2a","after":"sha256:a1c1b979a6924fde04fe22708a57e45e8fcdbe3161e2f209595b559fb82a0c2a"},"crates/features/approve/src/approve/refuse/kept.rs":{"before":"sha256:21bdccb3e7973517e4e3bebcde9c493156552f2aeebdbb55cbfd9f1e766936f1","after":"sha256:21bdccb3e7973517e4e3bebcde9c493156552f2aeebdbb55cbfd9f1e766936f1"},"crates/features/approve/src/approve/refuse/text.rs":{"before":"sha256:4e9534b41e705d2a43ac35b99e336892753832e8cf08061f52e2a6026f03261b","after":"sha256:4e9534b41e705d2a43ac35b99e336892753832e8cf08061f52e2a6026f03261b"},"crates/features/approve/src/approve/stack.rs":{"before":"sha256:1f0dd8c1d9310fda23128b8b55d5c3e17ae51d80d534dc4cd25e95f46f8228bd","after":"sha256:1f0dd8c1d9310fda23128b8b55d5c3e17ae51d80d534dc4cd25e95f46f8228bd"},"crates/features/approve/src/approve/stack/approve.rs":{"before":"sha256:85adbb6d6e9257ee7785e93fd66e3dbda566e1cded2852d5789c57e4ce3bce13","after":"sha256:85adbb6d6e9257ee7785e93fd66e3dbda566e1cded2852d5789c57e4ce3bce13"},"crates/features/approve/src/approve/stack/capabilities.rs":{"before":"sha256:19d2f537044c494e84e45c86946e83e0d4594669b4c36668d18b84bc616130cb","after":"sha256:19d2f537044c494e84e45c86946e83e0d4594669b4c36668d18b84bc616130cb"},"crates/features/approve/src/approve/stack/changes.rs":{"before":"sha256:1d7f023ff465c7e8639bb14eba93083fff697e16692ab9cb75b12d53a9ab47ce","after":"sha256:1d7f023ff465c7e8639bb14eba93083fff697e16692ab9cb75b12d53a9ab47ce"},"crates/features/approve/src/approve/stack/select.rs":{"before":"sha256:54dcebf3ba5b89489dcf79c29a8813ee607e3e4141a6288710c8d6403588679a","after":"sha256:54dcebf3ba5b89489dcf79c29a8813ee607e3e4141a6288710c8d6403588679a"},"crates/features/approve/src/approve/stack/state.rs":{"before":"sha256:62e5a96789ac0210f6dbea14d5caca51eb5fc15874afb4d1bee020eabfedf722","after":"sha256:62e5a96789ac0210f6dbea14d5caca51eb5fc15874afb4d1bee020eabfedf722"},"crates/features/approve/src/approve/stack/text.rs":{"before":"sha256:a78fc0b0195477ecd9135658d9d178bc176da32f30b1567b41ef0ec0d5925b52","after":"sha256:a78fc0b0195477ecd9135658d9d178bc176da32f30b1567b41ef0ec0d5925b52"},"crates/features/approve/src/approve/steered.rs":{"before":"sha256:36de3dd3c2265dd01d074c9cd460121ff967ddd414d9f0997caefa515acf552e","after":"sha256:0fc490c955f2f91a729fb353194cf1fbad091d97a7bd8ee7747ecc2b38c448c1"},"crates/features/approve/src/approve/steering.rs":{"before":"sha256:455f128f93bc40a0e4071cdf3eea371c8839a53d12d8cf0486fd910cd340830b","after":"sha256:455f128f93bc40a0e4071cdf3eea371c8839a53d12d8cf0486fd910cd340830b"},"crates/features/approve/src/approve/text.rs":{"before":"sha256:8c677abd9e244bea3afb0902c9b3f31ce4119c97639fa2910ce41217be81d6f6","after":"sha256:d1d6f941d2012abcc393bc17491ab16cc94f4978ea42718bb5c0e5487fae572c"},"crates/features/approve/src/approve/worktree.rs":{"before":"sha256:6e13f4a075b9fc69b85ae6ac5e73ecdafe81a073d3d117f782f199e42b76a9c6","after":"sha256:ae999d5115b3ca590c7572086c07e3689e744cc3384832360a84a3c252a7e79f"},"crates/features/approve/src/approve/worktree/copy.rs":{"before":"sha256:6b2b79f4d23b946e247c5789a451d6791b0c68f8e53058bf00828c4a8d93dff5","after":"sha256:6b2b79f4d23b946e247c5789a451d6791b0c68f8e53058bf00828c4a8d93dff5"},"crates/features/approve/src/approve/worktree/markers.rs":{"before":"sha256:d47de3779f4909a2fb3297ad439c9c630e0ebe953c59ffa80a44e5d693d0faf6","after":"sha256:d47de3779f4909a2fb3297ad439c9c630e0ebe953c59ffa80a44e5d693d0faf6"},"crates/features/approve/src/approve/worktree/path.rs":{"before":"sha256:359ac60e67113ecf69c86c1730628da72553209301b7ab2bdd9931306754697f","after":"sha256:359ac60e67113ecf69c86c1730628da72553209301b7ab2bdd9931306754697f"},"crates/features/approve/src/approve/worktree/prepare.rs":{"before":"sha256:36855d1516d8c0bbc61213406fa67c8aabcac0a9a8beddfe1059685feb20b71c","after":"sha256:36855d1516d8c0bbc61213406fa67c8aabcac0a9a8beddfe1059685feb20b71c"},"crates/features/approve/src/approve/worktree/record.rs":{"before":"sha256:ec01b8e842e50ac40a871dddac4dd4a7f2c67f08123456c244f1a29037b34133","after":"sha256:ec01b8e842e50ac40a871dddac4dd4a7f2c67f08123456c244f1a29037b34133"},"crates/features/approve/src/approve/worktree/text.rs":{"before":"sha256:f9afaba5f9b596060a1853a0c95e4ccaccae46d79805456a20ddc38ddaf09ea2","after":"sha256:f9afaba5f9b596060a1853a0c95e4ccaccae46d79805456a20ddc38ddaf09ea2"},"crates/features/approve/src/feature.rs":{"before":"sha256:74d959ea4d90a0292ef1ccad1a68edcef2e2a7107e7e2dc1750584a6e32232c8","after":"sha256:74d959ea4d90a0292ef1ccad1a68edcef2e2a7107e7e2dc1750584a6e32232c8"},"crates/features/approve/src/lib.rs":{"before":"sha256:c04e4c51b724462fadfd6decc24967e93bb02523644ee0b54756f11b547fd921","after":"sha256:c04e4c51b724462fadfd6decc24967e93bb02523644ee0b54756f11b547fd921"},"crates/features/approve/src/reject.rs":{"before":"sha256:300b06e9f13a8139100272d39746ae411b1ffc71acc3e3d953ca98545fc2b301","after":"sha256:300b06e9f13a8139100272d39746ae411b1ffc71acc3e3d953ca98545fc2b301"},"crates/features/approve/src/reject/args.rs":{"before":"sha256:337512389178995dfcc50b7a4e8c4d4ade9b169a6428d1c492bf831ac51c32cd","after":"sha256:337512389178995dfcc50b7a4e8c4d4ade9b169a6428d1c492bf831ac51c32cd"},"crates/features/approve/src/reject/eligibility.rs":{"before":"sha256:64df4c89c84a5e00d8bef4043262a01699aa040fabf0a6e9aa95ac123aa8580c","after":"sha256:64df4c89c84a5e00d8bef4043262a01699aa040fabf0a6e9aa95ac123aa8580c"},"crates/features/approve/src/reject/markers.rs":{"before":"sha256:72d2fc649d0758d929c2a42316417588f0c1e3d8bb0daf2118f38040e2ecc878","after":"sha256:72d2fc649d0758d929c2a42316417588f0c1e3d8bb0daf2118f38040e2ecc878"},"crates/features/approve/src/reject/record.rs":{"before":"sha256:643fbbb194bb36f6e28dcb8c351962a43f09a4c83a7e30248b4816ded71f59a6","after":"sha256:643fbbb194bb36f6e28dcb8c351962a43f09a4c83a7e30248b4816ded71f59a6"},"crates/features/approve/src/reject/text.rs":{"before":"sha256:f0802337aeb64f2f7ce49f9e566a8cf4fcfc6bcc98caf8c2152721fd6997164d","after":"sha256:f0802337aeb64f2f7ce49f9e566a8cf4fcfc6bcc98caf8c2152721fd6997164d"},"crates/features/approve/src/reject/time.rs":{"before":"sha256:5ccb21e93037e20ed22f83b0cb4bec87c671ed27c05aff7c5e0d77963438f3ea","after":"sha256:5ccb21e93037e20ed22f83b0cb4bec87c671ed27c05aff7c5e0d77963438f3ea"},"crates/features/approve/src/reject/worktree.rs":{"before":"sha256:0ad9fa3d27c612e3d72b1d771ec74abf5bfafb9d653a7a668ea4c15377c06a11","after":"sha256:0ad9fa3d27c612e3d72b1d771ec74abf5bfafb9d653a7a668ea4c15377c06a11"},"crates/features/approve/tests/approve_archived_lookup.rs":{"before":null,"after":"sha256:acf050429e7431357dd783ad87ef833138c9dde8db92b9a91bda3906afeff6b2"},"crates/features/approve/tests/approve_default_branch.rs":{"before":null,"after":"sha256:bef747d8368a7d23c9546bef000485a2d5db0128c5e424bf46c01f7d7fb71f4f"},"crates/features/approve/tests/approve_steered.rs":{"before":"sha256:55a2eb26c415605de4f29a827f5d995a9383352e8692a7235d88d8e74cb9f8e0","after":"sha256:afe52244fe42abcc6068de245974b7b0d46ebf1d7174e4400e085baf93690be6"},"crates/features/approve/tests/approve_steering.rs":{"before":"sha256:6f79574e7b0f4a3ecaa0da507f3d17a8a40535a36f5c0506bd65473b2cdc75a8","after":"sha256:1ab0d9971c19253059a4fb4c19d25b1814f76f69150d9016cb2bc8224eb4bff0"},"crates/features/approve/src/approve/default_branch.rs":{"before":null,"after":"sha256:bf45425c3ae1b08de619da7c0cd8388e1ba939515473e4560bc92a7029f27ff2"},"crates/features/approve/tests/fixtures/default-branch-golden/git-off-001.txt":{"before":null,"after":"sha256:7d640b2f50b08e3c61999276d42f41df2c19c7221a92584f35fddbff83b9e874"},"crates/features/approve/tests/fixtures/default-branch-golden/merge-001.txt":{"before":null,"after":"sha256:25525f02319a5279e87e1e87c24531129fd8577e7593ede4823f40792dcf0784"},"crates/features/approve/tests/fixtures/default-branch-golden/merge-noedit-001.txt":{"before":null,"after":"sha256:0aa729a376f1c6befc33eff6411f6dbe15485fe2f62fa30c30db5591fb754096"},"crates/features/approve/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt":{"before":null,"after":"sha256:269907a1af2d404e96e615827d3a07ae08422ea9a261b91879287adf194914fd"},"crates/features/approve/tests/fixtures/default-branch-golden/requirement-001.txt":{"before":null,"after":"sha256:db6fe5895d40adadc9ed3c12909008bfcb4d2a29f823e84e8f51e0ca4302b5e9"}}}}
+ {"type":"done","timestamp":"2026-10-25T17:57:10.295Z","data":{"task":"3"}}
++{"type":"verify_ran","timestamp":"2026-10-25T18:17:46.212Z","data":{"command":"cargo test -p osq-feature-approve --test approve_default_branch --test approve_archived_lookup --test approve_steering --test approve_steered --test approve_lookup --test approve_worktree","exitCode":0,"duration":1.98,"log":".run/logs/3-3.log","output":"test default_branch_refusals ... ok\ntest a_done_marker_without_a_numeric_id_is_kept ... ok\ntest approval_stops_are_recorded ... ok\ntest default_branch_worktree_approvals ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s\n\n     Running tests/approve_lookup.rs (target/debug/deps/approve_lookup-22b89798fcb9d744)\n\nrunning 1 test\ntest approved_folder_for_a_query ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/approve_steered.rs (target/debug/deps/approve_steered-b691378c8e4f3de7)\n\nrunning 3 tests\ntest commit_that_landed_is_kept ... ok\ntest steered_worktree_approvals ... ok\ntest steered_worktree_refusals ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s\n\n     Running tests/approve_steering.rs (target/debug/deps/approve_steering-f581d80c3f510ced)\n\nrunning 1 test\ntest steering_triggers ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s\n\n     Running tests/approve_worktree.rs (target/debug/deps/approve_worktree-a791d7a0665b0fb1)\n\nrunning 5 tests\ntest unreadable_config ... ok\ntest git_off_approves_in_the_checkout ... ok\ntest stacked_copy_removed ... ok\ntest prepare_failure_rolls_back ... ok\ntest worktree_approvals_equal_typescript ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s"}}
++{"type":"recertification","timestamp":"2026-10-25T18:17:46.223Z","data":{"task":"3","outcome":"passed","differingPaths":["crates/features/approve/src/approve/default_branch.rs (modified)","crates/features/approve/src/approve/default_branch/conflict.rs (added)","crates/features/approve/src/approve/text.rs (modified)"],"attribution":[{"path":"crates/features/approve/src/approve/default_branch.rs (modified)","attribution":"4"},{"path":"crates/features/approve/src/approve/default_branch/conflict.rs (added)","attribution":"4"},{"path":"crates/features/approve/src/approve/text.rs (modified)","attribution":"4"}],"command":"cargo test -p osq-feature-approve --test approve_default_branch --test approve_archived_lookup --test approve_steering --test approve_steered --test approve_lookup --test approve_worktree","exitCode":0,"output":"test default_branch_refusals ... ok\ntest a_done_marker_without_a_numeric_id_is_kept ... ok\ntest approval_stops_are_recorded ... ok\ntest default_branch_worktree_approvals ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s\n\n     Running tests/approve_lookup.rs (target/debug/deps/approve_lookup-22b89798fcb9d744)\n\nrunning 1 test\ntest approved_folder_for_a_query ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/approve_steered.rs (target/debug/deps/approve_steered-b691378c8e4f3de7)\n\nrunning 3 tests\ntest commit_that_landed_is_kept ... ok\ntest steered_worktree_approvals ... ok\ntest steered_worktree_refusals ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s\n\n     Running tests/approve_steering.rs (target/debug/deps/approve_steering-f581d80c3f510ced)\n\nrunning 1 test\ntest steering_triggers ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s\n\n     Running tests/approve_worktree.rs (target/debug/deps/approve_worktree-a791d7a0665b0fb1)\n\nrunning 5 tests\ntest unreadable_config ... ok\ntest git_off_approves_in_the_checkout ... ok\ntest stacked_copy_removed ... ok\ntest prepare_failure_rolls_back ... ok\ntest worktree_approvals_equal_typescript ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s","timedOut":false,"recordedHash":"sha256:35f603e616de6b927f6ad8f02fbe97b4c381185c09bfb09a529788ddebc742e5","currentHash":"sha256:51249af6828976b78bbd0e1fa31bd1c44e19422b7a9f0be1d9e704e0818e1efb","automatic":true}}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/5.jsonl b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/5.jsonl
+new file mode 100644
+index 000000000..230be808d
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/5.jsonl
+@@ -0,0 +1,97 @@
++{"type":"verify_ran","timestamp":"2026-10-25T18:17:49.892Z","data":{"command":"cargo test -p osq-cli --test approve_default_branch --test approve_steered --test dispatch","exitCode":101,"duration":0.18,"log":".run/logs/5-1.log","output":"error: no test target named `approve_default_branch` in `osq-cli` package\nhelp: available test in `osq-feature-approve` package:\n    approve_default_branch\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-25T18:17:50.040Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":13593,"repoLines":1075075,"importFanIn":0,"proposalWords":1180,"taskWords":264,"deltaRequirements":8,"deltaScenarios":20}}
++{"type":"started","timestamp":"2026-10-25T18:17:50.395Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"35b4b0a0","pid":1204679,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"38b5f686"}}
++{"type":"text","timestamp":"2026-10-25T18:17:52.202Z","data":{"text":"I'll start by reading the task file and related context."}}
++{"type":"tokens","timestamp":"2026-10-25T18:17:52.202Z","data":{"promptTokens":6256,"candidateTokens":177,"totalTokens":10657,"cachedTokens":4224,"reasoningTokens":0,"cost":0.002114544,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:52.203Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/ta"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:52.204Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/pr"}}
++{"type":"tokens","timestamp":"2026-10-25T18:17:53.889Z","data":{"promptTokens":2770,"candidateTokens":207,"totalTokens":13601,"cachedTokens":10624,"reasoningTokens":0,"cost":0.0011431439999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:53.889Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:53.891Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/sp"}}
++{"type":"tokens","timestamp":"2026-10-25T18:17:55.639Z","data":{"promptTokens":1010,"candidateTokens":212,"totalTokens":14790,"cachedTokens":13568,"reasoningTokens":32,"cost":0.000638808,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:55.639Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/go"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:55.641Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/go"}}
++{"type":"tokens","timestamp":"2026-10-25T18:17:57.386Z","data":{"promptTokens":5287,"candidateTokens":166,"totalTokens":20173,"cachedTokens":14720,"reasoningTokens":0,"cost":0.00187362,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:57.386Z","data":{"tool":"read","summary":"openspec/changes/347-rust-approve-default-branch-steering/go"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:57.386Z","data":{"tool":"read","summary":"crates/apps/cli/tests/approve_steered.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T18:17:59.256Z","data":{"promptTokens":5193,"candidateTokens":225,"totalTokens":25514,"cachedTokens":20096,"reasoningTokens":40,"cost":0.001948476,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:59.257Z","data":{"tool":"read","summary":"crates/features/approve/tests/approve_conflict_reopen.rs"}}
++{"type":"tool","timestamp":"2026-10-25T18:17:59.257Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:01.548Z","data":{"promptTokens":8113,"candidateTokens":357,"totalTokens":33942,"cachedTokens":25472,"reasoningTokens":138,"cost":0.003015132,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:01.549Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:01.549Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:03.386Z","data":{"promptTokens":1721,"candidateTokens":167,"totalTokens":35808,"cachedTokens":33920,"reasoningTokens":80,"cost":0.00092022,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:03.387Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:08.194Z","data":{"promptTokens":3794,"candidateTokens":870,"totalTokens":40376,"cachedTokens":35712,"reasoningTokens":578,"cost":0.002396472,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:08.195Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:08.195Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:10.525Z","data":{"promptTokens":2543,"candidateTokens":261,"totalTokens":43124,"cachedTokens":40320,"reasoningTokens":181,"cost":0.00131802,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:10.525Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:15.702Z","data":{"promptTokens":1521,"candidateTokens":799,"totalTokens":45328,"cachedTokens":43008,"reasoningTokens":590,"cost":0.0016731479999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:15.703Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:15.704Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:17.874Z","data":{"promptTokens":3472,"candidateTokens":238,"totalTokens":49022,"cachedTokens":45312,"reasoningTokens":10,"cost":0.001599072,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:17.874Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:17.877Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:27.721Z","data":{"promptTokens":1996,"candidateTokens":1664,"totalTokens":52556,"cachedTokens":48896,"reasoningTokens":1452,"cost":0.002888976,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:27.721Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:29.540Z","data":{"promptTokens":725,"candidateTokens":176,"totalTokens":53381,"cachedTokens":52480,"reasoningTokens":90,"cost":0.00074358,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:29.541Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:33.956Z","data":{"promptTokens":2526,"candidateTokens":634,"totalTokens":56536,"cachedTokens":53376,"reasoningTokens":532,"cost":0.0018388559999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:33.956Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:35.969Z","data":{"promptTokens":2119,"candidateTokens":165,"totalTokens":58732,"cachedTokens":56448,"reasoningTokens":59,"cost":0.001172388,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:35.970Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:44.841Z","data":{"promptTokens":1221,"candidateTokens":1397,"totalTokens":61242,"cachedTokens":58624,"reasoningTokens":1261,"cost":0.002394444,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:44.841Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:54.744Z","data":{"promptTokens":765,"candidateTokens":1677,"totalTokens":63626,"cachedTokens":61184,"reasoningTokens":1573,"cost":0.002609004,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:54.745Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:56.404Z","data":{"promptTokens":152,"candidateTokens":103,"totalTokens":63743,"cachedTokens":63488,"reasoningTokens":0,"cost":0.000550128,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:56.404Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:18:57.973Z","data":{"promptTokens":400,"candidateTokens":81,"totalTokens":64097,"cachedTokens":63616,"reasoningTokens":0,"cost":0.000598896,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:18:57.973Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:07.333Z","data":{"promptTokens":1877,"candidateTokens":1530,"totalTokens":67407,"cachedTokens":64000,"reasoningTokens":1389,"cost":0.0027831,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:07.333Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:15.160Z","data":{"promptTokens":430,"candidateTokens":1271,"totalTokens":69029,"cachedTokens":67328,"reasoningTokens":1178,"cost":0.002058168,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:15.160Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:16.979Z","data":{"promptTokens":1139,"candidateTokens":135,"totalTokens":70266,"cachedTokens":68992,"reasoningTokens":23,"cost":0.0009176519999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:16.979Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:19.510Z","data":{"promptTokens":1240,"candidateTokens":306,"totalTokens":71690,"cachedTokens":70144,"reasoningTokens":219,"cost":0.001160064,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:19.510Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:22.209Z","data":{"promptTokens":668,"candidateTokens":306,"totalTokens":72654,"cachedTokens":71680,"reasoningTokens":214,"cost":0.00099768,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:22.210Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:19:25.772Z","data":{"promptTokens":564,"candidateTokens":359,"totalTokens":73499,"cachedTokens":72576,"reasoningTokens":233,"cost":0.001035456,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:19:25.772Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:04.455Z","data":{"promptTokens":164,"candidateTokens":7587,"totalTokens":81223,"cachedTokens":73472,"reasoningTokens":7502,"cost":0.009594432,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:04.456Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:31.120Z","data":{"promptTokens":761,"candidateTokens":8446,"totalTokens":90359,"cachedTokens":81152,"reasoningTokens":259,"cost":0.010850412,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:31.120Z","data":{"tool":"write","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
++{"type":"file_changed","timestamp":"2026-10-25T18:20:31.123Z","data":{"path":"crates/apps/cli/tests/approve_default_branch.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:34.852Z","data":{"promptTokens":175,"candidateTokens":657,"totalTokens":91072,"cachedTokens":90240,"reasoningTokens":103,"cost":0.0013823400000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:34.853Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
++{"type":"file_changed","timestamp":"2026-10-25T18:20:34.859Z","data":{"path":"crates/apps/cli/tests/approve_default_branch.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:36.660Z","data":{"promptTokens":253,"candidateTokens":140,"totalTokens":91273,"cachedTokens":90880,"reasoningTokens":24,"cost":0.00078918,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:36.661Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:47.289Z","data":{"promptTokens":1366,"candidateTokens":833,"totalTokens":93463,"cachedTokens":91264,"reasoningTokens":476,"cost":0.001956984,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:47.289Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
++{"type":"file_changed","timestamp":"2026-10-25T18:20:47.291Z","data":{"path":"crates/apps/cli/tests/approve_default_branch.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:49.230Z","data":{"promptTokens":212,"candidateTokens":158,"totalTokens":93682,"cachedTokens":93312,"reasoningTokens":42,"cost":0.000813072,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:49.230Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:53.878Z","data":{"promptTokens":850,"candidateTokens":449,"totalTokens":94867,"cachedTokens":93568,"reasoningTokens":124,"cost":0.0013552079999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:53.878Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
++{"type":"file_changed","timestamp":"2026-10-25T18:20:53.880Z","data":{"path":"crates/apps/cli/tests/approve_default_branch.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:55.445Z","data":{"promptTokens":208,"candidateTokens":119,"totalTokens":95047,"cachedTokens":94720,"reasoningTokens":3,"cost":0.00077352,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:55.446Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:20:59.704Z","data":{"promptTokens":461,"candidateTokens":217,"totalTokens":95654,"cachedTokens":94976,"reasoningTokens":100,"cost":0.000968556,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:20:59.704Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:23:08.261Z","data":{"promptTokens":1517,"candidateTokens":534,"totalTokens":97667,"cachedTokens":95616,"reasoningTokens":405,"cost":0.0016695959999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:23:08.262Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
++{"type":"tokens","timestamp":"2026-10-25T18:23:12.503Z","data":{"promptTokens":164,"candidateTokens":696,"totalTokens":98396,"cachedTokens":97536,"reasoningTokens":121,"cost":0.001469616,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T18:23:12.504Z","data":{"tool":"write","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
++{"type":"file_changed","timestamp":"2026-10-25T18:23:12.504Z","data":{"path":"openspec/changes/347-rust-approve-default-branch-steering/.run/results/5.md"}}
++{"type":"text","timestamp":"2026-10-25T18:23:15.466Z","data":{"text":"Task complete.\n\n- Copied the goldens unchanged into `crates/apps/cli/tests/fixtures/default-branch-golden/`.\n- Added `crates/apps/cli/tests/approve_default_branch.rs`, covering both CLI scenarios through `run_cli` with the registry's features.\n- Task verify passed: `cargo test -p osq-cli --test approve_default_branch --test approve_steered --test dispatch`.\n- Proposal verify passed: `OSQ_CHANGE=openspec/changes/347-rust-approve-default-branch-steering sh scripts/verify-rust.sh`.\n- Wrote the result file at `openspec/changes/347-rust-approve-default-branch-steering/.run/results/5.md`."}}
++{"type":"tokens","timestamp":"2026-10-25T18:23:15.466Z","data":{"promptTokens":157,"candidateTokens":325,"totalTokens":98786,"cachedTokens":98304,"reasoningTokens":160,"cost":0.001026924,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-25T18:23:15.493Z","data":{"exitCode":0,"pid":1204679,"timedOut":false,"elapsedSeconds":325.1}}
++{"type":"format_ran","timestamp":"2026-10-25T18:23:18.708Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/apps/cli/tests/approve_default_branch.rs' 'crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt' 'crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt' 'crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt' 'crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt' 'crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt'","files":["crates/apps/cli/tests/approve_default_branch.rs","crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt","crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt","crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt","crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt","crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt"],"exitCode":0,"duration":1.36,"timedOut":false,"output":"Checked 0 files in 849µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-25T18:23:24.315Z","data":{"command":"cargo test -p osq-cli --test approve_default_branch --test approve_steered --test dispatch","exitCode":0,"duration":1.78,"log":".run/logs/5-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s\n     Running tests/approve_default_branch.rs (target/debug/deps/approve_default_branch-1da101ac6e2d64fc)\n\nrunning 2 tests\ntest conflicts_through_the_cli ... ok\ntest default_branch_approvals_equal_typescript ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s\n\n     Running tests/approve_steered.rs (target/debug/deps/approve_steered-ae49e2366e41b3d2)\n\nrunning 1 test\ntest steered_approvals_equal_typescript ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s\n\n     Running tests/dispatch.rs (target/debug/deps/dispatch-60cf42dccfc43c6c)\n\nrunning 7 tests\ntest first_feature_wins ... ok\ntest help_from_the_features_data ... ok\ntest cli_crate_ownership ... ok\ntest registered_features ... ok\ntest unknown_command ... ok\ntest help_lists_every_registered_command ... ok\ntest run_through_the_registry ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"}}
++{"type":"measures","timestamp":"2026-10-25T18:25:21.126Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":13593,"repoLines":1075075,"importFanIn":0,"proposalWords":1180,"taskWords":264,"deltaRequirements":8,"deltaScenarios":20,"changedFiles":6,"changedLines":1382,"scopeHashes":{"crates/apps/cli/tests/approve_default_branch.rs":{"before":null,"after":"sha256:9c1b2ca4305f8ca38dac587766f86cd6369b751a76813de4504f375b3c16a7b8"},"crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt":{"before":null,"after":"sha256:7d640b2f50b08e3c61999276d42f41df2c19c7221a92584f35fddbff83b9e874"},"crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt":{"before":null,"after":"sha256:25525f02319a5279e87e1e87c24531129fd8577e7593ede4823f40792dcf0784"},"crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt":{"before":null,"after":"sha256:0aa729a376f1c6befc33eff6411f6dbe15485fe2f62fa30c30db5591fb754096"},"crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt":{"before":null,"after":"sha256:269907a1af2d404e96e615827d3a07ae08422ea9a261b91879287adf194914fd"},"crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt":{"before":null,"after":"sha256:db6fe5895d40adadc9ed3c12909008bfcb4d2a29f823e84e8f51e0ca4302b5e9"}}}}
++{"type":"dead","timestamp":"2026-10-25T18:25:21.127Z","data":{"task":"5","reason":"change_verify_red"}}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl
+new file mode 100644
+index 000000000..0c18ee87b
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/events/change.jsonl
+@@ -0,0 +1,7 @@
++{"type":"baseline_ran","timestamp":"2026-10-25T17:02:15.990Z","data":{"outcome":"passed","command":"pnpm verify","commit":"7eec5121b6986151857a8644f86e672464b5e65c","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":274.56}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:08:27.797Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":101,"duration":112.56,"log":".run/logs/change-1.log","output":"\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)\n\nrunning 1 test\ntest stacked_folder_paths ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)\n\nrunning 3 tests\ntest directory_outside_any_repository ... ok\ntest unborn_repository ... ok\ntest state_of_the_read_repository ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)\n\nrunning 2 tests\ntest tree_record_without_git ... FAILED\ntest tree_record_path_and_lines ... ok\n\nfailures:\n\n---- tree_record_without_git stdout ----\n\nthread 'tree_record_without_git' (2978898) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:\ncalled `Result::unwrap()` on an `Err` value: Spawn { command: \"target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir\", source: Os { code: 26, kind: ExecutableFileBusy, message: \"Text file busy\" } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    tree_record_without_git\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\nerror: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`"}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:16:08.513Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":146.56,"log":".run/logs/change-2.log","output":"   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 9 mutants to test\nok       Unmutated baseline in 8s build + 0s test\n INFO Auto-set test timeout to 20s\n9 mutants tested in 28s: 5 caught, 4 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:25:32.761Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":154.42,"log":".run/logs/change-3.log","output":"   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 21 mutants to test\nok       Unmutated baseline in 9s build + 1s test\n INFO Auto-set test timeout to 20s\n21 mutants tested in 42s: 17 caught, 4 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-25T17:57:10.234Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":255.91,"log":".run/logs/change-4.log","output":"   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 92 mutants to test\nok       Unmutated baseline in 10s build + 3s test\n INFO Auto-set test timeout to 20s\n92 mutants tested in 2m: 83 caught, 9 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-25T18:17:30.128Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":313.43,"log":".run/logs/change-5.log","output":"   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 125 mutants to test\nok       Unmutated baseline in 11s build + 4s test\n INFO Auto-set test timeout to 22s\n125 mutants tested in 3m: 111 caught, 14 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-25T18:25:21.122Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":101,"duration":116.8,"log":".run/logs/change-6.log","output":"\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)\n\nrunning 1 test\ntest stacked_folder_paths ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)\n\nrunning 3 tests\ntest directory_outside_any_repository ... ok\ntest unborn_repository ... ok\ntest state_of_the_read_repository ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)\n\nrunning 2 tests\ntest tree_record_without_git ... FAILED\ntest tree_record_path_and_lines ... ok\n\nfailures:\n\n---- tree_record_without_git stdout ----\n\nthread 'tree_record_without_git' (1280961) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:\ncalled `Result::unwrap()` on an `Err` value: Spawn { command: \"target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir\", source: Os { code: 26, kind: ExecutableFileBusy, message: \"Text file busy\" } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    tree_record_without_git\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\nerror: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`"}}
+diff --git a/openspec/changes/347-rust-approve-default-branch-steering/.run/results/5.md b/openspec/changes/347-rust-approve-default-branch-steering/.run/results/5.md
+new file mode 100644
+index 000000000..d0696d94f
+--- /dev/null
++++ b/openspec/changes/347-rust-approve-default-branch-steering/.run/results/5.md
+@@ -0,0 +1,12 @@
++## Changed
++
++- Copied the five files of `openspec/changes/347-rust-approve-default-branch-steering/golden/` unchanged into `crates/apps/cli/tests/fixtures/default-branch-golden/`.
++- Added `crates/apps/cli/tests/approve_default_branch.rs`:
++  - "Default-branch approvals equal TypeScript's" builds the four goldens' scratch repositories from `tests/fixtures/steered-repo` as `print-default-branch-goldens.mjs.txt` does, runs `approve 1` through `run_cli` with the registry's `features()`, and compares stdout, commits, branches, the tree record and the change folder's `.run/` tree with the golden, leaving out the delivery cursor and `approved` event lines and accepting any `synced` duration.
++  - "Conflicts through the CLI" builds `src/beta.js` and `src/delta.js` conflict cases with done tasks 1, 2 and 3, then checks the reopened tasks and retired trigger for beta and the planning stop, kept trigger, no-retry events and done markers for delta.
++
++## Deviated
++
++- The conflict cases write the same valid pre-main done marker for every task instead of recomputing each task's scope hash. The scenario checks marker presence after the run, and a marker whose scope differs is recertified; this also avoids adding `osq-kernel-storage` as a dependency of the CLI test target, which is outside the task's scope.
++
++Touched: crates/apps/cli/tests/approve_default_branch.rs, crates/apps/cli/tests/fixtures/default-branch-golden/git-off-001.txt, crates/apps/cli/tests/fixtures/default-branch-golden/merge-001.txt, crates/apps/cli/tests/fixtures/default-branch-golden/merge-noedit-001.txt, crates/apps/cli/tests/fixtures/default-branch-golden/print-default-branch-goldens.mjs.txt, crates/apps/cli/tests/fixtures/default-branch-golden/requirement-001.txt

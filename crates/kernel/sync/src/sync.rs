@@ -50,6 +50,8 @@ struct Sync<'a> {
     change_rel: String,
     /// The default branch the sync merges.
     default_branch: &'a str,
+    /// The conflicted paths the caller resolves to the default branch.
+    listed: &'a [String],
     /// The change stream's path in the change folder.
     events: PathBuf,
     /// The change stream's bytes before the sync, or none when it was absent.
@@ -71,7 +73,7 @@ struct Sync<'a> {
 }
 
 /// Syncs one change of either kind, giving the outcome its caller sees.
-pub(crate) fn run(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
+pub(crate) fn run(request: &SyncRequest<'_>, paths: &[String]) -> Result<SyncOutcome, SyncStop> {
     let vcs = GitVcs::new(request.worktree).with_timeouts(request.timeouts);
     let head = vcs.head().map_err(|error| failed(error.to_string()))?.sha;
     if let Some(head) = head.as_deref() {
@@ -97,6 +99,7 @@ pub(crate) fn run(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
         change,
         change_rel,
         default_branch: request.default_branch,
+        listed: paths,
         events,
         kept_events,
         picked: Vec::new(),
@@ -149,6 +152,10 @@ impl Sync<'_> {
             MergeOutcome::Clean => Vec::new(),
             MergeOutcome::Conflict { paths } => paths,
         };
+        let conflicts = match self.take_default(&conflicts) {
+            Ok(conflicts) => conflicts,
+            Err(stop) => return Err(self.finish(&stop)),
+        };
         if let Some(stop) = text::conflict_stop(self.folder, self.default_branch, &conflicts) {
             return Err(self.finish(&stop));
         }
@@ -156,6 +163,31 @@ impl Sync<'_> {
             Ok(commit) => Ok(SyncOutcome::Synced { commit }),
             Err(stop) => Err(self.finish(&stop)),
         }
+    }
+
+    /// Resolves every listed conflicted path to the default branch's version.
+    ///
+    /// # Errors
+    ///
+    /// Returns the stop a git read or write or a file write raises.
+    fn take_default(&self, conflicts: &[String]) -> Result<Vec<String>, Stop> {
+        let mut remaining = Vec::new();
+        for conflict in conflicts {
+            if !self.listed.iter().any(|path| path == conflict) {
+                remaining.push(conflict.clone());
+                continue;
+            }
+            let content = self
+                .vcs
+                .show(self.default_branch, conflict)
+                .map_err(|error| Stop::vcs(&error))?;
+            files::write_or_remove(&self.worktree.join(conflict), content.as_deref())
+                .map_err(|error| Stop::failed(error.to_string()))?;
+            self.vcs
+                .stage(&[conflict.as_str()])
+                .map_err(|error| Stop::vcs(&error))?;
+        }
+        Ok(remaining)
     }
 
     /// Steps 3 through 6 of a started merge, giving the sync commit.

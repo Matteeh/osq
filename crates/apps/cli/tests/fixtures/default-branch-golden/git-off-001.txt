@@ -1,0 +1,37 @@
+outcome: output
+Approved 001 (001-alpha-twice)
+  Hash: sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
+commits:
+none
+branches:
+none
+record:
+tree:
+--- .run/approved
+sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
+--- .run/done/1
+---
+scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
+scope_files:
+  src/alpha/index.js: sha256:66aebacd1be118f36b5d94774f5d48dda30e28391c410914ecb0384a58e1cf5a
+scope_resolver: 2
+---
+2026-10-20T08:00:00.000Z
+--- .run/events/change.jsonl
+{"data":{"attempt":2,"reason":"sync_conflict","target":"change"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/change.1.md
+---
+reason: sync_conflict
+---
+sync_conflict on main
+status:
+?? openspec/changes/001-alpha-twice/.run/approved
+?? openspec/changes/001-alpha-twice/.run/done/1
+?? openspec/changes/001-alpha-twice/.run/events/change.jsonl
+?? openspec/changes/001-alpha-twice/.run/manifest.json
+?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md
+?? openspec/changes/001-alpha-twice/plan-prompt.md
+?? openspec/changes/001-alpha-twice/proposal.md
+?? openspec/changes/001-alpha-twice/specs/alpha/spec.md
+?? openspec/changes/001-alpha-twice/tasks.md
+?? openspec/changes/001-alpha-twice/tasks/1.md

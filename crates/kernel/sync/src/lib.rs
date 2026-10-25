@@ -95,8 +95,27 @@ pub struct SyncStop {
 /// sync's own writes.
 ///
 /// Implements: rust-sync/sync-change
+/// Implements: rust-sync/default-branch-resolution
 pub fn sync_change(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
-    sync::run(request)
+    sync_change_taking_default(request, &[])
+}
+
+/// Takes the default branch in, resolving the listed conflicted paths to it.
+///
+/// A path in `paths` that conflicts keeps the default branch's version; every
+/// other conflict still stops the sync.
+///
+/// # Errors
+///
+/// Returns a `SyncStop` for every stop and every other error, after undoing the
+/// sync's own writes.
+///
+/// Implements: rust-sync/default-branch-resolution
+pub fn sync_change_taking_default(
+    request: &SyncRequest<'_>,
+    paths: &[String],
+) -> Result<SyncOutcome, SyncStop> {
+    sync::run(request, paths)
 }
 
 /// Appends the active sync's uncommitted `sync_stopped` event.

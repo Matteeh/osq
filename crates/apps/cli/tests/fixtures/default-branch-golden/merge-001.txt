@@ -1,0 +1,61 @@
+outcome: output
+Approved 001 (001-alpha-twice)
+  Hash: sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
+  Worktree: <root>/worktrees/repo/001-alpha-twice
+  Branch: osq/001-alpha-twice
+  Merged main into osq/001-alpha-twice
+commits:
+osq: 001 replanned
+Osq Bot <bot@example.com>
+  M	openspec/changes/archive/001-alpha-twice/tasks/1.md
+osq: 001 approved
+Osq Bot <bot@example.com>
+  A	openspec/changes/001-alpha-twice/.run/approved
+  A	openspec/changes/001-alpha-twice/.run/requirements-base
+  D	openspec/changes/archive/001-alpha-twice/.run/approved
+  M	openspec/specs/alpha/spec.md
+  R100	openspec/changes/archive/001-alpha-twice/.run/done/1	openspec/changes/001-alpha-twice/.run/done/1
+  R100	openspec/changes/archive/001-alpha-twice/.run/regressed/change.md	openspec/changes/001-alpha-twice/.run/regressed/change.md
+  R100	openspec/changes/archive/001-alpha-twice/plan-prompt.md	openspec/changes/001-alpha-twice/plan-prompt.md
+  R100	openspec/changes/archive/001-alpha-twice/proposal.md	openspec/changes/001-alpha-twice/proposal.md
+  R100	openspec/changes/archive/001-alpha-twice/specs/alpha/spec.md	openspec/changes/001-alpha-twice/specs/alpha/spec.md
+  R100	openspec/changes/archive/001-alpha-twice/tasks.md	openspec/changes/001-alpha-twice/tasks.md
+  R100	openspec/changes/archive/001-alpha-twice/tasks/1.md	openspec/changes/001-alpha-twice/tasks/1.md
+osq: 001 sync main
+Osq Bot <bot@example.com>
+  M	src/alpha/index.js
+branches:
+osq/001-alpha-twice osq: 001 sync main
+record:
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+tree:
+--- .run/approved
+sha256:a946ae45c16fe310565d8e468a7a7a2962e9df3dafa4fada5e37a9de694ce550
+--- .run/done/1
+---
+scope_hash: sha256:18e5f8a23226e2fae322aad8b99e857452038c2f3c3c8d1d377778234385c881
+scope_files:
+  src/alpha/index.js: sha256:4a88f4efd4d1e40d16fa47398f26e47d8c46a75af53c3f8b4f2e7450ff3d462b
+scope_resolver: 2
+original_scope_hash: sha256:18baaaa75791d4ffa968058edaa5ce48b39eaf88ad46b7bee943c5054d65fa80
+recertified_at: <ts>
+recertification_count: 1
+---
+2026-10-20T08:00:00.000Z
+--- .run/events/change.jsonl
+{"data":{"commits":1,"defaultBranch":"main","duration":8},"timestamp":"<timestamp>","type":"synced"}
+{"data":{"attempt":2,"reason":"sync_verify_red","target":"change"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/change.1.md
+---
+reason: sync_verify_red
+---
+sync_verify_red on main
+--- .run/requirements-base
+<main>
+status:
+ M openspec/changes/001-alpha-twice/.run/done/1
+ M openspec/changes/001-alpha-twice/.run/events/change.jsonl
+ D openspec/changes/001-alpha-twice/.run/regressed/change.md
+?? openspec/changes/001-alpha-twice/.run/regressed/change.1.md

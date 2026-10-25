@@ -16,5 +16,6 @@ osq-kernel-config.workspace = true
 osq-kernel-harnesses.workspace = true
 osq-kernel-specs.workspace = true
 osq-kernel-storage.workspace = true
+osq-kernel-sync.workspace = true
 osq-kernel-vcs.workspace = true
 serde_json.workspace = true

@@ -1,0 +1,10 @@
+{"type":"tool","timestamp":"2026-10-25T18:42:47.142Z","data":{"tool":"Read","summary":"/home/mathias/.osq/worktrees/osq/347-rust-approve-default-br"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:47.949Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:50.741Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:52.220Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:55.314Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:57.956Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"tool","timestamp":"2026-10-25T18:42:58.582Z","data":{"tool":"Bash","summary":"cd /home/mathias/.osq/worktrees/osq/347-rust-approve-default"}}
+{"type":"usage_limit","timestamp":"2026-10-25T18:42:58.963Z","data":{"resetsAt":"2026-10-26T10:00:00.000Z"}}
+{"type":"text","timestamp":"2026-10-25T18:42:58.962Z","data":{"text":"You've hit your weekly limit · resets 12pm (Europe/Helsinki)"}}
+{"type":"tokens","timestamp":"2026-10-25T18:42:58.967Z","data":{"promptTokens":100408,"candidateTokens":1307,"totalTokens":101715,"model":"claude-sonnet-5-5","cachedTokens":74218,"reasoningTokens":248,"cost":0.1252318}}
