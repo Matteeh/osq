@@ -61,6 +61,10 @@ export function defaultBranchResult(
  * Restart the change: keep the revised plan's old branch under
  * `osq/<folder>-restarted-<n>`, cut `osq/<folder>` from the default branch's
  * tip, and place the revised folder with a fresh seal. Every task runs again.
+ * A worktree git cannot remove stops before any other restart step, leaving
+ * the branch and the markers as they were for a second approval.
+ *
+ * @scenario spec-lint-and-approve: Worktree removal fails during a restart
  */
 export async function restartDefaultBranchBranch(
   context: DefaultBranchContext,
@@ -80,7 +84,15 @@ export async function restartDefaultBranchBranch(
 
   const aside = await copyAside(change.folderPath);
   try {
-    await rootVcs.worktreeRemove(worktreeRoot);
+    try {
+      await rootVcs.worktreeRemove(worktreeRoot);
+    } catch (error) {
+      const message = error instanceof Error ? error.message.trim() : String(error);
+      throw new Error(
+        `could not remove worktree ${worktreeRoot}: ${message}\n` +
+          `The change's markers are unchanged. Move ${worktreeRoot} aside, run git worktree prune, restart osq watch so it recreates the worktree, then run osq approve ${specId} again.`,
+      );
+    }
     const keptBranch = await nextKeptBranch(rootVcs, branch);
     await rootVcs.renameBranch(branch, keptBranch);
     await rootVcs.createBranch(branch, defaultBranch);

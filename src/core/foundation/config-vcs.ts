@@ -32,6 +32,9 @@ export const DEFAULT_GIT_COMMIT_SECONDS = 120;
 /** Default bound in seconds for a remote fetch or push when unset. */
 export const DEFAULT_GIT_REMOTE_SECONDS = 120;
 
+/** Default bound in seconds for `git worktree remove` when unset. */
+export const DEFAULT_GIT_WORKTREE_REMOVE_SECONDS = 1800;
+
 /** A name, a space, and a non-empty email in angle brackets. */
 const AUTHOR_PATTERN = /^\S.*\s<[^<>]+>$/;
 

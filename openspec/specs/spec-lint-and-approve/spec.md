@@ -1763,7 +1763,9 @@ change folder where it is, refusing on lint errors as any approval does, so
 the revised plan is judged against the checkout's living specs. It SHALL then
 commit the change folder as it stands in the worktree, the planner's edits and
 every marker included, with the message `osq: <id> replanned`, authored by
-`vcs.author`, so the branch keeps the plan it is leaving. Then:
+`vcs.author`, so the branch keeps the plan it is leaving. When `status` shows
+no path under the change folder, the branch already holds that plan, and it
+SHALL skip the commit and go on. Then:
 
 - **Restart**, when any trigger is `conflict`: it SHALL copy the change folder
   aside, remove the worktree, and rename `osq/<folder>` to the lowest free
@@ -1775,6 +1777,12 @@ every marker included, with the message `osq: <id> replanned`, authored by
   `.run/approved` and the manifest with `writeApprovalSeal`, write
   `.run/base` and `.run/approver` as "Approval into a worktree" writes them,
   and commit the folder with `osq: <id> approved`. Every task then runs again.
+  When removing the worktree fails or reaches its time limit, it SHALL stop
+  before any other restart step with
+  `could not remove worktree <path>: <git's message>`, then a line
+  `The change's markers are unchanged. Move <path> aside, run git worktree prune, restart osq watch so it recreates the worktree, then run osq approve <id> again.`
+  It SHALL leave the branch, its name and the change folder's markers as
+  they were, so that approval, run again, restarts the change.
 - **Merge**, otherwise: for an archived change it SHALL move the folder from
   the worktree's archive directory to its changes directory. It SHALL put the
   default branch's copy of every living spec in place in the worktree, as
@@ -1822,6 +1830,10 @@ branch.
 #### Scenario: Merge that conflicts restarts
 - **WHEN** a change halted with `requirement_changed`, and the default branch also changed a line the change changed
 - **THEN** approval restarts the change and the output names `osq/<folder>-restarted-1`
+
+#### Scenario: Worktree removal fails during a restart
+- **WHEN** an active change's sync recorded a `sync_conflict` stop, a planner edited `tasks/1.md` in the worktree, the worktree is locked with `git worktree lock`, and a human runs `osq approve <id>`
+- **THEN** it exits 1 with an error naming the worktree's path, `cannot remove a locked working tree`, `run git worktree prune` and `restart osq watch`, `.run/regressed/change.md` is byte for byte what it was, `osq/<folder>` still exists and no `osq/<folder>-restarted-1` does; after `git worktree unlock`, a second `osq approve <id>` exits 0 and prints `Restarted from main; kept the old branch as osq/<folder>-restarted-1`
 
 ### Requirement: Parsed proposals are shared and frozen
 Parsing a change folder's `proposal.md`, or its `spec.md` fallback, SHALL

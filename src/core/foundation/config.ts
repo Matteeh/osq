@@ -36,6 +36,7 @@ import {
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
 import { composeDefaultConfig, resolveSliceConfig } from './config-slices.js';
+import type { OsqTimeouts } from './config-timeouts.js';
 import {
   DEFAULT_TRACEABILITY_CONFIG,
   type TraceabilityConfig,
@@ -60,24 +61,13 @@ export type { WatchConfig } from './config-watch.js';
 export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
 export type { LogConfig, OsqLimits } from './config-limits.js';
+export type { OsqTimeouts } from './config-timeouts.js';
 export type { ValidatorConfig } from './config-validator.js';
 export interface OsqPaths {
   readonly features: string;
   readonly decisions: string;
   readonly templates: string;
   readonly openspecRoot: string;
-}
-export interface OsqTimeouts {
-  readonly staleLockSeconds: number;
-  readonly taskTimeoutSeconds: number;
-  readonly verifyTimeoutSeconds: number;
-  /** Preflight `--version` probe deadline; defaults to 10 seconds. */
-  readonly harnessPreflightSeconds?: number;
-  /** Kill grace after SIGTERM before SIGKILL; defaults to 5000 milliseconds. */
-  readonly harnessKillGracePeriodMs?: number;
-  readonly gitSeconds?: number;
-  readonly gitCommitSeconds?: number;
-  readonly gitRemoteSeconds?: number;
 }
 export interface PlannerConfig {
   readonly harness: string;

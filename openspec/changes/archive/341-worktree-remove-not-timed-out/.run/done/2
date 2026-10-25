@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:48d7a59dfe82c9fe84581bd0879762f52657701ececc4d706cd91cf1f4237e75"
+build_stamp: "81b56593"
+project_commit: "d8fe5892"
+exit_code: 0
+scope_files: {"src/core/spec/approve-default-branch-restart.ts":"sha256:7dc5d39434e4caf1c49ed7c60581caf7a98400961994f5aafdc47ea4def928c3","src/core/spec/approve-default-branch.ts":"sha256:f8805e0c44d25976826630d7154b4467f6f0f2e43dfbe7f040520e07bd2c7415","tests/recovery-restart-remove-fails.test.ts":"sha256:9f6ec38ebb44ac8037a5b02404bf578c4db0136bc145ac121b52b79cc1914a79"}
+---
+2026-10-25T00:09:42.231Z

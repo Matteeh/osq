@@ -1,0 +1,358 @@
+diff --git a/openspec/changes/341-worktree-remove-not-timed-out/.run/dead/2.md b/openspec/changes/341-worktree-remove-not-timed-out/.run/dead/2.md
+new file mode 100644
+index 00000000..327ba6e5
+--- /dev/null
++++ b/openspec/changes/341-worktree-remove-not-timed-out/.run/dead/2.md
+@@ -0,0 +1,7 @@
++---
++reason: own_folder_path
++fingerprint: sha256:72692c8f83d922439054dab4239a9a087a84dda3b22c0fc783b07edb9ea4bd20
++---
++These files name this change's folder, 341-worktree-remove-not-timed-out, whose path changes when the change archives:
++- tests/recovery-restart-remove-fails.test.ts:20
++Reach the change folder through the OSQ_CHANGE environment variable.
+diff --git a/openspec/changes/341-worktree-remove-not-timed-out/.run/events/2.jsonl b/openspec/changes/341-worktree-remove-not-timed-out/.run/events/2.jsonl
+new file mode 100644
+index 00000000..96e165cc
+--- /dev/null
++++ b/openspec/changes/341-worktree-remove-not-timed-out/.run/events/2.jsonl
+@@ -0,0 +1,87 @@
++{"type":"verify_ran","timestamp":"2026-10-24T23:52:57.886Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/recovery-restart-remove-fails.test.ts","exitCode":1,"duration":0.1,"log":".run/logs/2-1.log","output":"Could not find 'tests/recovery-restart-remove-fails.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/recovery-restart-remove-fails.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-24T23:52:59.984Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":203,"repoFiles":7331,"repoLines":731674,"importFanIn":2,"proposalWords":682,"taskWords":322,"deltaRequirements":3,"deltaScenarios":12}}
++{"type":"instructions_changed","timestamp":"2026-10-24T23:53:00.074Z","data":{"changed":["AGENTS.md","ADR 001 added","ADR 003 added","ADR 004 added","ADR 005 added","ADR 006 added","ADR 007 added","ADR 010 added","ADR 012 added","ADR 014 added","ADR 015 added","ADR 016 added","ADR 017 added","ADR 018 added","ADR 019 added","ADR 021 added"]}}
++{"type":"started","timestamp":"2026-10-24T23:53:00.230Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"f53ab3fe","pid":1976153,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"81b56593"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:02.196Z","data":{"promptTokens":2348,"candidateTokens":280,"totalTokens":6852,"cachedTokens":4224,"reasoningTokens":20,"cost":0.001065744,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:02.197Z","data":{"tool":"bash","summary":"cat openspec/changes/341-worktree-remove-not-timed-out/tasks"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:02.197Z","data":{"tool":"bash","summary":"cat openspec/changes/341-worktree-remove-not-timed-out/specs"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:02.198Z","data":{"tool":"bash","summary":"cat openspec/changes/341-worktree-remove-not-timed-out/specs"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:03.271Z","data":{"promptTokens":4554,"candidateTokens":131,"totalTokens":11469,"cachedTokens":6784,"reasoningTokens":10,"cost":0.0015641039999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:03.272Z","data":{"tool":"bash","summary":"cat src/core/spec/approve-default-branch.ts; echo \"---RESTAR"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:03.272Z","data":{"tool":"bash","summary":"cat tests/recovery-sync-conflict.test.ts; echo \"---SUPPORT--"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:05.151Z","data":{"promptTokens":6703,"candidateTokens":254,"totalTokens":18349,"cachedTokens":11392,"reasoningTokens":81,"cost":0.002384052,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:05.151Z","data":{"tool":"bash","summary":"ls tests | grep -E 'recovery|steering|scenario'; echo '---';"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:05.151Z","data":{"tool":"bash","summary":"rg -n \"scenario\\(\" tests | head -30; echo '--- testing expor"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:06.830Z","data":{"promptTokens":1536,"candidateTokens":195,"totalTokens":20035,"cachedTokens":18304,"reasoningTokens":44,"cost":0.000804624,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:06.830Z","data":{"tool":"bash","summary":"cat tests/vcs-worktree-remove-timeout.test.ts; echo '--- sce"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:06.830Z","data":{"tool":"bash","summary":"sed -n '1,220p' src/core/vcs/git-vcs-write.ts; echo '--- git"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:08.679Z","data":{"promptTokens":6728,"candidateTokens":225,"totalTokens":26921,"cachedTokens":19968,"reasoningTokens":84,"cost":0.002408208,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:08.679Z","data":{"tool":"bash","summary":"rg -n \"GIT_WORKTREE_REMOVE|gitWorktreeRemove|runWorktreeRemo"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:08.680Z","data":{"tool":"bash","summary":"sed -n '1,220p' tests/steering-approve-default-branch.test.t"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:11.043Z","data":{"promptTokens":3367,"candidateTokens":281,"totalTokens":30528,"cachedTokens":26880,"reasoningTokens":115,"cost":0.0015085799999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:11.043Z","data":{"tool":"bash","summary":"sed -n '1,240p' src/cli/approve.ts; echo '--- command error "}}
++{"type":"tool","timestamp":"2026-10-24T23:53:11.044Z","data":{"tool":"bash","summary":"rg -n \"status\\(\\).*some|relativeFolder|startsWith\\(.*folder|"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:15.783Z","data":{"promptTokens":3080,"candidateTokens":790,"totalTokens":34334,"cachedTokens":30464,"reasoningTokens":602,"cost":0.002054784,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:15.784Z","data":{"tool":"bash","summary":"rg -n \"could not|trimEnd\\(\\).*error|error instanceof Error \\"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:15.784Z","data":{"tool":"bash","summary":"rg -n \"function worktreeDirt|worktreeDirt\\(\" -A30 src/core/v"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:19.232Z","data":{"promptTokens":3184,"candidateTokens":514,"totalTokens":38002,"cachedTokens":34304,"reasoningTokens":373,"cost":0.001777824,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:19.232Z","data":{"tool":"bash","summary":"cat src/core/trace/scenario-lookup.ts; sed -n '1,240p' src/c"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:19.233Z","data":{"tool":"bash","summary":"cat openspec/changes/341-worktree-remove-not-timed-out/tasks"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:30.773Z","data":{"promptTokens":3226,"candidateTokens":1953,"totalTokens":43067,"cachedTokens":37888,"reasoningTokens":1863,"cost":0.003538728,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:30.773Z","data":{"tool":"bash","summary":"nl -ba src/core/spec/approve-default-branch.ts | sed -n '28,"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:33.906Z","data":{"promptTokens":1438,"candidateTokens":643,"totalTokens":45089,"cachedTokens":43008,"reasoningTokens":4,"cost":0.001461048,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:33.906Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:33.907Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-restart.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:33.912Z","data":{"path":"src/core/spec/approve-default-branch-restart.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:33.912Z","data":{"path":"src/core/spec/approve-default-branch.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:36.361Z","data":{"promptTokens":223,"candidateTokens":283,"totalTokens":45434,"cachedTokens":44928,"reasoningTokens":200,"cost":0.0006760679999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:36.361Z","data":{"tool":"bash","summary":"sed -n '280,410p' tests/steering-dead-approve.test.ts; echo "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:54.897Z","data":{"promptTokens":2255,"candidateTokens":3842,"totalTokens":51409,"cachedTokens":45312,"reasoningTokens":2888,"cost":0.005558772,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:54.898Z","data":{"tool":"write","summary":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:54.898Z","data":{"path":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:56.026Z","data":{"promptTokens":236,"candidateTokens":85,"totalTokens":51521,"cachedTokens":51200,"reasoningTokens":4,"cost":0.00047999999999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:56.026Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:00.510Z","data":{"promptTokens":369,"candidateTokens":251,"totalTokens":52076,"cachedTokens":51456,"reasoningTokens":90,"cost":0.000720636,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:00.511Z","data":{"tool":"bash","summary":"cat tests/git-test-env.ts; echo '---'; rg -n \"Python-only re"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:00.511Z","data":{"tool":"bash","summary":"ls openspec/changes; echo '--- active change folders ---'; r"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:02.050Z","data":{"promptTokens":2189,"candidateTokens":140,"totalTokens":54297,"cachedTokens":51968,"reasoningTokens":46,"cost":0.001136508,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:02.051Z","data":{"tool":"bash","summary":"rg -n 'Python-only repository' -C3 openspec/specs/spec-lint-"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:04.747Z","data":{"promptTokens":219,"candidateTokens":262,"totalTokens":54753,"cachedTokens":54272,"reasoningTokens":116,"cost":0.0007057319999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:04.748Z","data":{"tool":"bash","summary":"rg -n \"OSQ_CHANGE\" tests src | head -50; echo '--- git-test-"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:08.707Z","data":{"promptTokens":2211,"candidateTokens":82,"totalTokens":56949,"cachedTokens":54656,"reasoningTokens":26,"cost":0.001089636,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:08.707Z","data":{"tool":"bash","summary":"sed -n '1,130p' tests/steering-dead-approve.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:11.539Z","data":{"promptTokens":1468,"candidateTokens":304,"totalTokens":58604,"cachedTokens":56832,"reasoningTokens":217,"cost":0.0011461919999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:11.540Z","data":{"tool":"bash","summary":"rg -n \"dedupeScenarioNames|setupLookupRoot|lookup root with|"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:15.061Z","data":{"promptTokens":756,"candidateTokens":367,"totalTokens":59619,"cachedTokens":58496,"reasoningTokens":267,"cost":0.001018176,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:15.061Z","data":{"tool":"bash","summary":"rg -n \"export .*lookup|ScenarioNames|scenario.*root\" tests/h"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:21.536Z","data":{"promptTokens":2439,"candidateTokens":1596,"totalTokens":63555,"cachedTokens":59520,"reasoningTokens":390,"cost":0.0030040199999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:21.537Z","data":{"tool":"edit","summary":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:54:21.602Z","data":{"path":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:23.289Z","data":{"promptTokens":227,"candidateTokens":84,"totalTokens":63671,"cachedTokens":63360,"reasoningTokens":3,"cost":0.00054906,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:23.290Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:27.487Z","data":{"promptTokens":138,"candidateTokens":213,"totalTokens":63967,"cachedTokens":63616,"reasoningTokens":73,"cost":0.0006786959999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:27.488Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:27.488Z","data":{"tool":"bash","summary":"pnpm typecheck:cli"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:36.946Z","data":{"promptTokens":473,"candidateTokens":284,"totalTokens":64629,"cachedTokens":63872,"reasoningTokens":125,"cost":0.000865932,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:36.946Z","data":{"tool":"bash","summary":"pnpm lint"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:36.947Z","data":{"tool":"bash","summary":"wc -l src/core/spec/approve-default-branch.ts src/core/spec/"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:40.386Z","data":{"promptTokens":779,"candidateTokens":169,"totalTokens":65460,"cachedTokens":64512,"reasoningTokens":12,"cost":0.0008235720000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:40.386Z","data":{"tool":"edit","summary":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:54:40.387Z","data":{"path":"tests/recovery-restart-remove-fails.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:42.284Z","data":{"promptTokens":212,"candidateTokens":180,"totalTokens":65672,"cachedTokens":65280,"reasoningTokens":53,"cost":0.00067128,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:42.285Z","data":{"tool":"bash","summary":"pnpm lint"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:42.285Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:46.568Z","data":{"promptTokens":160,"candidateTokens":70,"totalTokens":65894,"cachedTokens":65664,"reasoningTokens":13,"cost":0.000525984,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:46.569Z","data":{"tool":"bash","summary":"pnpm verify"}}
++{"type":"tokens","timestamp":"2026-10-24T23:58:30.953Z","data":{"promptTokens":13416,"candidateTokens":186,"totalTokens":79394,"cachedTokens":65792,"reasoningTokens":75,"cost":0.004642751999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:58:30.954Z","data":{"tool":"bash","summary":"rg -n \"ℹ fail|ELIFECYCLE|Command failed|✖\" /tmp/pi-bash-3e7a"}}
++{"type":"tokens","timestamp":"2026-10-24T23:58:36.262Z","data":{"promptTokens":256,"candidateTokens":825,"totalTokens":80313,"cachedTokens":79232,"reasoningTokens":481,"cost":0.001542192,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:58:36.262Z","data":{"tool":"write","summary":"openspec/changes/341-worktree-remove-not-timed-out/.run/resu"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:58:36.263Z","data":{"path":"openspec/changes/341-worktree-remove-not-timed-out/.run/results/2.md"}}
++{"type":"text","timestamp":"2026-10-24T23:58:40.530Z","data":{"text":"Task complete.\n\n- Updated restart failure handling with the recovery message and early stop.\n- Skipped the empty `osq: <id> replanned` commit when the change folder is clean.\n- Added `tests/recovery-restart-remove-fails.test.ts` proving the new scenario.\n- Wrote the result file.\n\nVerification passed:\n- Task verify\n- `tests/steering-approve-default-branch.test.ts`\n- `tests/recovery-sync-conflict.test.ts`\n- `pnpm typecheck:cli`\n- `pnpm lint`\n- `pnpm verify`"}}
++{"type":"tokens","timestamp":"2026-10-24T23:58:40.530Z","data":{"promptTokens":222,"candidateTokens":514,"totalTokens":80864,"cachedTokens":80128,"reasoningTokens":391,"cost":0.001164168,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-24T23:58:40.545Z","data":{"exitCode":0,"pid":1976153,"timedOut":false,"elapsedSeconds":340.3}}
++{"type":"format_ran","timestamp":"2026-10-24T23:58:42.162Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/core/spec/approve-default-branch-restart.ts' 'src/core/spec/approve-default-branch.ts' 'tests/recovery-restart-remove-fails.test.ts'","files":["src/core/spec/approve-default-branch-restart.ts","src/core/spec/approve-default-branch.ts","tests/recovery-restart-remove-fails.test.ts"],"exitCode":0,"duration":0.29,"timedOut":false,"output":"Checked 3 files in 2ms. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-24T23:58:44.013Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/recovery-restart-remove-fails.test.ts","exitCode":0,"duration":1.27,"log":".run/logs/2-2.log","output":"✔ Scenario: Worktree removal fails during a restart (863.542016ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1141.147023\n"}}
++{"type":"measures","timestamp":"2026-10-24T23:58:44.018Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":203,"repoFiles":7331,"repoLines":731674,"importFanIn":2,"proposalWords":682,"taskWords":322,"deltaRequirements":3,"deltaScenarios":12,"changedFiles":3,"changedLines":173,"scopeHashes":{"src/core/spec/approve-default-branch-restart.ts":{"before":"sha256:2573a246527cb5511ab53ae4a17f4d9a1ee78032ae01120283a1d4bebf09d9de","after":"sha256:363125271caffd1d22623ea35a62d73b60157075c3189f3e36f6b2f6457b7a19"},"src/core/spec/approve-default-branch.ts":{"before":"sha256:18c91c109cb1495ce1ed3d1763bf2058207037b88dd3e9c2d8aa996d01a1ccbe","after":"sha256:3f57ef3c80fec40177efe585bc84b5b5bc3e5ad576330b06a1fcc4ac62edeee3"},"tests/recovery-restart-remove-fails.test.ts":{"before":null,"after":"sha256:9f903a8a0c658a530d0fda482b30960ffaaa65a01dc06dbebada7d7fcd0ac239"}}}}
++{"type":"dead","timestamp":"2026-10-24T23:58:44.019Z","data":{"task":"2","reason":"own_folder_path"}}
+diff --git a/openspec/changes/341-worktree-remove-not-timed-out/.run/events/change.jsonl b/openspec/changes/341-worktree-remove-not-timed-out/.run/events/change.jsonl
+new file mode 100644
+index 00000000..3836d92a
+--- /dev/null
++++ b/openspec/changes/341-worktree-remove-not-timed-out/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-24T23:40:57.991Z","data":{"outcome":"passed","command":"pnpm verify","commit":"91d7206c18c9023c06def4675f02e6d2505d674b","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":415.08}}
++{"type":"verify_ran","timestamp":"2026-10-24T23:49:14.726Z","data":{"command":"pnpm verify","exitCode":0,"duration":197.47,"log":".run/logs/change-1.log","output":"▶ service panel component\n  ✔ renders the panel directly for a server status (1.073235ms)\n✔ service panel component (1.151507ms)\n▶ Start planning button\n  ✔ leads the hand-off block and posts the plan action once (22.045919ms)\n  ✔ disables the button while an action is pending (2.369986ms)\n✔ Start planning button (25.652764ms)\n▶ Start planning after Plan it\n  ✔ shows Plan it on a halted change and the opened block starts with Start planning (29.09641ms)\n✔ Start planning after Plan it (29.277944ms)\n▶ No start without the action\n  ✔ offers no Start planning without a plan action and keeps Copy hand-off (2.206242ms)\n✔ No start without the action (6.156595ms)\n▶ Last run outcome\n  ✔ shows the outcome line before the paste text (2.057808ms)\n  ✔ leaves the hand-off block unchanged without a plan run (28.175963ms)\n✔ Last run outcome (31.824209ms)\n▶ Planning top block\n  ✔ refreshes the planning line every 30 seconds (0.342458ms)\n  ✔ shows the planning line and note and no plan controls (2.13175ms)\n✔ Planning top block (3.182816ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (21.580648ms)\n  ✔ maps every derived task state onto the status vocabulary (0.234986ms)\n  ✔ defines the whole palette for light and dark schemes (45.584346ms)\n  ✔ never centers table cells (0.984903ms)\n✔ status badge (73.226877ms)\nℹ tests 233\nℹ suites 74\nℹ pass 233\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 8248.442493\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1350 files in 1052ms. No fixes applied."}}
+diff --git a/openspec/changes/341-worktree-remove-not-timed-out/.run/results/2.md b/openspec/changes/341-worktree-remove-not-timed-out/.run/results/2.md
+new file mode 100644
+index 00000000..09d4eccd
+--- /dev/null
++++ b/openspec/changes/341-worktree-remove-not-timed-out/.run/results/2.md
+@@ -0,0 +1,20 @@
++## Changed
++
++- `restartDefaultBranchBranch` now turns a failed `worktreeRemove` into the
++  `could not remove worktree <path>: <git's message>` error followed by the
++  recovery line, and stops before renaming the branch or touching the markers.
++- `approveDefaultBranchSteering` skips the `osq: <id> replanned` commit when
++  `vcs.status()` has no path under the change folder, so a second approval
++  after a failed restart no longer fails with `nothing to commit`.
++- Added `tests/recovery-restart-remove-fails.test.ts`, which proves "Worktree
++  removal fails during a restart" with `scenario`, including the unchanged
++  regression marker, the untouched branch, and the successful second approval.
++
++## Missing context
++
++The scenario lookup needed a dedicated lookup root with deduplicated scenario
++headers, because the living `spec-lint-and-approve` spec already repeats
++"Python-only repository" under two requirements. The test follows the pattern
++of `steering-dead-approve.test.ts`.
++
++Touched: src/core/spec/approve-default-branch.ts, src/core/spec/approve-default-branch-restart.ts, tests/recovery-restart-remove-fails.test.ts
+diff --git a/src/core/spec/approve-default-branch-restart.ts b/src/core/spec/approve-default-branch-restart.ts
+index e6fe9495..965ab89b 100644
+--- a/src/core/spec/approve-default-branch-restart.ts
++++ b/src/core/spec/approve-default-branch-restart.ts
+@@ -61,6 +61,8 @@ export function defaultBranchResult(
+  * Restart the change: keep the revised plan's old branch under
+  * `osq/<folder>-restarted-<n>`, cut `osq/<folder>` from the default branch's
+  * tip, and place the revised folder with a fresh seal. Every task runs again.
++ *
++ * @scenario spec-lint-and-approve: Worktree removal fails during a restart
+  */
+ export async function restartDefaultBranchBranch(
+   context: DefaultBranchContext,
+@@ -80,7 +82,15 @@ export async function restartDefaultBranchBranch(
+ 
+   const aside = await copyAside(change.folderPath);
+   try {
+-    await rootVcs.worktreeRemove(worktreeRoot);
++    try {
++      await rootVcs.worktreeRemove(worktreeRoot);
++    } catch (error) {
++      const detail = error instanceof Error ? error.message : String(error);
++      throw new Error(
++        `could not remove worktree ${worktreeRoot}: ${detail.trimEnd()}\n` +
++          `The change's markers are unchanged. Move ${worktreeRoot} aside, run git worktree prune, restart osq watch so it recreates the worktree, then run osq approve ${specId} again.`,
++      );
++    }
+     const keptBranch = await nextKeptBranch(rootVcs, branch);
+     await rootVcs.renameBranch(branch, keptBranch);
+     await rootVcs.createBranch(branch, defaultBranch);
+diff --git a/src/core/spec/approve-default-branch.ts b/src/core/spec/approve-default-branch.ts
+index 76fd0fb2..8b58e9b1 100644
+--- a/src/core/spec/approve-default-branch.ts
++++ b/src/core/spec/approve-default-branch.ts
+@@ -34,6 +34,8 @@ export interface DefaultBranchContext {
+  * shared prelude lints, reviews the digest, and commits the revised plan as
+  * `osq: <id> replanned`; a conflict restarts the branch from the default
+  * branch and any other trigger merges it in.
++ *
++ * @scenario spec-lint-and-approve: Worktree removal fails during a restart
+  */
+ export async function approveDefaultBranchSteering(
+   projectRoot: string,
+@@ -58,7 +60,12 @@ export async function approveDefaultBranchSteering(
+   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
+   const vcs = await selectVcs(tree.root, config);
+   const relativeFolder = path.relative(tree.root, folderPath).split(path.sep).join('/');
+-  await vcs.commit([relativeFolder], `osq: ${specId} replanned`, author);
++  const underFolder = (entry: string | undefined): boolean =>
++    entry === relativeFolder || entry?.startsWith(`${relativeFolder}/`) === true;
++  const changed = (await vcs.status()).some(
++    (entry) => underFolder(entry.path) || underFolder(entry.from),
++  );
++  if (changed) await vcs.commit([relativeFolder], `osq: ${specId} replanned`, author);
+ 
+   const observations = await findPlanningSessions(folderPath, {
+     createdAt: await resolveChangeCreationTime(folderPath),
+diff --git a/tests/recovery-restart-remove-fails.test.ts b/tests/recovery-restart-remove-fails.test.ts
+new file mode 100644
+index 00000000..25c9a3b1
+--- /dev/null
++++ b/tests/recovery-restart-remove-fails.test.ts
+@@ -0,0 +1,155 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { after, afterEach, before } from 'node:test';
++import { fileURLToPath } from 'node:url';
++import { scenario } from '@matteeh/osq/testing';
++import {
++  type CommandResult,
++  type RecoveryProject,
++  ScriptedAdapter,
++  assertOk,
++  commitMain,
++  createRecoveryProject,
++  exists,
++  git,
++  reviseTask,
++} from './recovery-support.js';
++
++const CHANGE_SLUG = '341-worktree-remove-not-timed-out';
++const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
++const tmpDirs: string[] = [];
++let lookupRoot: string | null = null;
++let previousChange: string | undefined;
++
++/** Rename every repeated scenario header after its first, for a clean lookup root. */
++function dedupeScenarioNames(content: string): string {
++  const seen = new Set<string>();
++  return content
++    .split('\n')
++    .map((line) => {
++      const match = /^#### Scenario: (.+)$/.exec(line);
++      if (match === null) return line;
++      const name = match[1] ?? '';
++      if (!seen.has(name)) {
++        seen.add(name);
++        return line;
++      }
++      return `#### Scenario: ${name} (variant)`;
++    })
++    .join('\n');
++}
++
++/** Point scenario lookup at the deduped living spec merged with this change's delta. */
++async function makeLookupRoot(): Promise<string> {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-restart-remove-lookup-'));
++  const openspec = path.join(root, 'openspec');
++  const specDir = path.join(openspec, 'specs', 'spec-lint-and-approve');
++  await fs.mkdir(specDir, { recursive: true });
++  const living = await fs.readFile(
++    path.join(REPO_ROOT, 'openspec', 'specs', 'spec-lint-and-approve', 'spec.md'),
++    'utf8',
++  );
++  await fs.writeFile(path.join(specDir, 'spec.md'), dedupeScenarioNames(living), 'utf8');
++  const deltaDir = path.join(openspec, 'changes', CHANGE_SLUG, 'specs', 'spec-lint-and-approve');
++  await fs.mkdir(deltaDir, { recursive: true });
++  await fs.copyFile(
++    path.join(
++      REPO_ROOT,
++      'openspec',
++      'changes',
++      CHANGE_SLUG,
++      'specs',
++      'spec-lint-and-approve',
++      'spec.md',
++    ),
++    path.join(deltaDir, 'spec.md'),
++  );
++  return path.join(openspec, 'changes', CHANGE_SLUG);
++}
++
++before(async () => {
++  previousChange = process.env.OSQ_CHANGE;
++  lookupRoot = await makeLookupRoot();
++  process.env.OSQ_CHANGE = lookupRoot;
++});
++
++afterEach(async () => {
++  for (const dir of tmpDirs.splice(0)) {
++    await fs.rm(dir, { recursive: true, force: true });
++  }
++});
++
++after(async () => {
++  if (previousChange === undefined) Reflect.deleteProperty(process.env, 'OSQ_CHANGE');
++  else process.env.OSQ_CHANGE = previousChange;
++  if (lookupRoot !== null) await fs.rm(lookupRoot, { recursive: true, force: true });
++});
++
++let project: RecoveryProject;
++
++/** The scenario project's `approve`, the function under test through `run`. */
++function approve(): Promise<CommandResult> {
++  return project.approve();
++}
++
++scenario(
++  'spec-lint-and-approve',
++  'Worktree removal fails during a restart',
++  { covers: approve },
++  async ({ run, then }) => {
++    project = await createRecoveryProject(tmpDirs, {
++      tasks: [{ title: 'First task', scope: 'src/one.txt' }],
++      autoRetries: 0,
++    });
++    assertOk(await project.approve(), 'approve');
++
++    // The first spawn moves main onto the task's file, so the sync conflicts.
++    const adapter = new ScriptedAdapter(async (_options, call) => {
++      if (call === 1) {
++        await commitMain(project.repo, { 'src/one.txt': 'main\n' });
++        return 'task\n';
++      }
++      return 'main\ntask\n';
++    });
++    await project.watchOnce(adapter);
++    assert.equal(adapter.calls.length, 1);
++
++    const regressionPath = path.join(project.changeFolder, '.run', 'regressed', 'change.md');
++    assert.equal(await exists(regressionPath), true);
++    const regressionBefore = await fs.readFile(regressionPath);
++
++    await reviseTask(project.changeFolder, 1, { title: 'First task', scope: 'src/one.txt' });
++    await git(['worktree', 'lock', project.worktree], project.repo);
++
++    const failed = await run();
++    const regressionAfter = await fs.readFile(regressionPath);
++    const branchesAfterFailure = await git(['branch', '--list'], project.repo);
++
++    await git(['worktree', 'unlock', project.worktree], project.repo);
++    const approved = await run();
++
++    await then(
++      "it exits 1 with an error naming the worktree's path, `cannot remove a locked working tree`, `run git worktree prune` and `restart osq watch`, `.run/regressed/change.md` is byte for byte what it was, `osq/<folder>` still exists and no `osq/<folder>-restarted-1` does; after `git worktree unlock`, a second `osq approve <id>` exits 0 and prints `Restarted from main; kept the old branch as osq/<folder>-restarted-1`",
++      async () => {
++        assert.equal(failed.exitCode, 1, failed.stderr);
++        assert.ok(failed.stderr.includes(project.worktree), failed.stderr);
++        assert.ok(failed.stderr.includes('cannot remove a locked working tree'), failed.stderr);
++        assert.ok(failed.stderr.includes('run git worktree prune'), failed.stderr);
++        assert.ok(failed.stderr.includes('restart osq watch'), failed.stderr);
++        assert.deepEqual(regressionAfter, regressionBefore);
++        assert.ok(branchesAfterFailure.includes('osq/001-order-flow'), branchesAfterFailure);
++        assert.ok(
++          !branchesAfterFailure.includes('osq/001-order-flow-restarted-1'),
++          branchesAfterFailure,
++        );
++        assertOk(approved, 'second approve');
++        assert.match(
++          approved.stdout,
++          /Restarted from main; kept the old branch as osq\/001-order-flow-restarted-1/,
++        );
++      },
++    );
++  },
++);

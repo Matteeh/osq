@@ -32,8 +32,11 @@ export interface DefaultBranchContext {
 /**
  * Approve a change whose triggers include a default-branch trigger. The
  * shared prelude lints, reviews the digest, and commits the revised plan as
- * `osq: <id> replanned`; a conflict restarts the branch from the default
- * branch and any other trigger merges it in.
+ * `osq: <id> replanned` when the worktree has changes under the folder; a
+ * conflict restarts the branch from the default branch and any other trigger
+ * merges it in.
+ *
+ * @scenario spec-lint-and-approve: Worktree removal fails during a restart
  */
 export async function approveDefaultBranchSteering(
   projectRoot: string,
@@ -58,7 +61,13 @@ export async function approveDefaultBranchSteering(
   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
   const vcs = await selectVcs(tree.root, config);
   const relativeFolder = path.relative(tree.root, folderPath).split(path.sep).join('/');
-  await vcs.commit([relativeFolder], `osq: ${specId} replanned`, author);
+  const status = await vcs.status();
+  const changed = status.some(
+    (entry) => entry.path === relativeFolder || entry.path.startsWith(`${relativeFolder}/`),
+  );
+  if (changed) {
+    await vcs.commit([relativeFolder], `osq: ${specId} replanned`, author);
+  }
 
   const observations = await findPlanningSessions(folderPath, {
     createdAt: await resolveChangeCreationTime(folderPath),

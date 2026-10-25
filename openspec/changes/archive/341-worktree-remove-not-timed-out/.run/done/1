@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:eaa532f12129757513a9f6144a863e4636d320d3441be975affefbd9147bfb08"
+build_stamp: "81b56593"
+project_commit: "91d7206c"
+exit_code: 0
+scope_files: {"src/core/foundation/config-timeouts.ts":"sha256:79ff83871fb012c3f6004acef6468f42c09f60433ba371cc1dc8d2d2e3f56d09","src/core/foundation/config-vcs.ts":"sha256:9a135ccc20e2d0e34253e1f7389bc36173f9ef3228a81555cf7ab9df9beebe2e","src/core/foundation/config.ts":"sha256:424b8b91538abf9a57c29bbdacdef8fc0ce546818b21be775d2f99ca4072e673","src/core/vcs/git-run.ts":"sha256:f40c792b4c6bede0554d3657b91c537b9c98f64e91815e1bfd9db5ece0788552","src/core/vcs/git-vcs.ts":"sha256:240a70e73643b9ed3f806e1b5deed132dacbaa37c84bf9bcc3e2858c3b4c285c","tests/vcs-worktree-remove-timeout.test.ts":"sha256:a57ec6a873e9dc925112c52660a8107217f85246f0afa462a1f2e4006c8c9d21"}
+---
+2026-10-24T23:49:14.742Z

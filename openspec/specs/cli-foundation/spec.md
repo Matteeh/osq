@@ -1526,6 +1526,10 @@ SHALL be required when `enabled` is true. `worktreeRoot`, `prepare`, and
 `defaultBranch`, when set, SHALL be non-empty strings after trimming, kept
 trimmed. A loaded config SHALL always carry `vcs`. `timeouts.gitCommitSeconds`
 MAY bound each commit osq makes, and SHALL default to 120 when unset.
+`timeouts.gitWorktreeRemoveSeconds` MAY bound each `git worktree remove` osq
+runs, and SHALL default to 1800 from `DEFAULT_GIT_WORKTREE_REMOVE_SECONDS` in
+`src/core/foundation/config-vcs.ts` when unset, long enough to delete a
+worktree holding a multi-gigabyte build folder.
 
 #### Scenario: Block unset
 - **WHEN** `osq.config.ts` has no `vcs` block
