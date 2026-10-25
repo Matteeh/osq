@@ -24,6 +24,7 @@ osq-feature-show.workspace = true
 osq-feature-lint.workspace = true
 osq-feature-doctor.workspace = true
 osq-feature-retry.workspace = true
+osq-feature-manual.workspace = true
 osq-feature-metaloop.workspace = true
 
 [[bin]]

@@ -13,6 +13,7 @@ use osq_feature_doctor::DoctorFeature;
 use osq_feature_inbox::InboxFeature;
 use osq_feature_land::LandFeature;
 use osq_feature_lint::LintFeature;
+use osq_feature_manual::ManualFeature;
 use osq_feature_plan::PlanFeature;
 use osq_feature_report::ReportFeature;
 use osq_feature_retry::RetryFeature;
@@ -52,6 +53,7 @@ pub fn features() -> Vec<Box<dyn Feature>> {
         Box::new(LintFeature),
         Box::new(DoctorFeature),
         Box::new(RetryFeature),
+        Box::new(ManualFeature::new()),
     ]
 }
 

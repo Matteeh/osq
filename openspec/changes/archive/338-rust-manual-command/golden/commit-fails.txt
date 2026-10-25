@@ -1,0 +1,12 @@
+exit: 1
+lines:
+error:
+<commit refused>
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+AD openspec/manual/2026-10-15T20-01-02-123Z.md
+M  src/app.ts

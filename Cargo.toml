@@ -26,6 +26,7 @@ members = [
     "crates/features/lint",
     "crates/features/doctor",
     "crates/features/retry",
+    "crates/features/manual",
     "crates/apps/cli",
 ]
 
@@ -61,6 +62,7 @@ osq-feature-show = { path = "crates/features/show" }
 osq-feature-lint = { path = "crates/features/lint" }
 osq-feature-doctor = { path = "crates/features/doctor" }
 osq-feature-retry = { path = "crates/features/retry" }
+osq-feature-manual = { path = "crates/features/manual" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.11"

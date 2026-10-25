@@ -1,0 +1,12 @@
+exit: 1
+lines:
+error:
+<commit refused>
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ D src/gone.ts
+R  src/old.ts -> src/new.ts

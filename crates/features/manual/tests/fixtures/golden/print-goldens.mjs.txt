@@ -1,0 +1,159 @@
+// Prints TypeScript's `keepManualEdits` goldens for rust-manual "Manual keep
+// equals TypeScript's" and "Manual refusals equal TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <fixture project> <golden folder>
+// <golden folder> holds `cases.json`; the script writes `<case>.txt` beside it.
+//
+// Each case starts from a fresh scratch folder. It copies the fixture project
+// to the project root and writes the project's `osq.toml` from the case's
+// `vcs`, with `author = "osq <osq@example.com>"`. With `git` `root` the
+// project root is the scratch folder; with `parent` it is `<scratch>/project`
+// and the scratch folder is the repository; with `none` there is no
+// repository. A repository is `git init -b main` with the local config
+// `user.name Ada`, `user.email ada@example.com` and `commit.gpgsign false`,
+// and one commit of every file. The case's steps then run in order:
+//   write   writes `text` to the path, making its folders
+//   append  appends `text` to the path
+//   remove  deletes the path
+//   move    runs `git mv <move> <to>`
+//   config  runs `git config <config> <value>`
+//   hook    writes `.git/hooks/<hook>` as `#!/bin/sh\nexit 1\n`, mode 755
+// Then it runs `keepManualEdits` with the case's comment and paths, `now`
+// 2026-10-15T20:01:02.123Z, and the config `defineConfig` makes of the same
+// `vcs` block.
+//
+// `<case>.txt` holds, one section after another:
+//   exit: 0 when it returned, 1 when it threw
+//   lines: each returned line, a 7-hex short commit written `<commit>`
+//   error: the thrown message, with the project root written `<root>` and the
+//          repository top written `<top>`; a case with `gitRefuses` writes
+//          `<commit refused>` instead, since git's own text differs by version
+//   head: `new` when HEAD moved, `unchanged` when not, `none` with no repository
+//   message: the new commit's raw message, `git log -1 --format=%B`
+//   author: the new commit's `%an <%ae>`
+//   files: the new commit's `git show --name-status --format=` lines
+//   records: each file under `openspec/manual/`, sorted, as `== <name>` and
+//            its text without its final newline
+//   status: `git status --porcelain=v1 --untracked-files=all` after the run
+// A section with nothing to show holds no lines. The file ends with a newline.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const dist = (file) => pathToFileURL(path.resolve('dist', file)).href;
+const { defineConfig } = await import(dist('core/foundation/config.js'));
+const { keepManualEdits } = await import(dist('core/vcs/manual-edits.js'));
+
+const [fixture, golden] = process.argv.slice(2);
+const cases = JSON.parse(fs.readFileSync(path.join(golden, 'cases.json'), 'utf8'));
+const AUTHOR = 'osq <osq@example.com>';
+const NOW = '2026-10-15T20:01:02.123Z';
+
+function git(cwd, args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`git ${args.join(' ')}: ${result.stderr}`);
+  return result.stdout;
+}
+
+function toml(vcs) {
+  const lines = ['[vcs]', `enabled = ${vcs.enabled}`, `author = "${AUTHOR}"`];
+  if (vcs.manualEdits !== undefined) lines.push(`manualEdits = "${vcs.manualEdits}"`);
+  return `${lines.join('\n')}\n`;
+}
+
+function runStep(root, top, step) {
+  if (step.write !== undefined) {
+    fs.mkdirSync(path.dirname(path.join(root, step.write)), { recursive: true });
+    fs.writeFileSync(path.join(root, step.write), step.text);
+  } else if (step.append !== undefined) {
+    fs.appendFileSync(path.join(root, step.append), step.text);
+  } else if (step.remove !== undefined) {
+    fs.rmSync(path.join(root, step.remove));
+  } else if (step.move !== undefined) {
+    git(root, ['mv', step.move, step.to]);
+  } else if (step.config !== undefined) {
+    git(root, ['config', step.config, step.value]);
+  } else if (step.hook !== undefined) {
+    const hook = path.join(top, '.git', 'hooks', step.hook);
+    fs.mkdirSync(path.dirname(hook), { recursive: true });
+    fs.writeFileSync(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+  } else {
+    throw new Error(`unknown step ${JSON.stringify(step)}`);
+  }
+}
+
+function setUp(scratch, entry) {
+  const root = entry.git === 'parent' ? path.join(scratch, 'project') : scratch;
+  fs.cpSync(fixture, root, { recursive: true });
+  fs.writeFileSync(path.join(root, 'osq.toml'), toml(entry.vcs));
+  if (entry.git !== 'none') {
+    git(scratch, ['init', '-q', '-b', 'main']);
+    git(scratch, ['config', 'user.name', 'Ada']);
+    git(scratch, ['config', 'user.email', 'ada@example.com']);
+    git(scratch, ['config', 'commit.gpgsign', 'false']);
+    git(scratch, ['add', '-A']);
+    git(scratch, ['commit', '-q', '-m', 'init']);
+  }
+  return root;
+}
+
+function records(root) {
+  const dir = path.join(root, 'openspec', 'manual');
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .sort()
+    .flatMap((name) => {
+      const text = fs.readFileSync(path.join(dir, name), 'utf8').replace(/\n$/, '');
+      return [`== ${name}`, ...text.split('\n')];
+    });
+}
+
+async function render(entry) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `osq-manual-${entry.name}-`)));
+  try {
+    const root = setUp(scratch, entry);
+    for (const step of entry.steps) runStep(root, scratch, step);
+    const hasGit = entry.git !== 'none';
+    const before = hasGit ? git(scratch, ['rev-parse', 'HEAD']).trim() : null;
+    const vcs = { enabled: entry.vcs.enabled, author: AUTHOR };
+    if (entry.vcs.manualEdits !== undefined) vcs.manualEdits = entry.vcs.manualEdits;
+    const config = defineConfig({ vcs });
+
+    let exit = 0;
+    let lines = [];
+    let error = [];
+    try {
+      lines = await keepManualEdits(root, config, { comment: entry.comment, paths: entry.paths, now: NOW });
+      lines = lines.map((line) => line.replace(/ as [0-9a-f]{7}$/, ' as <commit>'));
+    } catch (thrown) {
+      exit = 1;
+      const message = entry.gitRefuses === true
+        ? '<commit refused>'
+        : String(thrown.message).replaceAll(root, '<root>').replaceAll(scratch, '<top>');
+      error = [message];
+    }
+
+    const after = hasGit ? git(scratch, ['rev-parse', 'HEAD']).trim() : null;
+    const head = !hasGit ? 'none' : after === before ? 'unchanged' : 'new';
+    const moved = head === 'new';
+    const out = [`exit: ${exit}`, 'lines:', ...lines, 'error:', ...error, `head: ${head}`, 'message:'];
+    if (moved) out.push(...git(scratch, ['log', '-1', '--format=%B']).replace(/\n+$/, '').split('\n'));
+    out.push('author:');
+    if (moved) out.push(git(scratch, ['log', '-1', '--format=%an <%ae>']).trim());
+    out.push('files:');
+    if (moved) out.push(...git(scratch, ['show', '--name-status', '--format=', 'HEAD']).trim().split('\n'));
+    out.push('records:', ...records(root), 'status:');
+    if (hasGit) {
+      const status = git(scratch, ['status', '--porcelain=v1', '--untracked-files=all']).replace(/\n+$/, '');
+      if (status !== '') out.push(...status.split('\n'));
+    }
+    fs.writeFileSync(path.join(golden, `${entry.name}.txt`), `${out.join('\n')}\n`);
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+for (const entry of cases) await render(entry);

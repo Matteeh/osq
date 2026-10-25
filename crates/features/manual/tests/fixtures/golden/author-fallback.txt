@@ -1,0 +1,23 @@
+exit: 0
+lines:
+Kept src/app.ts as <commit>
+error:
+head: new
+message:
+osq: manual keep as osq
+author:
+osq <osq@example.com>
+files:
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+M	src/app.ts
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - src/app.ts
+capabilities:
+  - alpha
+---
+keep as osq
+status:

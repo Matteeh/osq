@@ -1,0 +1,23 @@
+exit: 0
+lines:
+Kept notes.txt as <commit>
+error:
+head: new
+message:
+osq: manual add notes
+author:
+Ada <ada@example.com>
+files:
+A	notes.txt
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - notes.txt
+capabilities: []
+---
+add notes
+status:
+ M src/app.ts

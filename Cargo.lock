@@ -302,6 +302,7 @@ dependencies = [
  "osq-feature-inbox",
  "osq-feature-land",
  "osq-feature-lint",
+ "osq-feature-manual",
  "osq-feature-metaloop",
  "osq-feature-plan",
  "osq-feature-report",
@@ -392,6 +393,19 @@ dependencies = [
  "osq-kernel-config",
  "osq-kernel-linter",
  "osq-kernel-loop",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
+ "yaml-rust2",
+]
+
+[[package]]
+name = "osq-feature-manual"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
  "osq-kernel-specs",
  "osq-kernel-storage",
  "osq-kernel-vcs",

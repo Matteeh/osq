@@ -1,0 +1,11 @@
+exit: 1
+lines:
+error:
+src/none.ts has no uncommitted edits
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ M src/app.ts

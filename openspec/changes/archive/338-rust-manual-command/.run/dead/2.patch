@@ -1,0 +1,752 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 72774fb0..988bacca 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -406,8 +406,11 @@ version = "0.0.0"
+ dependencies = [
+  "osq-core",
+  "osq-kernel-config",
++ "osq-kernel-specs",
++ "osq-kernel-storage",
+  "osq-kernel-vcs",
+  "serde_json",
++ "yaml-rust2",
+ ]
+ 
+ [[package]]
+diff --git a/crates/apps/cli/tests/manual_command.rs b/crates/apps/cli/tests/manual_command.rs
+new file mode 100644
+index 00000000..aadc4e1b
+--- /dev/null
++++ b/crates/apps/cli/tests/manual_command.rs
+@@ -0,0 +1,109 @@
++//! Proves `manual` through the CLI's feature registry.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++use std::process::{self, Command};
++
++use osq_cli::{CliResult, features, run_cli};
++
++/// A scratch repository under the system temporary directory, removed on drop.
++struct Scratch {
++    /// The repository's top level.
++    path: PathBuf,
++}
++
++impl Scratch {
++    /// Creates a fresh repository named for this test and process.
++    fn new() -> Self {
++        let path = std::env::temp_dir().join(format!("osq-manual-command-{}", process::id()));
++        let _ = fs::remove_dir_all(&path);
++        fs::create_dir_all(&path).expect("the scratch folder is created");
++        let path = fs::canonicalize(path).expect("the scratch folder canonicalizes");
++        Self { path }
++    }
++}
++
++impl Drop for Scratch {
++    /// Removes the scratch repository and everything it holds.
++    fn drop(&mut self) {
++        let _ = fs::remove_dir_all(&self.path);
++    }
++}
++
++/// Runs git in `cwd`, giving its trimmed standard output.
++fn git(cwd: &Path, args: &[&str]) -> String {
++    let output = Command::new("git")
++        .args(args)
++        .current_dir(cwd)
++        .output()
++        .expect("git starts");
++    assert!(
++        output.status.success(),
++        "git {} failed: {}",
++        args.join(" "),
++        String::from_utf8_lossy(&output.stderr)
++    );
++    String::from_utf8(output.stdout)
++        .expect("git writes text")
++        .trim()
++        .to_owned()
++}
++
++/// The arguments as owned strings.
++fn args(values: &[&str]) -> Vec<String> {
++    values.iter().map(|value| (*value).to_owned()).collect()
++}
++
++/// Writes the scratch repository's committed project and its one edit.
++fn set_up(root: &Path) {
++    fs::write(
++        root.join("osq.toml"),
++        "[vcs]\nenabled = true\nauthor = \"osq <osq@example.com>\"\n",
++    )
++    .expect("the config is written");
++    fs::write(root.join("a.txt"), "one\n").expect("the tracked file is written");
++    git(root, &["init", "-q", "-b", "main"]);
++    git(root, &["config", "user.name", "Ada"]);
++    git(root, &["config", "user.email", "ada@example.com"]);
++    git(root, &["config", "commit.gpgsign", "false"]);
++    git(root, &["add", "-A"]);
++    git(root, &["commit", "-q", "-m", "init"]);
++    fs::write(root.join("a.txt"), "two\n").expect("the tracked file is edited");
++}
++
++/// Proves the blank, kept and nothing-to-keep rows in order.
++///
++/// Covers: rust-cli/manual-through-the-cli
++#[test]
++fn manual_through_the_cli() {
++    let scratch = Scratch::new();
++    let root = scratch.path.as_path();
++    set_up(root);
++    let registry = features();
++    assert_eq!(
++        run_cli(&registry, root, &args(&["manual", "   "])),
++        CliResult {
++            stdout: String::new(),
++            stderr: "manual failed: osq manual needs a comment: osq manual \"<why>\"\n".to_owned(),
++            code: 1,
++        }
++    );
++    let keep = run_cli(&registry, root, &args(&["manual", "keep a"]));
++    let commit = git(root, &["rev-parse", "HEAD"]);
++    assert_eq!(
++        keep,
++        CliResult {
++            stdout: format!("Kept a.txt as {}\n", &commit[..7]),
++            stderr: String::new(),
++            code: 0,
++        }
++    );
++    assert_eq!(
++        run_cli(&registry, root, &args(&["manual", "again"])),
++        CliResult {
++            stdout: String::new(),
++            stderr: "manual failed: nothing to keep: the checkout has no uncommitted edits outside openspec/changes\n".to_owned(),
++            code: 1,
++        }
++    );
++}
+diff --git a/crates/features/manual/Cargo.toml b/crates/features/manual/Cargo.toml
+index c0b429be..6546b241 100644
+--- a/crates/features/manual/Cargo.toml
++++ b/crates/features/manual/Cargo.toml
+@@ -14,6 +14,9 @@ workspace = true
+ osq-core.workspace = true
+ osq-kernel-config.workspace = true
+ osq-kernel-vcs.workspace = true
++osq-kernel-specs.workspace = true
++osq-kernel-storage.workspace = true
++yaml-rust2.workspace = true
+ 
+ [dev-dependencies]
+ serde_json.workspace = true
+diff --git a/crates/features/manual/src/keep.rs b/crates/features/manual/src/keep.rs
+index 2b538e58..19241abc 100644
+--- a/crates/features/manual/src/keep.rs
++++ b/crates/features/manual/src/keep.rs
+@@ -1,15 +1,186 @@
+-//! The keep half of `manual`, which task 2 fills in.
++//! The keep half of `manual`: the record, the commit and the lines it prints.
++
++use std::collections::BTreeSet;
++use std::fs;
++use std::path::Path;
+ 
+ use osq_core::{FeatureError, Output};
++use osq_kernel_config::Config;
++use osq_kernel_specs::{owner_capabilities, read_capability_ownership};
++use osq_kernel_storage::scope::write_frontmatter;
++use osq_kernel_vcs::{GitVcs, StatusEntry, Vcs};
++use yaml_rust2::Yaml;
++use yaml_rust2::yaml::Hash;
++
++use crate::paths;
++use crate::time;
++
++/// Builds the `Failed` error every keep failure uses.
++fn failed(message: impl Into<String>) -> FeatureError {
++    FeatureError::failed("manual", message)
++}
+ 
+-/// Keeps the selected entries, which task 2 builds.
++/// Turns a file error into the command's failure.
++fn io_failed(error: &std::io::Error) -> FeatureError {
++    failed(error.to_string())
++}
++
++/// Keeps the selected entries, writing the record and committing both.
+ ///
+ /// # Errors
+ ///
+-/// Returns the placeholder failure until task 2 writes the record and commit.
+-pub(crate) fn run(_now_ms: Option<i64>) -> Result<Output, FeatureError> {
+-    Err(FeatureError::failed(
+-        "manual",
+-        "keeping edits is not built yet",
+-    ))
++/// Returns a `Failed` error when the record cannot be written or git refuses
++/// the commit.
++///
++/// Implements: rust-manual/manual-keep
++pub(crate) fn run(
++    root: &Path,
++    config: &Config,
++    status: &[StatusEntry],
++    kept: &[StatusEntry],
++    comment: &str,
++    now_ms: Option<i64>,
++) -> Result<Output, FeatureError> {
++    let paths = record_paths(kept);
++    let kept_at = time::format_utc(now_ms.unwrap_or_else(time::now_ms));
++    let capabilities = capabilities(root, &paths);
++    let commit = write_record_and_commit(root, config, comment, &kept_at, &paths, &capabilities)?;
++    let mut lines = vec![format!("Kept {} as {}", paths.join(", "), short(&commit))];
++    let left_out = left_out_untracked(status, kept);
++    if !left_out.is_empty() {
++        lines.push(format!(
++            "Left out untracked: {}; name them to keep them",
++            left_out.join(", ")
++        ));
++    }
++    Ok(Output::text(format!("{}\n", lines.join("\n"))))
++}
++
++/// The kept entries' paths and rename sources, distinct and sorted by bytes.
++fn record_paths(kept: &[StatusEntry]) -> Vec<String> {
++    let mut paths = BTreeSet::new();
++    for entry in kept {
++        paths.insert(entry.path.clone());
++        if let Some(from) = &entry.from {
++            paths.insert(from.clone());
++        }
++    }
++    paths.into_iter().collect()
++}
++
++/// The distinct capabilities that own any of `paths`, sorted by bytes.
++fn capabilities(root: &Path, paths: &[String]) -> Vec<String> {
++    let specs = root.join("openspec").join("specs");
++    let ownerships = read_capability_ownership(&specs);
++    let mut names = BTreeSet::new();
++    for path in paths {
++        names.extend(owner_capabilities(&ownerships, path));
++    }
++    names.into_iter().collect()
++}
++
++/// Renders the record's text from its fields.
++fn render_record(
++    kept_at: &str,
++    paths: &[String],
++    capabilities: &[String],
++    comment: &str,
++) -> String {
++    let mut mapping = Hash::new();
++    mapping.insert(
++        Yaml::String(String::from("kept_at")),
++        Yaml::String(kept_at.to_owned()),
++    );
++    mapping.insert(Yaml::String(String::from("paths")), list(paths));
++    mapping.insert(
++        Yaml::String(String::from("capabilities")),
++        list(capabilities),
++    );
++    format!("---\n{}---\n{comment}\n", write_frontmatter(&mapping))
++}
++
++/// One YAML list of strings.
++fn list(values: &[String]) -> Yaml {
++    Yaml::Array(
++        values
++            .iter()
++            .map(|value| Yaml::String(value.clone()))
++            .collect(),
++    )
++}
++
++/// The record's path relative to the project root.
++fn record_relative(kept_at: &str) -> String {
++    format!("openspec/manual/{}.md", kept_at.replace([':', '.'], "-"))
++}
++
++/// Writes the record and commits it with the kept paths, removing it on failure.
++fn write_record_and_commit(
++    root: &Path,
++    config: &Config,
++    comment: &str,
++    kept_at: &str,
++    paths: &[String],
++    capabilities: &[String],
++) -> Result<String, FeatureError> {
++    let relative = record_relative(kept_at);
++    let record = root.join(&relative);
++    if let Some(parent) = record.parent() {
++        fs::create_dir_all(parent).map_err(|error| io_failed(&error))?;
++    }
++    fs::write(
++        &record,
++        render_record(kept_at, paths, capabilities, comment),
++    )
++    .map_err(|error| io_failed(&error))?;
++    let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
++    let author = resolve_author(&vcs, config);
++    let mut commit_paths: Vec<&str> = paths.iter().map(String::as_str).collect();
++    commit_paths.push(&relative);
++    match vcs.commit(&commit_paths, &commit_message(comment), &author) {
++        Ok(commit) => Ok(commit),
++        Err(error) => {
++            let _ = fs::remove_file(&record);
++            Err(failed(error.to_string()))
++        }
++    }
++}
++
++/// The commit author from git config, or `vcs.author` when either is unset.
++fn resolve_author(vcs: &GitVcs, config: &Config) -> String {
++    let name = vcs.config_value("user.name").ok().flatten();
++    let email = vcs.config_value("user.email").ok().flatten();
++    match (name, email) {
++        (Some(name), Some(email)) => format!("{name} <{email}>"),
++        _ => config.vcs.author.clone().unwrap_or_default(),
++    }
++}
++
++/// The commit message: the subject with the comment's first line, the rest below.
++fn commit_message(comment: &str) -> String {
++    let (first, rest) = match comment.split_once('\n') {
++        Some((first, rest)) => (first, Some(rest)),
++        None => (comment, None),
++    };
++    let subject = format!("osq: manual {first}");
++    match rest {
++        Some(rest) => format!("{subject}\n\n{rest}"),
++        None => subject,
++    }
++}
++
++/// The commit's first seven characters.
++fn short(commit: &str) -> &str {
++    commit.get(..7).unwrap_or(commit)
++}
++
++/// The untracked entries a keep leaves out, distinct and sorted by bytes.
++fn left_out_untracked(status: &[StatusEntry], kept: &[StatusEntry]) -> Vec<String> {
++    let mut names = BTreeSet::new();
++    for entry in status {
++        if entry.code == "??" && !paths::is_under_changes(&entry.path) && !kept.contains(entry) {
++            names.insert(entry.path.clone());
++        }
++    }
++    names.into_iter().collect()
+ }
+diff --git a/crates/features/manual/src/lib.rs b/crates/features/manual/src/lib.rs
+index 89bf06e6..df85cb29 100644
+--- a/crates/features/manual/src/lib.rs
++++ b/crates/features/manual/src/lib.rs
+@@ -8,5 +8,6 @@ mod keep;
+ mod manual;
+ mod paths;
+ mod refusals;
++mod time;
+ 
+ pub use feature::ManualFeature;
+diff --git a/crates/features/manual/src/manual.rs b/crates/features/manual/src/manual.rs
+index 7d596761..5637a8b0 100644
+--- a/crates/features/manual/src/manual.rs
++++ b/crates/features/manual/src/manual.rs
+@@ -25,7 +25,13 @@ pub(crate) fn run(
+ ) -> Result<Output, FeatureError> {
+     let config =
+         load_config(root).map_err(|error| FeatureError::failed("manual", error.to_string()))?;
+-    let kept = refusals::check(root, &config, comment, named)?;
+-    let _ = kept;
+-    keep::run(now_ms)
++    let selection = refusals::check(root, &config, comment, named)?;
++    keep::run(
++        root,
++        &config,
++        &selection.status,
++        &selection.kept,
++        comment.trim(),
++        now_ms,
++    )
+ }
+diff --git a/crates/features/manual/src/refusals.rs b/crates/features/manual/src/refusals.rs
+index a6f106d5..013464de 100644
+--- a/crates/features/manual/src/refusals.rs
++++ b/crates/features/manual/src/refusals.rs
+@@ -27,8 +27,15 @@ fn failed(message: impl Into<String>) -> FeatureError {
+     FeatureError::failed("manual", message)
+ }
+ 
+-/// Checks every refusal in the requirement's order and gives the selected
+-/// entries.
++/// The working tree's entries and the ones a keep touches.
++pub(crate) struct Selection {
++    /// Every status entry the refusals read.
++    pub(crate) status: Vec<StatusEntry>,
++    /// The entries a keep writes and commits.
++    pub(crate) kept: Vec<StatusEntry>,
++}
++
++/// Checks every refusal in the requirement's order and gives the selection.
+ ///
+ /// # Errors
+ ///
+@@ -40,7 +47,7 @@ pub(crate) fn check(
+     config: &Config,
+     comment: &str,
+     named: &[String],
+-) -> Result<Vec<StatusEntry>, FeatureError> {
++) -> Result<Selection, FeatureError> {
+     if config.vcs.manual_edits == ManualEdits::Block {
+         return Err(failed(BLOCKED));
+     }
+@@ -73,5 +80,5 @@ pub(crate) fn check(
+     if kept.is_empty() {
+         return Err(failed(NOTHING_TO_KEEP));
+     }
+-    Ok(kept)
++    Ok(Selection { status, kept })
+ }
+diff --git a/crates/features/manual/src/time.rs b/crates/features/manual/src/time.rs
+new file mode 100644
+index 00000000..a68c8ef7
+--- /dev/null
++++ b/crates/features/manual/src/time.rs
+@@ -0,0 +1,52 @@
++//! Reading the clock and writing UTC in TypeScript's fixed ISO form.
++
++use std::time::{SystemTime, UNIX_EPOCH};
++
++/// The current time as epoch milliseconds.
++///
++/// Implements: rust-manual/manual-keep
++pub(crate) fn now_ms() -> i64 {
++    let elapsed = SystemTime::now()
++        .duration_since(UNIX_EPOCH)
++        .unwrap_or_default();
++    i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX)
++}
++
++/// Writes epoch milliseconds as `YYYY-MM-DDTHH:MM:SS.mmmZ` in UTC.
++///
++/// Implements: rust-manual/manual-keep
++pub(crate) fn format_utc(ms: i64) -> String {
++    let seconds = ms.div_euclid(1000);
++    let millis = ms.rem_euclid(1000);
++    let days = seconds.div_euclid(86_400);
++    let day_seconds = seconds.rem_euclid(86_400);
++    let (year, month, day) = civil_from_days(days);
++    let hour = day_seconds / 3_600;
++    let minute = (day_seconds % 3_600) / 60;
++    let second = day_seconds % 60;
++    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}Z")
++}
++
++/// Turns days since the Unix epoch into a proleptic Gregorian date.
++fn civil_from_days(days: i64) -> (i64, i64, i64) {
++    let shifted = days + 719_468;
++    let era = if shifted >= 0 {
++        shifted
++    } else {
++        shifted - 146_096
++    } / 146_097;
++    let day_of_era = shifted - era * 146_097;
++    let year_of_era =
++        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
++    let year = year_of_era + era * 400;
++    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
++    let month_prime = (5 * day_of_year + 2) / 153;
++    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
++    let month = if month_prime < 10 {
++        month_prime + 3
++    } else {
++        month_prime - 9
++    };
++    let year = if month <= 2 { year + 1 } else { year };
++    (year, month, day)
++}
+diff --git a/crates/features/manual/tests/manual_keeps.rs b/crates/features/manual/tests/manual_keeps.rs
+new file mode 100644
+index 00000000..1400e384
+--- /dev/null
++++ b/crates/features/manual/tests/manual_keeps.rs
+@@ -0,0 +1,91 @@
++//! Proves manual's keeps against the goldens TypeScript printed.
++
++mod support;
++
++#[path = "../src/time.rs"]
++mod time;
++
++use std::time::{SystemTime, UNIX_EPOCH};
++
++use osq_kernel_storage::ManualEdit;
++
++/// The keep cases of `cases.json`, in the requirement's order.
++const CASES: [&str; 9] = [
++    "tracked",
++    "named-untracked",
++    "folder-prefix",
++    "rename",
++    "multiline",
++    "change-folders-left-out",
++    "unowned",
++    "author-fallback",
++    "commit-fails",
++];
++
++/// Proves every row of "Manual keep equals TypeScript's".
++///
++/// Covers: rust-manual/manual-keep-equals-typescript-s
++#[test]
++fn manual_keep_equals_typescripts() {
++    for name in CASES {
++        support::check_case(name);
++    }
++}
++
++/// Proves the planner reads the folder-prefix case's kept edit.
++///
++/// Covers: rust-manual/the-planner-reads-a-kept-edit
++#[test]
++fn planner_reads_a_kept_edit() {
++    let records = support::kept_records("folder-prefix");
++    assert_eq!(
++        records,
++        vec![ManualEdit {
++            file: "2026-10-15T20-01-02-123Z.md".to_owned(),
++            kept_at: "2026-10-15T20:01:02.123Z".to_owned(),
++            paths: vec!["src/app.ts".to_owned(), "src/lib/util.ts".to_owned()],
++            capabilities: vec!["alpha".to_owned(), "beta".to_owned()],
++            comment: "bump the source".to_owned(),
++        }]
++    );
++}
++
++/// Proves the fixed UTC form across era, leap-year and month edges.
++///
++/// Covers: rust-manual/manual-keep-equals-typescript-s
++#[test]
++fn utc_text_for_fixed_times() {
++    let rows: [(i64, &str); 16] = [
++        (-62_162_121_600_000, "0000-02-29T00:00:00.000Z"),
++        (-62_162_035_200_001, "0000-02-29T23:59:59.999Z"),
++        (-62_162_035_200_000, "0000-03-01T00:00:00.000Z"),
++        (-62_135_596_800_000, "0001-01-01T00:00:00.000Z"),
++        (-59_006_316_303_211, "0100-03-01T12:34:56.789Z"),
++        (-49_539_254_400_001, "0400-02-29T23:59:59.999Z"),
++        (-11_670_998_400_000, "1600-02-29T00:00:00.000Z"),
++        (-1, "1969-12-31T23:59:59.999Z"),
++        (0, "1970-01-01T00:00:00.000Z"),
++        (951_804_428_009, "2000-02-29T06:07:08.009Z"),
++        (1_709_208_000_000, "2024-02-29T12:00:00.000Z"),
++        (1_735_689_599_999, "2024-12-31T23:59:59.999Z"),
++        (1_735_689_600_000, "2025-01-01T00:00:00.000Z"),
++        (1_792_231_200_000, "2026-10-17T10:00:00.000Z"),
++        (13_574_563_200_000, "2400-02-29T00:00:00.000Z"),
++        (253_402_300_799_999, "9999-12-31T23:59:59.999Z"),
++    ];
++    for (ms, expected) in rows {
++        assert_eq!(time::format_utc(ms), expected, "{ms}");
++    }
++    let before = elapsed_ms();
++    let now = time::now_ms();
++    let after = elapsed_ms();
++    assert!(before <= now && now <= after, "the clock is UTC now");
++}
++
++/// The current time as epoch milliseconds, for the clock's bounds.
++fn elapsed_ms() -> i64 {
++    let elapsed = SystemTime::now()
++        .duration_since(UNIX_EPOCH)
++        .expect("the clock is after the epoch");
++    i64::try_from(elapsed.as_millis()).expect("the time fits in i64")
++}
+diff --git a/crates/features/manual/tests/support/mod.rs b/crates/features/manual/tests/support/mod.rs
+index 7b3ea933..105501d6 100644
+--- a/crates/features/manual/tests/support/mod.rs
++++ b/crates/features/manual/tests/support/mod.rs
+@@ -12,6 +12,7 @@ use std::process::{self, Command};
+ 
+ use osq_core::{Feature, FeatureError, Invocation};
+ use osq_feature_manual::ManualFeature;
++use osq_kernel_storage::ManualEdit;
+ use serde_json::Value;
+ 
+ /// The keep time every case uses, in epoch milliseconds.
+@@ -342,6 +343,19 @@ pub fn check_case(name: &str) {
+     assert_eq!(dump, golden, "{name}");
+ }
+ 
++/// Runs `name`'s case and reads the records the keep wrote.
++pub fn kept_records(name: &str) -> Vec<ManualEdit> {
++    let case = case_named(name);
++    let scratch = Scratch::new(&format!("{name}-records"));
++    let root = set_up(&scratch.path, &case);
++    for step in case["steps"].as_array().expect("the case has steps") {
++        run_step(&root, &scratch.path, step);
++    }
++    let (_, error) = run_manual(&root, &case);
++    assert!(error.is_empty(), "{name} is kept: {error:?}");
++    osq_kernel_storage::read_manual_edits(&root)
++}
++
+ /// The refusal a tracked edit inside `openspec/changes` gives when no path is
+ /// named, which the goldens do not cover.
+ pub fn tracked_change_refusal() -> String {
+diff --git a/openspec/changes/338-rust-manual-command/.run/dead/2.md b/openspec/changes/338-rust-manual-command/.run/dead/2.md
+new file mode 100644
+index 00000000..94cade9a
+--- /dev/null
++++ b/openspec/changes/338-rust-manual-command/.run/dead/2.md
+@@ -0,0 +1,6 @@
++---
++reason: undeclared_test_change
++fingerprint: sha256:225cdf76fdd17cec10577283538503943b1ac17a1be4c825b3dbab4f78249b7b
++---
++Preexisting test files were modified or deleted without both tests.modify: true and an authorizing scope entry:
++- crates/features/manual/tests/support/mod.rs (modified); authorizing scope: crates/features/manual/tests/support/mod.rs
+diff --git a/openspec/changes/338-rust-manual-command/.run/events/2.jsonl b/openspec/changes/338-rust-manual-command/.run/events/2.jsonl
+new file mode 100644
+index 00000000..f7cb3653
+--- /dev/null
++++ b/openspec/changes/338-rust-manual-command/.run/events/2.jsonl
+@@ -0,0 +1,104 @@
++{"type":"verify_ran","timestamp":"2026-10-24T23:49:27.690Z","data":{"command":"cargo test -p osq-feature-manual -p osq-cli --test manual_keeps --test manual_command","exitCode":101,"duration":0.47,"log":".run/logs/2-1.log","output":"error: no test target named `manual_keeps` in `osq-feature-manual`, ... packages\nhelp: available test targets:\n    approve_steered\n    binary\n    dispatch\n    dispatch_output_code\n    feature\n    manual_refusals\n    reactions\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-24T23:52:09.558Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":38,"scopeLines":1715,"repoFiles":33056,"repoLines":1119138,"importFanIn":0,"proposalWords":654,"taskWords":366,"deltaRequirements":6,"deltaScenarios":9,"dependencies":{"crates/features/manual/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-vcs","serde_json"]}}}
++{"type":"instructions_changed","timestamp":"2026-10-24T23:52:09.860Z","data":{"changed":["AGENTS.md","ADR 003 added","ADR 006 added","ADR 007 added","ADR 014 added","ADR 016 added","ADR 017 added","ADR 022 added","ADR 023 added","ADR 024 added","ADR 025 added","ADR 026 added","ADR 027 added","ADR 028 added","ADR 029 added","ADR 030 added"]}}
++{"type":"started","timestamp":"2026-10-24T23:52:10.112Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"154473c2","pid":1907779,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"81b56593"}}
++{"type":"text","timestamp":"2026-10-24T23:52:11.787Z","data":{"text":"I'll start by reading the task file, proposal, and specs."}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:11.787Z","data":{"promptTokens":2522,"candidateTokens":171,"totalTokens":6917,"cachedTokens":4224,"reasoningTokens":0,"cost":0.000987144,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:11.792Z","data":{"tool":"read","summary":"openspec/changes/338-rust-manual-command/tasks/2.md"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:11.792Z","data":{"tool":"read","summary":"openspec/changes/338-rust-manual-command/proposal.md"}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:13.519Z","data":{"promptTokens":2178,"candidateTokens":260,"totalTokens":9350,"cachedTokens":6912,"reasoningTokens":0,"cost":0.001006872,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:13.541Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:13.541Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:15.399Z","data":{"promptTokens":3256,"candidateTokens":285,"totalTokens":12885,"cachedTokens":9344,"reasoningTokens":6,"cost":0.0013748639999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:15.399Z","data":{"tool":"bash","summary":"cd "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:15.400Z","data":{"tool":"bash","summary":"cd "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:17.177Z","data":{"promptTokens":7590,"candidateTokens":260,"totalTokens":20650,"cachedTokens":12800,"reasoningTokens":14,"cost":0.0026658000000000003,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:17.178Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:17.181Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:19.229Z","data":{"promptTokens":7113,"candidateTokens":329,"totalTokens":28050,"cachedTokens":20608,"reasoningTokens":40,"cost":0.0026523479999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:19.230Z","data":{"tool":"bash","summary":"cd "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:19.230Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:21.605Z","data":{"promptTokens":5073,"candidateTokens":324,"totalTokens":33429,"cachedTokens":28032,"reasoningTokens":50,"cost":0.0020788919999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:21.605Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:21.605Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:24.212Z","data":{"promptTokens":3061,"candidateTokens":376,"totalTokens":36845,"cachedTokens":33408,"reasoningTokens":49,"cost":0.0015699479999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:24.213Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:24.213Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:26.259Z","data":{"promptTokens":3630,"candidateTokens":275,"totalTokens":40641,"cachedTokens":36736,"reasoningTokens":13,"cost":0.0016394159999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:26.259Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:26.260Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:32.199Z","data":{"promptTokens":5056,"candidateTokens":943,"totalTokens":46575,"cachedTokens":40576,"reasoningTokens":701,"cost":0.002891856,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:32.199Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:32.200Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:33.769Z","data":{"promptTokens":1629,"candidateTokens":119,"totalTokens":48212,"cachedTokens":46464,"reasoningTokens":0,"cost":0.000910284,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:33.784Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:38.822Z","data":{"promptTokens":506,"candidateTokens":689,"totalTokens":49323,"cachedTokens":48128,"reasoningTokens":467,"cost":0.001267368,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:38.823Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:38.823Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:40.257Z","data":{"promptTokens":1469,"candidateTokens":134,"totalTokens":50883,"cachedTokens":49280,"reasoningTokens":0,"cost":0.00089718,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:40.258Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:43.938Z","data":{"promptTokens":1024,"candidateTokens":573,"totalTokens":52413,"cachedTokens":50816,"reasoningTokens":291,"cost":0.0012996960000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:43.938Z","data":{"tool":"bash","summary":"cd "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:43.939Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:48.320Z","data":{"promptTokens":448,"candidateTokens":695,"totalTokens":53495,"cachedTokens":52352,"reasoningTokens":419,"cost":0.001282512,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:48.321Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:52:48.321Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:52:49.889Z","data":{"promptTokens":804,"candidateTokens":100,"totalTokens":54280,"cachedTokens":53376,"reasoningTokens":0,"cost":0.000681456,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:52:49.890Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:04.868Z","data":{"promptTokens":833,"candidateTokens":2863,"totalTokens":57968,"cachedTokens":54272,"reasoningTokens":2757,"cost":0.004011132,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:04.869Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:07.616Z","data":{"promptTokens":1033,"candidateTokens":358,"totalTokens":59247,"cachedTokens":57856,"reasoningTokens":132,"cost":0.001086636,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:07.616Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tool","timestamp":"2026-10-24T23:53:07.617Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:17.394Z","data":{"promptTokens":2536,"candidateTokens":1686,"totalTokens":63358,"cachedTokens":59136,"reasoningTokens":1538,"cost":0.0031388159999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:17.394Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:23.615Z","data":{"promptTokens":503,"candidateTokens":1305,"totalTokens":65040,"cachedTokens":63232,"reasoningTokens":1175,"cost":0.002096292,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:23.616Z","data":{"tool":"bash","summary":"grep -rn \"pub type Hash\" ~/.cargo/registry/src/*/yaml-rust2-"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:32.778Z","data":{"promptTokens":228,"candidateTokens":1638,"totalTokens":66762,"cachedTokens":64896,"reasoningTokens":1442,"cost":0.002423376,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:32.779Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:36.470Z","data":{"promptTokens":261,"candidateTokens":834,"totalTokens":67783,"cachedTokens":66688,"reasoningTokens":125,"cost":0.001479228,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:36.470Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:36.472Z","data":{"path":"crates/features/manual/src/time.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:42.407Z","data":{"promptTokens":245,"candidateTokens":1701,"totalTokens":69530,"cachedTokens":67584,"reasoningTokens":4,"cost":0.002520204,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:42.407Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:42.408Z","data":{"path":"crates/features/manual/src/keep.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:46.030Z","data":{"promptTokens":201,"candidateTokens":879,"totalTokens":70456,"cachedTokens":69376,"reasoningTokens":72,"cost":0.001531356,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:46.030Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:49.457Z","data":{"promptTokens":432,"candidateTokens":709,"totalTokens":71541,"cachedTokens":70400,"reasoningTokens":299,"cost":0.0014028,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:49.457Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:53:54.418Z","data":{"promptTokens":161,"candidateTokens":1224,"totalTokens":72809,"cachedTokens":71424,"reasoningTokens":79,"cost":0.0019456439999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:53:54.419Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:53:54.419Z","data":{"path":"crates/features/manual/tests/manual_keeps.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:00.994Z","data":{"promptTokens":156,"candidateTokens":1506,"totalTokens":74366,"cachedTokens":72704,"reasoningTokens":476,"cost":0.002290224,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:00.995Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:54:00.998Z","data":{"path":"crates/apps/cli/tests/manual_command.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:05.922Z","data":{"promptTokens":175,"candidateTokens":763,"totalTokens":75178,"cachedTokens":74240,"reasoningTokens":653,"cost":0.00141354,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:05.922Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:09.361Z","data":{"promptTokens":348,"candidateTokens":167,"totalTokens":75651,"cachedTokens":75136,"reasoningTokens":70,"cost":0.000755616,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:09.361Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:12.115Z","data":{"promptTokens":143,"candidateTokens":328,"totalTokens":76119,"cachedTokens":75648,"reasoningTokens":213,"cost":0.000890388,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:12.115Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:17.110Z","data":{"promptTokens":984,"candidateTokens":508,"totalTokens":77524,"cachedTokens":76032,"reasoningTokens":83,"cost":0.0013609919999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:17.110Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:19.908Z","data":{"promptTokens":325,"candidateTokens":150,"totalTokens":77915,"cachedTokens":77440,"reasoningTokens":8,"cost":0.00074214,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:19.909Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:26.633Z","data":{"promptTokens":1039,"candidateTokens":209,"totalTokens":79072,"cachedTokens":77824,"reasoningTokens":129,"cost":0.001029444,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:26.633Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:54:28.985Z","data":{"promptTokens":248,"candidateTokens":321,"totalTokens":79417,"cachedTokens":78848,"reasoningTokens":117,"cost":0.000932688,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:54:28.986Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:56:55.547Z","data":{"promptTokens":135,"candidateTokens":393,"totalTokens":79888,"cachedTokens":79360,"reasoningTokens":244,"cost":0.00098826,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:56:55.548Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:57:01.090Z","data":{"promptTokens":204,"candidateTokens":843,"totalTokens":80919,"cachedTokens":79872,"reasoningTokens":719,"cost":0.0015520319999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:57:01.091Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:57:09.153Z","data":{"promptTokens":2201,"candidateTokens":1215,"totalTokens":84312,"cachedTokens":80896,"reasoningTokens":980,"cost":0.002603676,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:57:09.155Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:57:29.015Z","data":{"promptTokens":375,"candidateTokens":601,"totalTokens":85200,"cachedTokens":84224,"reasoningTokens":399,"cost":0.001339044,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:57:29.015Z","data":{"tool":"bash","summary":"cd . "}}
++{"type":"tokens","timestamp":"2026-10-24T23:57:45.544Z","data":{"promptTokens":892,"candidateTokens":1105,"totalTokens":87117,"cachedTokens":85120,"reasoningTokens":502,"cost":0.00210432,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:57:45.545Z","data":{"tool":"write","summary":"ope"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:57:45.545Z","data":{"path":"openspec/changes/338-rust-manual-command/.run/results/2.md"}}
++{"type":"text","timestamp":"2026-10-24T23:57:47.738Z","data":{"text":"Implemented task 2.\n\nSummary:\n- Replaced the placeholder keep with TypeScript-equivalent record writing, capability ownership, commit author/message resolution, record cleanup on commit failure, and output lines.\n- Copied the UTC millisecond formatter into the manual crate.\n- Added `manual_keeps.rs` covering all keep goldens, the planner-read record, and fixed-time UTC formatting.\n- Added `manual_command.rs` covering blank-comment refusal, kept output, and nothing-to-keep through `features()`/`run_cli`.\n- Added required dependencies.\n\nVerification passed:\n- `cargo test -p osq-feature-manual -p osq-cli --test manual_keeps --test manual_command`\n- `cargo test -p osq-feature-manual -p osq-cli`\n- `cargo clippy ... -D warnings`\n- `cargo fmt --all`\n- Mutation check: 165 caught, 10 unviable, 0 missed.\n\nResult written to `openspec/changes/338-rust-manual-command/.run/results/2.md`."}}
++{"type":"tokens","timestamp":"2026-10-24T23:57:47.738Z","data":{"promptTokens":134,"candidateTokens":233,"totalTokens":87407,"cachedTokens":87040,"reasoningTokens":0,"cost":0.00084204,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-24T23:57:47.765Z","data":{"exitCode":0,"pid":1907779,"timedOut":false,"elapsedSeconds":337.7}}
++{"type":"measures","timestamp":"2026-10-24T23:57:50.333Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":38,"scopeLines":1715,"repoFiles":33056,"repoLines":1119138,"importFanIn":0,"proposalWords":654,"taskWords":366,"deltaRequirements":6,"deltaScenarios":9,"dependencies":{"crates/features/manual/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-vcs","serde_json"]},"changedFiles":9,"changedLines":457,"scopeHashes":{"crates/apps/cli/tests/manual_command.rs":{"before":null,"after":"sha256:bd2329e3f7c7a43471738eac92b25c6dcd87a5cf6ea43fca8865921b76453b61"},"crates/features/manual/Cargo.toml":{"before":"sha256:0a96fd793fa62ec8b3278acea41d029d6a00398ad865d362fdc1b6de0cf14d70","after":"sha256:f2ba8b9457b2263f127e70eb9b0a98d9871e79e26bfffcff4c0447b2247f9460"},"crates/features/manual/src/feature.rs":{"before":"sha256:6fadeccd9efa1827244e2090b2f830546e69075a3e8151e912c233564a686f49","after":"sha256:6fadeccd9efa1827244e2090b2f830546e69075a3e8151e912c233564a686f49"},"crates/features/manual/src/keep.rs":{"before":"sha256:cc2ecce1643697be29e0c5d8c278d05767611e474c84e443530266e528852b16","after":"sha256:ceb360a4df503753e9449b9a41e389e53e161dc12d8c6bb1a5303c097c477fa5"},"crates/features/manual/src/lib.rs":{"before":"sha256:fdcff16b873036d04b5e06fd53fd4fbf35dad570226a06106a6a70c8f1eee21a","after":"sha256:93970f91f67c000310f01cf681888433199d9f1a63afb9a789c1bcb2d4b080f1"},"crates/features/manual/src/manual.rs":{"before":"sha256:13b4f0a1cb60a713bef6c025a9152a674603273662bb7dbb29a27b0609e83009","after":"sha256:0fca3ffa950eb1740ea19797463fe31191ab883802d433a0b2ea8435de39db52"},"crates/features/manual/src/paths.rs":{"before":"sha256:26eee3ab9b05926918487dde8145bbd219ff6de8388827f114a3ce07f2d4f835","after":"sha256:26eee3ab9b05926918487dde8145bbd219ff6de8388827f114a3ce07f2d4f835"},"crates/features/manual/src/refusals.rs":{"before":"sha256:1f95f3f58d68aa5ed99d01dd9e84d8db4723c6029d5ded20d8a13b72963910e1","after":"sha256:a6663e30169226facf375001bf913e238cff795dc5e746415cf49ca2059f4843"},"crates/features/manual/tests/feature.rs":{"before":"sha256:5357918e553f3931da90d7a202f96a4fca4feb2c094c23ca8b012245b08b13f1","after":"sha256:5357918e553f3931da90d7a202f96a4fca4feb2c094c23ca8b012245b08b13f1"},"crates/features/manual/tests/fixtures/golden/author-fallback.txt":{"before":"sha256:4838ee9afbbd3ca1e40b10fb54152a307c8b5c3f50557431de132ae4e0d07cf2","after":"sha256:4838ee9afbbd3ca1e40b10fb54152a307c8b5c3f50557431de132ae4e0d07cf2"},"crates/features/manual/tests/fixtures/golden/blank-comment.txt":{"before":"sha256:b63348d29c2e901b67e016bed71461051ac98f903d7ddc279c40b84b7826035c","after":"sha256:b63348d29c2e901b67e016bed71461051ac98f903d7ddc279c40b84b7826035c"},"crates/features/manual/tests/fixtures/golden/block.txt":{"before":"sha256:c2dfb30ab805eeece03edce1177debaefa4911151bf7fe2fb81127f68759eea9","after":"sha256:c2dfb30ab805eeece03edce1177debaefa4911151bf7fe2fb81127f68759eea9"},"crates/features/manual/tests/fixtures/golden/cases.json":{"before":"sha256:32e1b68902023a11820a08706f8e65f00ce0cf5e4c323b23a7ca1850a34b54aa","after":"sha256:32e1b68902023a11820a08706f8e65f00ce0cf5e4c323b23a7ca1850a34b54aa"},"crates/features/manual/tests/fixtures/golden/change-folders-left-out.txt":{"before":"sha256:e0b2768a288fc60a793e3167d3b2e107c4fa8a5749aaf155c3ab94307544025c","after":"sha256:e0b2768a288fc60a793e3167d3b2e107c4fa8a5749aaf155c3ab94307544025c"},"crates/features/manual/tests/fixtures/golden/change-path.txt":{"before":"sha256:36ca8626ab97a71e905636670245636b680f8d19d45e80902e99ede2aba26990","after":"sha256:36ca8626ab97a71e905636670245636b680f8d19d45e80902e99ede2aba26990"},"crates/features/manual/tests/fixtures/golden/commit-fails.txt":{"before":"sha256:3c434485430ee3748cab07b4ea5df5a403fb0a36e72f54f3d2f9edad04fe279c","after":"sha256:3c434485430ee3748cab07b4ea5df5a403fb0a36e72f54f3d2f9edad04fe279c"},"crates/features/manual/tests/fixtures/golden/folder-prefix.txt":{"before":"sha256:3702a17900c98adbd69478de5cced6c934c868b2c21790e8ef75463de75dddce","after":"sha256:3702a17900c98adbd69478de5cced6c934c868b2c21790e8ef75463de75dddce"},"crates/features/manual/tests/fixtures/golden/multiline.txt":{"before":"sha256:50aaf3c35d00e154435c68741007ba90612caf0ec2fbaee046290b8ff7eb0d2b","after":"sha256:50aaf3c35d00e154435c68741007ba90612caf0ec2fbaee046290b8ff7eb0d2b"},"crates/features/manual/tests/fixtures/golden/named-untracked.txt":{"before":"sha256:b1e2fad617aeffcd60ecf1c984201a89c03b36ae016f4edb8aaf7c00b623944d","after":"sha256:b1e2fad617aeffcd60ecf1c984201a89c03b36ae016f4edb8aaf7c00b623944d"},"crates/features/manual/tests/fixtures/golden/nested.txt":{"before":"sha256:6b9272edec710d9d2e9213abb22dff2eacbbcbfe2f899b8504e1c0bce4def5ae","after":"sha256:6b9272edec710d9d2e9213abb22dff2eacbbcbfe2f899b8504e1c0bce4def5ae"},"crates/features/manual/tests/fixtures/golden/no-edits-path.txt":{"before":"sha256:8336ffc3456b0e059f16645b383acf9d1380de573552d420df1e863ce79ebf02","after":"sha256:8336ffc3456b0e059f16645b383acf9d1380de573552d420df1e863ce79ebf02"},"crates/features/manual/tests/fixtures/golden/no-git.txt":{"before":"sha256:3f5152936beb8481f4110d73cce6a1394ff40fbc91bd6101830e9b35d51ede30","after":"sha256:3f5152936beb8481f4110d73cce6a1394ff40fbc91bd6101830e9b35d51ede30"},"crates/features/manual/tests/fixtures/golden/nothing-to-keep.txt":{"before":"sha256:7b46b943c28bdad8c9f78110ffa6e7fe594fb10d5b7332ef7c15bc34db784129","after":"sha256:7b46b943c28bdad8c9f78110ffa6e7fe594fb10d5b7332ef7c15bc34db784129"},"crates/features/manual/tests/fixtures/golden/only-untracked.txt":{"before":"sha256:80908b1a3004245738b0690474c845bb7f85e856b5fce4c330158a204d09192a","after":"sha256:80908b1a3004245738b0690474c845bb7f85e856b5fce4c330158a204d09192a"},"crates/features/manual/tests/fixtures/golden/print-goldens.mjs.txt":{"before":"sha256:fa2af09706e120fb0472233579cb0890e60354ba7614cf1e8d702e413b51c0ca","after":"sha256:fa2af09706e120fb0472233579cb0890e60354ba7614cf1e8d702e413b51c0ca"},"crates/features/manual/tests/fixtures/golden/rename.txt":{"before":"sha256:89f756f1f18d1c6fd4489c46515fd8bbc7f76ca9c62df1ae7b568126be5adb26","after":"sha256:89f756f1f18d1c6fd4489c46515fd8bbc7f76ca9c62df1ae7b568126be5adb26"},"crates/features/manual/tests/fixtures/golden/tracked.txt":{"before":"sha256:1c52b97acd3a176b82f61aaaabcecb9f1817818c6024ebc30cb3d1a3cef16e83","after":"sha256:1c52b97acd3a176b82f61aaaabcecb9f1817818c6024ebc30cb3d1a3cef16e83"},"crates/features/manual/tests/fixtures/golden/unowned.txt":{"before":"sha256:bceef73a66f2a8b33616a1056ef3705308816397efa27ec3acc2ca1d0cd56e4e","after":"sha256:bceef73a66f2a8b33616a1056ef3705308816397efa27ec3acc2ca1d0cd56e4e"},"crates/features/manual/tests/fixtures/golden/vcs-off.txt":{"before":"sha256:d234ab391d2f8a58ab728f5d97640c2675dedf75dc563ed55aa2202562e9cb91","after":"sha256:d234ab391d2f8a58ab728f5d97640c2675dedf75dc563ed55aa2202562e9cb91"},"crates/features/manual/tests/fixtures/manual-project/notes/todo.txt":{"before":"sha256:735c743005694cfcb6405a0d67d7f3e3cfcfa17f697062893b036ef2f79efe1b","after":"sha256:735c743005694cfcb6405a0d67d7f3e3cfcfa17f697062893b036ef2f79efe1b"},"crates/features/manual/tests/fixtures/manual-project/openspec/changes/004-active/proposal.md":{"before":"sha256:be9a525ba978ee3e4ed303361847bfe7d194bbbf9a3a49eaf6557ab1c3ecf842","after":"sha256:be9a525ba978ee3e4ed303361847bfe7d194bbbf9a3a49eaf6557ab1c3ecf842"},"crates/features/manual/tests/fixtures/manual-project/openspec/specs/alpha/spec.md":{"before":"sha256:1582282005be1f23a9fa6904025de7d469a8bdaf4c221ec2382fcec5ef0a9c78","after":"sha256:1582282005be1f23a9fa6904025de7d469a8bdaf4c221ec2382fcec5ef0a9c78"},"crates/features/manual/tests/fixtures/manual-project/openspec/specs/beta/spec.md":{"before":"sha256:97c16aa25573e784834aa1ee13ca3b1e0d4ade2daf29f9deb13114b15bd14857","after":"sha256:97c16aa25573e784834aa1ee13ca3b1e0d4ade2daf29f9deb13114b15bd14857"},"crates/features/manual/tests/fixtures/manual-project/src/app.ts":{"before":"sha256:f615240bdf4b9ae589da60e1a702728dc65b34ae174ed23a9f07e61732232ec5","after":"sha256:f615240bdf4b9ae589da60e1a702728dc65b34ae174ed23a9f07e61732232ec5"},"crates/features/manual/tests/fixtures/manual-project/src/gone.ts":{"before":"sha256:e6de875fb3dae96f3d04d8829a1c72e317cdfec47bbdaa05bedeaa87d735cf4f","after":"sha256:e6de875fb3dae96f3d04d8829a1c72e317cdfec47bbdaa05bedeaa87d735cf4f"},"crates/features/manual/tests/fixtures/manual-project/src/lib/util.ts":{"before":"sha256:89a5926f199a40ed3649c6903b0867124e9e37baeb2136ad37bbdc8f3aea3f03","after":"sha256:89a5926f199a40ed3649c6903b0867124e9e37baeb2136ad37bbdc8f3aea3f03"},"crates/features/manual/tests/fixtures/manual-project/src/old.ts":{"before":"sha256:8df9d7d0e198c9df6e50c5968114ce4618a307b3f7122910a553a77c1a975178","after":"sha256:8df9d7d0e198c9df6e50c5968114ce4618a307b3f7122910a553a77c1a975178"},"crates/features/manual/tests/manual_refusals.rs":{"before":"sha256:733c52042102488e212a3007b76d2922d163b27373f828802999599a9ec2e4a6","after":"sha256:733c52042102488e212a3007b76d2922d163b27373f828802999599a9ec2e4a6"},"crates/features/manual/tests/support/mod.rs":{"before":"sha256:6c2bcadf7ff5796a5ccf61dbd376842dce38db9c7904c473940e75e3fda96804","after":"sha256:c7976a8030f6b5b988e4e5a5ba5063d4563b8135abab44193e70b2f70701be0c"},"crates/features/manual/src/time.rs":{"before":null,"after":"sha256:2dac260529cb8b33d71e713aa8d477ab79891333c53a313ab5c56a755158fddb"},"crates/features/manual/tests/manual_keeps.rs":{"before":null,"after":"sha256:731fa0805ee47a8633799359ed1221341238b8158dc8c50f4a1428d8e7bfba6d"}}}}
++{"type":"dead","timestamp":"2026-10-24T23:57:50.335Z","data":{"task":"2","reason":"undeclared_test_change"}}
+diff --git a/openspec/changes/338-rust-manual-command/.run/events/change.jsonl b/openspec/changes/338-rust-manual-command/.run/events/change.jsonl
+new file mode 100644
+index 00000000..4b5d019a
+--- /dev/null
++++ b/openspec/changes/338-rust-manual-command/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-24T23:24:48.116Z","data":{"outcome":"passed","command":"pnpm verify","commit":"0b7365af46a6b1664ec59e7ab153b186644640e6","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":657.7}}
++{"type":"verify_ran","timestamp":"2026-10-24T23:40:54.187Z","data":{"command":"cargo test -p osq-feature-manual -p osq-cli","exitCode":0,"duration":7.51,"log":".run/logs/change-1.log","output":"test reaction_failure_through_the_cli ... ok\ntest delivery_warning_through_the_cli ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running unittests src/lib.rs (target/debug/deps/osq_feature_manual-9896f71293dfd580)\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/feature.rs (target/debug/deps/feature-ac223d27ead2d793)\n\nrunning 3 tests\ntest at_fixes_the_clock ... ok\ntest manual_feature_commands ... ok\ntest manual_argument_errors ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/manual_refusals.rs (target/debug/deps/manual_refusals-3b08d5af3dec67a2)\n\nrunning 3 tests\ntest path_rules_match_typescript ... ok\ntest tracked_change_edits_are_not_kept ... ok\ntest manual_refusals_equal_typescripts ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s\n\n   Doc-tests osq_cli\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_feature_manual\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"}}
+diff --git a/openspec/changes/338-rust-manual-command/.run/results/2.md b/openspec/changes/338-rust-manual-command/.run/results/2.md
+new file mode 100644
+index 00000000..1ecdc57e
+--- /dev/null
++++ b/openspec/changes/338-rust-manual-command/.run/results/2.md
+@@ -0,0 +1,15 @@
++## Changed
++
++- Replaced task 1's placeholder keep with the real one: the selected entries' paths and rename sources become `openspec/manual/<stamp>.md`, written through `write_frontmatter`, with sorted capabilities from `read_capability_ownership` and `owner_capabilities`.
++- Added the commit path: `resolve_author`, the subject-plus-body commit message, the author fallback, record removal when git refuses, the `Kept ... as ...` line and the `Left out untracked` line.
++- Copied the UTC millisecond formatter into `crates/features/manual/src/time.rs`, and resolved `ManualFeature::new()`'s clock at each keep.
++- Changed the refusals to return both the status snapshot and the selected entries, so the keep can compute the untracked entries it leaves out.
++- Added `tests/manual_keeps.rs` for every keep golden, the planner reading the `folder-prefix` record, and the UTC formatter's fixed times; added `tests/support/mod.rs::kept_records` and `crates/apps/cli/tests/manual_command.rs` for `manual` through `features()`.
++- Added `osq-kernel-specs`, `osq-kernel-storage` and `yaml-rust2` to the crate's manifest, which also updated `Cargo.lock`.
++- `cargo fmt --all`, clippy with `-D warnings`, this task's verify, the proposal's verify, and cargo-mutants over the crate's source files all pass; the mutation run caught every viable mutant (165 caught, 10 unviable, 0 missed).
++
++## Deviated
++
++- `Cargo.lock` changed as cargo resolved the manifest's new kernel and YAML dependencies; it is a generated file outside the task's listed scope.
++
++Touched: Cargo.lock, crates/features/manual/Cargo.toml, crates/features/manual/src/keep.rs, crates/features/manual/src/lib.rs, crates/features/manual/src/manual.rs, crates/features/manual/src/refusals.rs, crates/features/manual/src/time.rs, crates/features/manual/tests/manual_keeps.rs, crates/features/manual/tests/support/mod.rs, crates/apps/cli/tests/manual_command.rs

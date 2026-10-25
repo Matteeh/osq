@@ -1,0 +1,11 @@
+exit: 1
+lines:
+error:
+osq manual needs vcs.enabled and a git checkout
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ M src/app.ts

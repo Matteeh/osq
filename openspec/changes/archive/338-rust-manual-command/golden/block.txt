@@ -1,0 +1,11 @@
+exit: 1
+lines:
+error:
+vcs.manualEdits is "block" in osq.config.ts; plan a change for these edits instead
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ M src/app.ts

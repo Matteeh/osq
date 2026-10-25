@@ -1,0 +1,27 @@
+exit: 0
+lines:
+Kept src/app.ts, src/lib/util.ts as <commit>
+error:
+head: new
+message:
+osq: manual bump the source
+author:
+Ada <ada@example.com>
+files:
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+M	src/app.ts
+M	src/lib/util.ts
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - src/app.ts
+  - src/lib/util.ts
+capabilities:
+  - alpha
+  - beta
+---
+bump the source
+status:
+ M notes/todo.txt

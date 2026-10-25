@@ -1,0 +1,11 @@
+exit: 1
+lines:
+error:
+<root> is inside the git repository at <top> but is not its top level; run osq from <top> or set vcs.enabled to false
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ M project/src/app.ts

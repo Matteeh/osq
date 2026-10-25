@@ -1,0 +1,11 @@
+exit: 1
+lines:
+error:
+nothing to keep: the checkout has no uncommitted edits outside openspec/changes
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+?? openspec/changes/005-draft/proposal.md

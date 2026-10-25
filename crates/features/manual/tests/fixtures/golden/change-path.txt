@@ -1,0 +1,12 @@
+exit: 1
+lines:
+error:
+openspec/changes/005-draft/proposal.md belongs to a change; osq manual keeps edits outside openspec/changes
+head: unchanged
+message:
+author:
+files:
+records:
+status:
+ M src/app.ts
+?? openspec/changes/005-draft/proposal.md

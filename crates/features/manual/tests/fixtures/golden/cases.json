@@ -1,0 +1,325 @@
+[
+  {
+    "name": "block",
+    "vcs": {
+      "enabled": true,
+      "manualEdits": "block"
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "x",
+    "paths": []
+  },
+  {
+    "name": "vcs-off",
+    "vcs": {
+      "enabled": false
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "x",
+    "paths": []
+  },
+  {
+    "name": "no-git",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "none",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "x",
+    "paths": []
+  },
+  {
+    "name": "nested",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "parent",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "x",
+    "paths": []
+  },
+  {
+    "name": "blank-comment",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "   ",
+    "paths": []
+  },
+  {
+    "name": "change-path",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "write": "openspec/changes/005-draft/proposal.md",
+        "text": "# Draft\n"
+      }
+    ],
+    "comment": "x",
+    "paths": [
+      "openspec/changes/005-draft/proposal.md"
+    ]
+  },
+  {
+    "name": "no-edits-path",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      }
+    ],
+    "comment": "x",
+    "paths": [
+      "src/none.ts"
+    ]
+  },
+  {
+    "name": "nothing-to-keep",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "openspec/changes/005-draft/proposal.md",
+        "text": "# Draft\n"
+      }
+    ],
+    "comment": "tidy",
+    "paths": []
+  },
+  {
+    "name": "only-untracked",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "notes.txt",
+        "text": "notes\n"
+      }
+    ],
+    "comment": "tidy",
+    "paths": []
+  },
+  {
+    "name": "commit-fails",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "hook": "pre-commit"
+      }
+    ],
+    "comment": "x",
+    "paths": [],
+    "gitRefuses": true
+  },
+  {
+    "name": "tracked",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "write": "notes.txt",
+        "text": "notes\n"
+      }
+    ],
+    "comment": "raise the verify timeout",
+    "paths": []
+  },
+  {
+    "name": "named-untracked",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "write": "notes.txt",
+        "text": "notes\n"
+      }
+    ],
+    "comment": "add notes",
+    "paths": [
+      "notes.txt"
+    ]
+  },
+  {
+    "name": "folder-prefix",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "write": "src/lib/util.ts",
+        "text": "export const util = 2;\n"
+      },
+      {
+        "write": "notes/todo.txt",
+        "text": "done\n"
+      }
+    ],
+    "comment": "bump the source",
+    "paths": [
+      "src/"
+    ]
+  },
+  {
+    "name": "rename",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "move": "src/old.ts",
+        "to": "src/new.ts"
+      },
+      {
+        "remove": "src/gone.ts"
+      }
+    ],
+    "comment": "rename old",
+    "paths": [],
+    "gitRefuses": true
+  },
+  {
+    "name": "multiline",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "append": "osq.toml",
+        "text": "# a note\n"
+      }
+    ],
+    "comment": "  fix the config\nwith more detail\n",
+    "paths": []
+  },
+  {
+    "name": "change-folders-left-out",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "write": "openspec/changes/004-active/proposal.md",
+        "text": "# Active, edited\n"
+      },
+      {
+        "write": "openspec/changes/005-draft/proposal.md",
+        "text": "# Draft\n"
+      },
+      {
+        "write": "notes.txt",
+        "text": "notes\n"
+      }
+    ],
+    "comment": "keep the app",
+    "paths": []
+  },
+  {
+    "name": "unowned",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "notes/todo.txt",
+        "text": "done\n"
+      }
+    ],
+    "comment": "tick the todo",
+    "paths": []
+  },
+  {
+    "name": "author-fallback",
+    "vcs": {
+      "enabled": true
+    },
+    "git": "root",
+    "steps": [
+      {
+        "write": "src/app.ts",
+        "text": "export const app = 2;\n"
+      },
+      {
+        "config": "user.email",
+        "value": ""
+      }
+    ],
+    "comment": "keep as osq",
+    "paths": []
+  }
+]

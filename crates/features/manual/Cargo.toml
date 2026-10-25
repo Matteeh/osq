@@ -1,0 +1,22 @@
+[package]
+name = "osq-feature-manual"
+description = "The manual feature: keeps a human's uncommitted edits as one manual change, as TypeScript's `osq manual` does."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+osq-core.workspace = true
+osq-kernel-config.workspace = true
+osq-kernel-vcs.workspace = true
+osq-kernel-specs.workspace = true
+osq-kernel-storage.workspace = true
+yaml-rust2.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

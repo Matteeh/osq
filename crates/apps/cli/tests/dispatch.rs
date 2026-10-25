@@ -96,7 +96,7 @@ fn registered_features() {
         names,
         [
             "plan", "approve", "run", "archive", "land", "inbox", "report", "show", "lint",
-            "doctor", "retry",
+            "doctor", "retry", "manual",
         ]
     );
 }

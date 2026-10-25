@@ -1,0 +1,26 @@
+exit: 0
+lines:
+Kept osq.toml as <commit>
+error:
+head: new
+message:
+osq: manual fix the config
+
+with more detail
+author:
+Ada <ada@example.com>
+files:
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+M	osq.toml
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - osq.toml
+capabilities:
+  - beta
+---
+fix the config
+with more detail
+status:

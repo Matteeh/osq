@@ -1,0 +1,25 @@
+exit: 0
+lines:
+Kept src/app.ts as <commit>
+Left out untracked: notes.txt; name them to keep them
+error:
+head: new
+message:
+osq: manual raise the verify timeout
+author:
+Ada <ada@example.com>
+files:
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+M	src/app.ts
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - src/app.ts
+capabilities:
+  - alpha
+---
+raise the verify timeout
+status:
+?? notes.txt

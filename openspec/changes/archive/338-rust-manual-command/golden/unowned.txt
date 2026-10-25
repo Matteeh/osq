@@ -1,0 +1,22 @@
+exit: 0
+lines:
+Kept notes/todo.txt as <commit>
+error:
+head: new
+message:
+osq: manual tick the todo
+author:
+Ada <ada@example.com>
+files:
+M	notes/todo.txt
+A	openspec/manual/2026-10-15T20-01-02-123Z.md
+records:
+== 2026-10-15T20-01-02-123Z.md
+---
+kept_at: 2026-10-15T20:01:02.123Z
+paths:
+  - notes/todo.txt
+capabilities: []
+---
+tick the todo
+status:
