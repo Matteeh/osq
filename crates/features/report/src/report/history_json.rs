@@ -9,25 +9,32 @@ use serde_json::{Map, Value, json};
 
 use super::blocks::{self, Blocks};
 use super::counts::Counts;
+use super::coverage::{self, Coverage};
 use super::history::History;
 use super::js_number;
 use super::sizes::{self, SizeMetrics};
+use super::validation::{self, Validation};
 
-/// Writes the `completionRate`, `history`, `now` and `specs` members as JSON.
+/// Writes the `completionRate`, `coverage`, `history`, `now`, `specs` and
+/// `validation` members as JSON.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
 /// Implements: rust-report/report-history-blocks
 /// Implements: rust-report/report-sizes
+/// Implements: rust-report/report-validation
+/// Implements: rust-report/report-coverage
 pub(crate) fn document(
     counts: &Counts,
     history: &History,
     blocks: &Blocks,
     sizes: &SizeMetrics,
+    coverage: &Coverage,
+    validation: Option<&Validation>,
 ) -> String {
     let rate =
         f64::from(u32::try_from(counts.completion).expect("a completion rate fits in a u32"));
-    let report = json!({
+    let mut report = json!({
         "completionRate": number(rate / 100.0),
         "history": value(history, blocks, sizes),
         "now": {
@@ -47,6 +54,12 @@ pub(crate) fn document(
             "total": counts.total_specs,
         },
     });
+    if let Some(members) = report.as_object_mut() {
+        members.insert("coverage".to_owned(), coverage::json(coverage));
+        if let Some(validation) = validation {
+            members.insert("validation".to_owned(), validation::json(validation));
+        }
+    }
     serde_json::to_string_pretty(&report).expect("a report JSON value writes")
 }
 

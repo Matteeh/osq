@@ -1,0 +1,127 @@
+// Prints TypeScript's `osq report` goldens for rust-report "Report summary
+// equals TypeScript's", through the Coverage section.
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <fixture folder> <golden folder>
+// <fixture folder> holds the crate's `tests/fixtures/summary/` projects plus
+// `coverage-project`. Each case runs the built CLI on a fresh copy of its
+// fixture project, with the copy as the working directory, a fresh empty HOME
+// and no osq config, so no capability opts in to traceability. git ignores
+// `.run/running/`, so the script writes a case's lock files into its copy.
+// `<case>.txt` holds `osq report`'s text from its first line through the last
+// line before the first blank line after `Coverage:`, so it holds the History
+// section, the Validation section when one prints, and Coverage; the script
+// fails when any other section prints in between. `<case>.json` holds the
+// `completionRate`, `coverage`, `now`, `specs` and `validation` members of
+// `osq report --json` and its `history` member cut to the keys in
+// HISTORY_KEYS, written as `serializeSortedJson` writes them. A member the
+// report leaves out, such as `validation` with no validator run, stays out.
+// Neither file ends with a newline.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const HISTORY_KEYS = [
+  'attempts',
+  'cost',
+  'deadByReason',
+  'dependencies',
+  'disclosures',
+  'preSpawnVerify',
+  'rejections',
+  'retries',
+  'rework',
+  'scopeRegressions',
+  'sizes',
+  'unexplainedReruns',
+  'verifyRuns',
+];
+const TOP_KEYS = ['completionRate', 'coverage', 'now', 'specs', 'validation'];
+const SECTIONS_BETWEEN = new Set(['Validation:']);
+
+const cases = [
+  { name: 'empty', project: null },
+  { name: 'report-project', project: 'report-project' },
+  {
+    name: 'report-project-running',
+    project: 'report-project',
+    locks: [
+      ['003-running', '7', 'not json\n'],
+      ['003-running', '8', '{"pid":1,"startedAt":1}\n'],
+    ],
+  },
+  { name: 'all-done', project: 'all-done' },
+  { name: 'thirds', project: 'thirds' },
+  { name: 'history-project', project: 'history-project' },
+  { name: 'sizes-project', project: 'sizes-project' },
+  { name: 'coverage-project', project: 'coverage-project' },
+];
+
+function run(root, home, args) {
+  const result = spawnSync(process.execPath, [BIN, ...args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, HOME: home, NO_COLOR: '1' },
+  });
+  if (result.status !== 0) throw new Error(`${args.join(' ')} failed: ${result.stderr}`);
+  return result.stdout;
+}
+
+function reportText(stdout) {
+  const lines = stdout.split('\n');
+  const history = lines.indexOf('History:');
+  const coverage = lines.indexOf('Coverage:');
+  if (history < 0 || coverage < 0) throw new Error('no History or Coverage line');
+  const historyEnd = lines.indexOf('', history);
+  for (let at = historyEnd; at < coverage; at++) {
+    if (lines[at - 1] === '' && lines[at] !== 'Coverage:' && !SECTIONS_BETWEEN.has(lines[at])) {
+      throw new Error(`unexpected section ${lines[at]}`);
+    }
+  }
+  const blank = lines.indexOf('', coverage);
+  if (blank < 0) throw new Error('no blank line after Coverage');
+  return lines.slice(0, blank).join('\n');
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, sorted(value[key])]),
+  );
+}
+
+function reportJson(stdout) {
+  const report = JSON.parse(stdout);
+  const history = {};
+  for (const key of HISTORY_KEYS) {
+    if (key in report.history) history[key] = report.history[key];
+  }
+  const picked = { history };
+  for (const key of TOP_KEYS) {
+    if (key in report) picked[key] = report[key];
+  }
+  return JSON.stringify(sorted(picked), null, 2);
+}
+
+for (const c of cases) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-report-'));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-report-home-'));
+  if (c.project !== null) fs.cpSync(path.join(fixture, c.project), root, { recursive: true });
+  for (const [folder, task, text] of c.locks ?? []) {
+    const running = path.join(root, 'openspec', 'changes', folder, '.run', 'running');
+    fs.mkdirSync(running, { recursive: true });
+    fs.writeFileSync(path.join(running, `${task}.pid`), text);
+  }
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), reportText(run(root, home, ['report'])));
+  fs.writeFileSync(
+    path.join(golden, `${c.name}.json`),
+    reportJson(run(root, home, ['report', '--json'])),
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(home, { recursive: true, force: true });
+}

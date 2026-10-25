@@ -187,7 +187,8 @@ fn no_blocks_in_the_history_project() {
 #[test]
 fn sizes_of_the_sizes_project() {
     let root = project("sizes", "sizes-project", "sizes-project");
-    let text = run(&root, &[]).expect("report prints text");
+    let report_text = run(&root, &[]).expect("report prints text");
+    let text = before_coverage(&report_text);
     assert!(text.ends_with(&SIZES.join("\n")), "{text}");
 
     let report: Value = serde_json::from_str(&run(&root, &["--json"]).expect("report prints JSON"))
@@ -227,6 +228,7 @@ fn size_hints() {
             ),
         );
         let text = run(&root, &[]).expect("report prints text");
+        let text = before_coverage(&text);
         if let Some(hint) = row.hint {
             assert_eq!(text.lines().last(), Some(hint), "{}", row.name);
         } else {
@@ -295,6 +297,13 @@ fn write_ordered_change(root: &Path, folder: &str, fixes: &str) {
         &change.join(".run/events/1.jsonl"),
         &format!("{}\n", events.join("\n")),
     );
+}
+
+/// The text before the blank line that starts the `Coverage:` section.
+fn before_coverage(text: &str) -> &str {
+    text.split("\n\nCoverage:")
+        .next()
+        .expect("a split gives at least one part")
 }
 
 /// The lines after the first line equal to `marker`.

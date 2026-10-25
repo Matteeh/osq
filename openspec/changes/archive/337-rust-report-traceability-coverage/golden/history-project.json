@@ -1,0 +1,249 @@
+{
+  "completionRate": 0,
+  "coverage": {
+    "byChange": {
+      "101-alpha": {
+        "withEvents": [
+          "1",
+          "2"
+        ],
+        "withoutEvents": []
+      },
+      "102-beta": {
+        "withEvents": [
+          "1"
+        ],
+        "withoutEvents": [
+          "2"
+        ]
+      }
+    },
+    "withEvents": 3,
+    "withoutEvents": 1
+  },
+  "history": {
+    "attempts": {
+      "byTask": {
+        "101-alpha/1": 2,
+        "101-alpha/2": 4,
+        "102-beta/1": 2,
+        "102-beta/2": 0
+      },
+      "multipleAttempts": [
+        "101-alpha/1",
+        "101-alpha/2",
+        "102-beta/1"
+      ],
+      "total": 8
+    },
+    "cost": {
+      "coverage": {
+        "reportedAttempts": 4,
+        "totalAttempts": 8
+      },
+      "formattedTotal": "$4.70",
+      "perSpec": {
+        "101-alpha": 4,
+        "102-beta": 0.7000000000000001
+      },
+      "provenance": "harness-reported",
+      "total": 4.7
+    },
+    "deadByReason": {
+      "timeout": 2,
+      "unknown": 1,
+      "verify_red": 1
+    },
+    "preSpawnVerify": {
+      "byStart": {
+        "any": {
+          "passed": 0,
+          "runs": 1
+        },
+        "green": {
+          "passed": 1,
+          "runs": 1
+        },
+        "red": {
+          "passed": 1,
+          "runs": 2
+        }
+      },
+      "mismatchedTasks": [
+        "101-alpha/1"
+      ],
+      "mismatches": 1,
+      "missingPathRuns": 2,
+      "runs": 5
+    },
+    "rejections": {
+      "byPlannerModel": {
+        "claude-opus": 1,
+        "unknown": 1
+      },
+      "total": 2
+    },
+    "retries": {
+      "automatic": {
+        "cost": 0.4,
+        "costReportedAttempts": 1,
+        "count": 2,
+        "reachedDone": 1
+      },
+      "manual": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 1,
+        "reachedDone": 1
+      },
+      "stuck": 1
+    },
+    "scopeRegressions": {
+      "detected": 3,
+      "recertifiedAutomatically": 1,
+      "recertifiedByHuman": 1,
+      "requeuedForAgent": 1,
+      "verificationFailedAtDetection": 1,
+      "verificationPassedAtDetection": 1
+    },
+    "sizes": {
+      "byAcceptanceLines": [
+        {
+          "bucket": "1-2",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "3-4",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "5-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "over-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        }
+      ],
+      "scopeFileSeries": [
+        {
+          "byScopeFiles": [
+            {
+              "bucket": "1-2",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "3-4",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "5-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "over-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            }
+          ],
+          "largestFirstAttemptPass": null,
+          "resolver": "legacy",
+          "startsAtChange": null
+        },
+        {
+          "byScopeFiles": [
+            {
+              "bucket": "1-2",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "3-4",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "5-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "over-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            }
+          ],
+          "largestFirstAttemptPass": null,
+          "resolver": "resolver-2",
+          "startsAtChange": null
+        }
+      ]
+    },
+    "unexplainedReruns": {
+      "byTask": {
+        "101-alpha/2": 1
+      },
+      "total": 1
+    },
+    "verifyRuns": {
+      "byTask": {
+        "101-alpha/1": [
+          1,
+          0
+        ],
+        "101-alpha/2": [
+          null
+        ]
+      },
+      "missingExitCode": 1,
+      "total": 3
+    }
+  },
+  "now": {
+    "dead": 0,
+    "done": 0,
+    "manual": 0,
+    "pending": 2,
+    "regressed": 0,
+    "running": 0,
+    "total": 4,
+    "unmarked": 2,
+    "verified": 0
+  },
+  "specs": {
+    "active": 1,
+    "archived": 1,
+    "total": 2
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "completionRate": 0,
+  "coverage": {
+    "byChange": {
+      "301-validated": {
+        "withEvents": [
+          "1"
+        ],
+        "withoutEvents": [
+          "2"
+        ]
+      },
+      "302-timed-out": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1"
+        ]
+      },
+      "303-unreadable": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1"
+        ]
+      },
+      "305-active": {
+        "withEvents": [
+          "2",
+          "10"
+        ],
+        "withoutEvents": [
+          "1"
+        ]
+      }
+    },
+    "capabilities": {
+      "withSidecar": [
+        "alpha"
+      ],
+      "withoutSidecar": [
+        "beta"
+      ]
+    },
+    "withEvents": 3,
+    "withoutEvents": 4
+  },
+  "history": {
+    "attempts": {
+      "byTask": {
+        "301-validated/1": 1,
+        "301-validated/2": 0,
+        "302-timed-out/1": 0,
+        "303-unreadable/1": 0,
+        "305-active/1": 0,
+        "305-active/10": 1,
+        "305-active/2": 1
+      },
+      "multipleAttempts": [],
+      "total": 3
+    },
+    "cost": {
+      "coverage": {
+        "reportedAttempts": 0,
+        "totalAttempts": 3
+      },
+      "formattedTotal": "not reported",
+      "perSpec": {},
+      "provenance": "harness-reported",
+      "total": 0
+    },
+    "deadByReason": {},
+    "preSpawnVerify": {
+      "byStart": {
+        "any": {
+          "passed": 0,
+          "runs": 0
+        },
+        "green": {
+          "passed": 0,
+          "runs": 0
+        },
+        "red": {
+          "passed": 0,
+          "runs": 0
+        }
+      },
+      "mismatchedTasks": [],
+      "mismatches": 0,
+      "missingPathRuns": 0,
+      "runs": 0
+    },
+    "rejections": {
+      "byPlannerModel": {},
+      "total": 0
+    },
+    "retries": {
+      "automatic": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "manual": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "stuck": 0
+    },
+    "scopeRegressions": {
+      "detected": 0,
+      "recertifiedAutomatically": 0,
+      "recertifiedByHuman": 0,
+      "requeuedForAgent": 0,
+      "verificationFailedAtDetection": 0,
+      "verificationPassedAtDetection": 0
+    },
+    "sizes": {
+      "byAcceptanceLines": [
+        {
+          "bucket": "1-2",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "3-4",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "5-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "over-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        }
+      ],
+      "scopeFileSeries": [
+        {
+          "byScopeFiles": [
+            {
+              "bucket": "1-2",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "3-4",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "5-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "over-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            }
+          ],
+          "largestFirstAttemptPass": null,
+          "resolver": "legacy",
+          "startsAtChange": null
+        },
+        {
+          "byScopeFiles": [
+            {
+              "bucket": "1-2",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "3-4",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "5-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            },
+            {
+              "bucket": "over-8",
+              "firstAttemptPassRate": 0,
+              "meanAttempts": 0,
+              "medianDurationSeconds": null,
+              "tasks": 0
+            }
+          ],
+          "largestFirstAttemptPass": null,
+          "resolver": "resolver-2",
+          "startsAtChange": null
+        }
+      ]
+    },
+    "unexplainedReruns": {
+      "byTask": {},
+      "total": 0
+    },
+    "verifyRuns": {
+      "byTask": {},
+      "missingExitCode": 0,
+      "total": 0
+    }
+  },
+  "now": {
+    "dead": 0,
+    "done": 0,
+    "manual": 0,
+    "pending": 3,
+    "regressed": 0,
+    "running": 0,
+    "total": 7,
+    "unmarked": 4,
+    "verified": 0
+  },
+  "specs": {
+    "active": 1,
+    "archived": 5,
+    "total": 6
+  },
+  "validation": {
+    "changes": 4,
+    "findings": 2,
+    "perChange": [
+      {
+        "change": "301-validated",
+        "findings": 2,
+        "outcome": "validated"
+      },
+      {
+        "change": "302-timed-out",
+        "findings": 0,
+        "outcome": "timed_out"
+      },
+      {
+        "change": "310-tie",
+        "findings": 0,
+        "outcome": "failed"
+      },
+      {
+        "change": "311-findings-not-a-list",
+        "findings": 0,
+        "outcome": "validated"
+      }
+    ],
+    "validated": 2
+  }
+}

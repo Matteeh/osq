@@ -1,0 +1,4 @@
+{"type":"validator_ran","timestamp":"2026-10-22T09:00:00.000Z","data":{"outcome":"  ","findings":[]}}
+{"type":"validator_ran","timestamp":"yesterday","data":{"outcome":"validated","findings":[]}}
+not json
+{"type":"validator_ran","timestamp":"2026-10-22T09:10:00.000Z","data":"validated"}

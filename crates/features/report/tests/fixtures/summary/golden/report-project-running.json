@@ -1,5 +1,47 @@
 {
   "completionRate": 31.25,
+  "coverage": {
+    "byChange": {
+      "001-shipped": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      "003-running": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "10"
+        ]
+      },
+      "004-no-proposal": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1"
+        ]
+      },
+      "005-unapproved": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1"
+        ]
+      }
+    },
+    "withEvents": 0,
+    "withoutEvents": 16
+  },
   "history": {
     "attempts": {
       "byTask": {

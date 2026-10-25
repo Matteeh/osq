@@ -1,0 +1,2 @@
+{"type":"validator_ran","timestamp":"2026-10-23T09:00:00.000Z","data":{"outcome":"validated","harness":"claude","model":"m","duration":5,"exitCode":0,"scenarios":3,"findings":[{"scenario":"d"},{"scenario":"e"},{"scenario":"f"}],"restored":[]}}
+{"type":"validator_ran","timestamp":"2026-10-23T09:00:00.000Z","data":{"outcome":" failed ","harness":"claude","model":"m","duration":5,"exitCode":1,"scenarios":3,"findings":[{"scenario":"g"}],"restored":[]}}

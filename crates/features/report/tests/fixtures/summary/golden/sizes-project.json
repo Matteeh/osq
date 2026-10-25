@@ -1,5 +1,34 @@
 {
   "completionRate": 0,
+  "coverage": {
+    "byChange": {
+      "201-first": {
+        "withEvents": [
+          "1",
+          "2"
+        ],
+        "withoutEvents": []
+      },
+      "202-second": {
+        "withEvents": [
+          "1",
+          "2"
+        ],
+        "withoutEvents": []
+      },
+      "203-third": {
+        "withEvents": [
+          "1",
+          "3"
+        ],
+        "withoutEvents": [
+          "2"
+        ]
+      }
+    },
+    "withEvents": 6,
+    "withoutEvents": 1
+  },
   "history": {
     "attempts": {
       "byTask": {

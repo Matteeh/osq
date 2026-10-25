@@ -64,3 +64,7 @@ Executor disclosures:
     3-4        0      0                       0              unavailable
     5-8        0      0                       0              unavailable
     over-8     0      0                       0              unavailable
+
+Coverage:
+  Tasks with event files: 0
+  Tasks without event files: 3

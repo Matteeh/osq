@@ -1,0 +1,72 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4",
+    "PLANNER.md": "sha256:e78b9fe10ef7967681f886db370ae4e5e7f426211e7d40125825fbc39a2f417c",
+    "config": "sha256:bc943577dee42d2128a86991604f86de2b45d2b8007878cde5f8323244f43015",
+    "rust-core": "sha256:2f0f76865c3add246cd9161405781a3cb230b33511b68ded6b12230511236cb2",
+    "rust-core/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-specs": "sha256:f78e558955d9fe643f07bef5b717b143ae3b369e8f9d77486366629185dd69e3",
+    "rust-specs/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-config": "sha256:bea06039f3e172a18dedb0eb00d6939cf6f53dbbaba6a97838441b2412d0b965",
+    "rust-config/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-vcs": "sha256:9b7938a785b54929ae24a3c6b20e93ff2143f6653e757876df38231be69bed94",
+    "rust-vcs/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-report": "sha256:37e9a99ca8da86b1892ce687fcc4a7d4bbaa5e6f563fcac41d54fb46c0188fe6",
+    "rust-report/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-storage": "sha256:326cf722d97b62f0710ac711f2ed952c209a6fd963a2e40cd392784a920adc55",
+    "rust-storage/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-24T15:53:53.829Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-24T22:13:08.643Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path",
+      "verify_without_test"
+    ],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "large_scope",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "tests_modify",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a",
+    "022": "sha256:1538605262ef642ef7835a2691ff9c4d45475477cad45a5e4a3ed5db7816d7ef",
+    "023": "sha256:48fcc891224ce6fbe0f003e4621faf7ec58e321046b53e0eda5100828cc4d39c",
+    "024": "sha256:4278b5fc9cdc6825874b3c8391ef92576d35b04c7c350d3869506d865d0ab02d",
+    "025": "sha256:6fa66cf8ee594b20ce3774112565de4dd1ab275c414d1d035f847c49afab22ea",
+    "026": "sha256:8ccbfb725b7514b5fcad04b509ef2674da919a4e452da214b400932aeed6d7d0",
+    "027": "sha256:ab9a82ce191d52285c6c9ba7454faac092516f172b5782ac140299a6bc2edf0f",
+    "028": "sha256:c24bea554b25693262a40e5e59b41a2a2b9b85db8044796abb4ac47d74eb80f5",
+    "029": "sha256:98703ae4847b3bfe9aec593d3968898ca0abbe5d2e3a064f013814680a976066",
+    "030": "sha256:e325852b23a6f2ed85a3a0f2190afa4e1ba96f618d4c1b98a01dbd2c611149f6"
+  }
+}

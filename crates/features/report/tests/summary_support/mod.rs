@@ -1,4 +1,8 @@
 //! Helpers shared by the report summary tests.
+//!
+//! Each test binary compiles this module on its own, so some helpers are
+//! unused in a given binary even though another test uses them.
+#![allow(dead_code)]
 
 use std::fs;
 use std::path::{Path, PathBuf};

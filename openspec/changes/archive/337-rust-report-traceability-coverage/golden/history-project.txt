@@ -1,0 +1,73 @@
+osq Delivery Metrics Report
+
+Specs Summary:
+  Total specs: 2 (1 active, 1 archived)
+
+Now:
+  Total tasks: 4
+  Done: 0
+  Verified done: 0
+  Manual done: 0
+  Dead: 0
+  Regressed: 0
+  Running: 0
+  Pending: 2
+  Unmarked: 2
+  Completion rate: 0%
+
+History:
+  Total attempts: 8
+  Tasks with multiple attempts: 3
+  Unexplained re-runs: 1
+  Verification runs: 3
+  Verification runs missing exit code: 1
+  Pre-spawn verify mismatches: 1 of 5 runs
+  Pre-spawn verify with missing paths: 2 of 5 runs
+  Pre-spawn verify by declared start: red 1 of 2 passed, green 1 of 1 passed, any 0 of 1 passed
+  Automatic retries:
+  automatic: 2 retries, 1 reached done, cost $0.40 (1 of 2 attempts reported cost)
+  manual: 1 retries, 1 reached done, cost not reported (0 of 1 attempts reported cost)
+  Stuck: 1
+  Harness-reported cost: $4.70 (4 of 8 attempts reported cost)
+  Dead by reason:
+    timeout: 2
+    unknown: 1
+    verify_red: 1
+  Rejections: 2
+  Rejections by planner model:
+    claude-opus: 1
+    unknown: 1
+  Scope regressions:
+    Detected: 3
+    Verification passed at detection: 1
+    Verification failed at detection: 1
+    Recertified by human: 1
+    Recertified automatically: 1
+    Requeued for agent: 1
+Rework:
+  (none)
+Executor disclosures:
+  (none)
+  Size by scope files (legacy):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable
+  Size by scope files (resolver-2):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable
+  Resolver 2 starts at: unavailable
+  Size by acceptance lines:
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable
+
+Coverage:
+  Tasks with event files: 3
+  Tasks without event files: 1

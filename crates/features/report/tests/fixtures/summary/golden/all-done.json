@@ -1,5 +1,17 @@
 {
   "completionRate": 100,
+  "coverage": {
+    "byChange": {
+      "001-one": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1"
+        ]
+      }
+    },
+    "withEvents": 0,
+    "withoutEvents": 1
+  },
   "history": {
     "attempts": {
       "byTask": {

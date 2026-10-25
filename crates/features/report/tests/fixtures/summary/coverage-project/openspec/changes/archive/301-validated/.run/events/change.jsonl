@@ -1,0 +1,3 @@
+{"type":"archived","timestamp":"2026-10-20T11:00:00.000Z","data":{"archivePath":"openspec/changes/archive/301-validated"}}
+{"type":"validator_ran","timestamp":"2026-10-20T11:01:00.000Z","data":{"outcome":"failed","harness":"claude","model":"m","duration":5,"exitCode":1,"scenarios":2,"findings":[],"restored":[]}}
+{"type":"validator_ran","timestamp":"2026-10-20T11:05:00.000Z","data":{"outcome":"validated","harness":"claude","model":"m","duration":5,"exitCode":0,"scenarios":2,"findings":[{"scenario":"a"},{"scenario":"b"}],"restored":[]}}

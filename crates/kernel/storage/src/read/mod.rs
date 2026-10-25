@@ -41,8 +41,12 @@
 //! Implements: rust-storage/dependencies-added
 //! Implements: rust-storage/change-fixes
 //! Implements: rust-storage/result-disclosure-reader
+//! Implements: rust-storage/latest-validation
+//! Implements: rust-storage/task-event-files
+//! Implements: rust-storage/capability-sidecars
 
 mod change_files;
+mod coverage;
 mod error;
 mod fixes;
 mod land;
@@ -61,10 +65,14 @@ mod snapshot;
 mod task_history;
 mod text;
 mod trees;
+mod validation;
 mod validator;
 mod watch;
 
 pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
+pub use coverage::{
+    CapabilitySidecars, TaskEventFile, read_capability_sidecars, read_task_event_files,
+};
 pub use error::StorageError;
 pub use fixes::read_change_fixes;
 pub use land::{LandFacts, LandTask, read_land_facts};
@@ -93,5 +101,6 @@ pub use task_history::{
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};
+pub use validation::{ValidationRun, read_latest_validation};
 pub use validator::{ValidatorFailing, validator_failing};
 pub use watch::{ServiceRecord, WatchState, WatcherMode, WatcherRecord, read_watch_state};

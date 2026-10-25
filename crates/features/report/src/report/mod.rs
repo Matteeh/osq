@@ -5,6 +5,7 @@
 mod arguments;
 mod blocks;
 mod counts;
+mod coverage;
 mod entries;
 mod history;
 mod history_json;
@@ -14,6 +15,7 @@ mod order;
 mod output;
 mod sizes;
 mod sizes_text;
+mod validation;
 
 use std::path::Path;
 
@@ -33,6 +35,8 @@ use osq_kernel_vcs::project_git_root;
 /// Implements: rust-report/report-counts
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
+/// Implements: rust-report/report-validation
+/// Implements: rust-report/report-coverage
 /// Implements: rust-vcs/project-root-check
 pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> {
     let json = arguments::parse(args)?;
@@ -43,10 +47,27 @@ pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> 
     let history = history::read(&entries);
     let blocks = blocks::read(&entries);
     let sizes = sizes::read(&entries);
+    let validation = validation::read(&entries);
+    let coverage = coverage::read(&entries, root);
     let text = if json {
-        output::json(&counts, &history, &blocks, &sizes)
+        output::json(
+            &counts,
+            &history,
+            &blocks,
+            &sizes,
+            &coverage,
+            validation.as_ref(),
+        )
     } else {
-        output::text(&counts, &history, &blocks, &sizes, &config.limits)
+        output::text(
+            &counts,
+            &history,
+            &blocks,
+            &sizes,
+            &config.limits,
+            &coverage,
+            validation.as_ref(),
+        )
     };
     Ok(Output::text(text))
 }

@@ -6,22 +6,29 @@ use osq_kernel_config::Limits;
 
 use super::blocks::Blocks;
 use super::counts::Counts;
+use super::coverage::{self, Coverage};
 use super::history::History;
 use super::sizes::SizeMetrics;
+use super::validation::{self, Validation};
 use super::{blocks, history_json, history_text, sizes_text};
 
-/// Writes the header, `Specs Summary:`, `Now:` and `History:` sections.
+/// Writes the header, `Specs Summary:`, `Now:`, `History:`, `Validation:`
+/// and `Coverage:` sections.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
 /// Implements: rust-report/report-history-blocks
 /// Implements: rust-report/report-sizes
+/// Implements: rust-report/report-validation
+/// Implements: rust-report/report-coverage
 pub(crate) fn text(
     counts: &Counts,
     history: &History,
     blocks: &Blocks,
     sizes: &SizeMetrics,
     limits: &Limits,
+    coverage: &Coverage,
+    validation: Option<&Validation>,
 ) -> String {
     let mut text = format!(
         concat!(
@@ -67,22 +74,33 @@ pub(crate) fn text(
         text.push('\n');
         text.push_str(line);
     }
+    if let Some(validation) = validation {
+        text.push_str("\n\n");
+        text.push_str(&validation::text(validation).join("\n"));
+    }
+    text.push_str("\n\n");
+    text.push_str(&coverage::text(coverage).join("\n"));
     text
 }
 
-/// Writes the `completionRate`, `history`, `now` and `specs` members as JSON.
+/// Writes the `completionRate`, `coverage`, `history`, `now`, `specs` and
+/// `validation` members as JSON.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
 /// Implements: rust-report/report-history-blocks
 /// Implements: rust-report/report-sizes
+/// Implements: rust-report/report-validation
+/// Implements: rust-report/report-coverage
 pub(crate) fn json(
     counts: &Counts,
     history: &History,
     blocks: &Blocks,
     sizes: &SizeMetrics,
+    coverage: &Coverage,
+    validation: Option<&Validation>,
 ) -> String {
-    history_json::document(counts, history, blocks, sizes)
+    history_json::document(counts, history, blocks, sizes, coverage, validation)
 }
 
 /// Writes hundredths of a percent as JavaScript writes the same number.

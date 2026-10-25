@@ -1,5 +1,26 @@
 {
   "completionRate": 0,
+  "coverage": {
+    "byChange": {
+      "101-alpha": {
+        "withEvents": [
+          "1",
+          "2"
+        ],
+        "withoutEvents": []
+      },
+      "102-beta": {
+        "withEvents": [
+          "1"
+        ],
+        "withoutEvents": [
+          "2"
+        ]
+      }
+    },
+    "withEvents": 3,
+    "withoutEvents": 1
+  },
   "history": {
     "attempts": {
       "byTask": {

@@ -15,7 +15,7 @@ mod pre_spawn;
 mod retries;
 mod scope;
 mod sizes;
-mod stream;
+pub(crate) mod stream;
 mod verify_codes;
 
 pub use dependencies::{DependencyPair, read_dependencies_added};

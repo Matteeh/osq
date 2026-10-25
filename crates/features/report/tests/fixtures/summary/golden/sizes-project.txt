@@ -71,3 +71,7 @@ Dependencies added:
     5-8        1      1                       1              30m
     over-8     1      0                       2              4m 30s
   Size hint: largest first-attempt pass 202-second/1 — scope files 9 is within 1 of configured maxScopeFiles 8; acceptance lines 7 is within 1 of configured maxAcceptanceLines 7
+
+Coverage:
+  Tasks with event files: 6
+  Tasks without event files: 1

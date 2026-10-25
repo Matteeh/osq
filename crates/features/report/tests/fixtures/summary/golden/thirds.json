@@ -1,5 +1,19 @@
 {
   "completionRate": 66.67,
+  "coverage": {
+    "byChange": {
+      "001-two-of-three": {
+        "withEvents": [],
+        "withoutEvents": [
+          "1",
+          "2",
+          "3"
+        ]
+      }
+    },
+    "withEvents": 0,
+    "withoutEvents": 3
+  },
   "history": {
     "attempts": {
       "byTask": {

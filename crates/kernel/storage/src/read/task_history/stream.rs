@@ -8,7 +8,7 @@ use crate::read::text::timestamp_ms;
 
 /// One parsed event line: its `type`, its `timestamp` and its object `data`.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(super) struct Event {
+pub(crate) struct Event {
     /// The event's `type` member when it is a string.
     kind: Option<String>,
     /// The event's `timestamp` member when it is a string.
@@ -19,27 +19,27 @@ pub(super) struct Event {
 
 impl Event {
     /// The event's `type` string, or `None` without one.
-    pub(super) fn kind(&self) -> Option<&str> {
+    pub(crate) fn kind(&self) -> Option<&str> {
         self.kind.as_deref()
     }
 
     /// The event's timestamp in epoch milliseconds, or `None` without one.
-    pub(super) fn timestamp_ms(&self) -> Option<i64> {
+    pub(crate) fn timestamp_ms(&self) -> Option<i64> {
         timestamp_ms(self.timestamp.as_deref()?)
     }
 
     /// A data member's raw JSON value, or `None` without one.
-    pub(super) fn raw(&self, key: &str) -> Option<&Value> {
+    pub(crate) fn raw(&self, key: &str) -> Option<&Value> {
         self.data.as_ref()?.get(key)
     }
 
     /// A data member's string value, or `None` without one.
-    pub(super) fn text(&self, key: &str) -> Option<&str> {
+    pub(crate) fn text(&self, key: &str) -> Option<&str> {
         self.data.as_ref()?.get(key)?.as_str()
     }
 
     /// A data member's finite numeric value, or `None` without one.
-    pub(super) fn number(&self, key: &str) -> Option<f64> {
+    pub(crate) fn number(&self, key: &str) -> Option<f64> {
         self.data
             .as_ref()?
             .get(key)?
@@ -48,7 +48,7 @@ impl Event {
     }
 
     /// Whether a data member is exactly the boolean `true`.
-    pub(super) fn is_true(&self, key: &str) -> bool {
+    pub(crate) fn is_true(&self, key: &str) -> bool {
         self.data
             .as_ref()
             .and_then(|data| data.get(key))
@@ -57,7 +57,7 @@ impl Event {
     }
 
     /// Whether a data member is a non-empty array.
-    pub(super) fn is_non_empty_array(&self, key: &str) -> bool {
+    pub(crate) fn is_non_empty_array(&self, key: &str) -> bool {
         matches!(
             self.data.as_ref().and_then(|data| data.get(key)),
             Some(Value::Array(items)) if !items.is_empty()
@@ -66,7 +66,7 @@ impl Event {
 }
 
 /// Parses a stream's lines in file order, skipping blank and non-object lines.
-pub(super) fn parse(content: &str) -> Vec<Event> {
+pub(crate) fn parse(content: &str) -> Vec<Event> {
     content.split('\n').filter_map(parse_line).collect()
 }
 
