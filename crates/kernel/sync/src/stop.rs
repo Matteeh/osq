@@ -9,8 +9,7 @@ use osq_core::event::{
 };
 use osq_kernel_vcs::{GitVcs, Vcs, VcsError};
 
-use super::super::{text, time};
-use super::files;
+use super::{files, text, time};
 
 /// Why a sync stopped, with the message the land fails with.
 #[derive(Debug)]
@@ -19,6 +18,8 @@ pub(crate) struct Stop {
     pub(crate) reason: SyncStopReason,
     /// The message the land fails with.
     pub(crate) message: String,
+    /// The conflicted paths a conflict stop names, in merge order.
+    pub(crate) conflicts: Vec<String>,
 }
 
 impl Stop {
@@ -29,6 +30,22 @@ impl Stop {
         Self {
             reason,
             message: message.into(),
+            conflicts: Vec::new(),
+        }
+    }
+
+    /// Builds a stop that names the conflicted paths it blocks on.
+    ///
+    /// Implements: rust-land/land-sync
+    pub(crate) fn conflicting(
+        reason: SyncStopReason,
+        message: impl Into<String>,
+        conflicts: Vec<String>,
+    ) -> Self {
+        Self {
+            reason,
+            message: message.into(),
+            conflicts,
         }
     }
 

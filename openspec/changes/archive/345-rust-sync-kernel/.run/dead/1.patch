@@ -1,0 +1,2365 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 988bacca7..8a48b7573 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -380,6 +380,7 @@ dependencies = [
+  "osq-kernel-harnesses",
+  "osq-kernel-specs",
+  "osq-kernel-storage",
++ "osq-kernel-sync",
+  "osq-kernel-vcs",
+  "serde_json",
+  "sha2",
+@@ -566,6 +567,19 @@ dependencies = [
+  "yaml-rust2",
+ ]
+ 
++[[package]]
++name = "osq-kernel-sync"
++version = "0.0.0"
++dependencies = [
++ "osq-core",
++ "osq-kernel-config",
++ "osq-kernel-harnesses",
++ "osq-kernel-specs",
++ "osq-kernel-storage",
++ "osq-kernel-vcs",
++ "serde_json",
++]
++
+ [[package]]
+ name = "osq-kernel-vcs"
+ version = "0.0.0"
+diff --git a/Cargo.toml b/Cargo.toml
+index 53be6771f..6e7e9c517 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -14,6 +14,7 @@ members = [
+     "crates/kernel/agents",
+     "crates/kernel/loop",
+     "crates/kernel/config",
++    "crates/kernel/sync",
+     "crates/features/plan",
+     "crates/features/approve",
+     "crates/features/run",
+@@ -50,6 +51,7 @@ osq-kernel-harnesses = { path = "crates/kernel/harnesses" }
+ osq-kernel-agents = { path = "crates/kernel/agents" }
+ osq-kernel-loop = { path = "crates/kernel/loop" }
+ osq-kernel-config = { path = "crates/kernel/config" }
++osq-kernel-sync = { path = "crates/kernel/sync" }
+ osq-feature-plan = { path = "crates/features/plan" }
+ osq-feature-approve = { path = "crates/features/approve" }
+ osq-feature-run = { path = "crates/features/run" }
+diff --git a/crates/features/land/Cargo.toml b/crates/features/land/Cargo.toml
+index 50f75463a..fbedca01f 100644
+--- a/crates/features/land/Cargo.toml
++++ b/crates/features/land/Cargo.toml
+@@ -16,6 +16,7 @@ osq-kernel-config.workspace = true
+ osq-kernel-harnesses.workspace = true
+ osq-kernel-specs.workspace = true
+ osq-kernel-storage.workspace = true
++osq-kernel-sync.workspace = true
+ osq-kernel-vcs.workspace = true
+ serde_json.workspace = true
+ sha2.workspace = true
+diff --git a/crates/features/land/src/land.rs b/crates/features/land/src/land.rs
+index 8c09c9e1c..d5cc1c675 100644
+--- a/crates/features/land/src/land.rs
++++ b/crates/features/land/src/land.rs
+@@ -7,7 +7,6 @@ mod cleanup;
+ mod find;
+ mod message;
+ pub(crate) mod message_command;
+-mod sync;
+ pub(crate) mod sync_command;
+ mod text;
+ mod time;
+@@ -18,6 +17,7 @@ use std::path::{Path, PathBuf};
+ use osq_core::FeatureError;
+ use osq_kernel_config::{Limits, ManualEdits, Timeouts, VcsConfig, load_config};
+ use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, sync_change};
+ use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree, project_git_root};
+ 
+ use find::{Located, WorktreeChange};
+@@ -136,20 +136,25 @@ fn sync_land(
+     timeouts: &Timeouts,
+     limits: &Limits,
+ ) -> Result<Option<String>, FeatureError> {
+-    sync::run(
+-        &change.path,
++    let request = SyncRequest {
++        worktree: &change.path,
+         folder,
++        kind: SyncKind::Archived,
+         default_branch,
+-        &sync::Controls {
+-            settings,
+-            timeouts,
+-            limits,
+-        },
+-        sync::Caller {
+-            command: LAND,
++        settings,
++        timeouts,
++        limits,
++        options: SyncOptions {
+             records: true,
++            verify: true,
++            tasks: None,
+         },
+-    )
++    };
++    match sync_change(&request) {
++        Ok(SyncOutcome::AlreadySynced) => Ok(None),
++        Ok(SyncOutcome::Synced { commit }) => Ok(Some(commit)),
++        Err(stop) => Err(failed_in(LAND, stop.message)),
++    }
+ }
+ 
+ /// The output of a finished land, with its after-land lines when configured.
+diff --git a/crates/features/land/src/land/sync.rs b/crates/features/land/src/land/sync.rs
+deleted file mode 100644
+index be5a73782..000000000
+--- a/crates/features/land/src/land/sync.rs
++++ /dev/null
+@@ -1,370 +0,0 @@
+-//! Taking the default branch into a change's branch before land.
+-
+-mod active;
+-mod check;
+-mod command;
+-mod event;
+-mod files;
+-mod locks;
+-mod prepare;
+-mod recertify;
+-mod specs;
+-mod stop;
+-mod text;
+-mod verify;
+-
+-use std::path::{Path, PathBuf};
+-use std::time::Instant;
+-
+-use osq_core::FeatureError;
+-use osq_core::event::SyncStopReason;
+-use osq_kernel_config::{Limits, Timeouts, VcsConfig};
+-use osq_kernel_vcs::{GitVcs, MergeOutcome, Vcs};
+-
+-use super::failed_in;
+-use stop::Stop;
+-
+-/// The kind of change a sync takes the default branch into.
+-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+-pub(super) enum Kind {
+-    /// A change under `openspec/changes/archive/`.
+-    Archived,
+-    /// An approved change under `openspec/changes/`.
+-    Active,
+-}
+-
+-/// Who runs the sync: the command its errors name and whether a stop is recorded.
+-///
+-/// Implements: rust-land/land-sync
+-#[derive(Clone, Copy)]
+-pub(super) struct Caller<'a> {
+-    /// The command every failure names.
+-    pub(super) command: &'a str,
+-    /// Whether a stop writes the land stop record.
+-    pub(super) records: bool,
+-}
+-
+-/// The settings, timeouts and limits every sync step reads.
+-pub(super) struct Controls<'a> {
+-    /// The version control settings, including `vcs.prepare`.
+-    pub(super) settings: &'a VcsConfig,
+-    /// Every timeout the sync applies.
+-    pub(super) timeouts: &'a Timeouts,
+-    /// Every output limit the sync applies.
+-    pub(super) limits: &'a Limits,
+-}
+-
+-/// Why a sync failed, with the stop reason an active sync records.
+-#[derive(Debug)]
+-pub(super) struct Failure {
+-    /// The stop's reason, or `sync_failed` for any other error.
+-    pub(super) reason: SyncStopReason,
+-    /// The failure's message.
+-    pub(super) message: String,
+-}
+-
+-impl Failure {
+-    /// Builds a `sync_failed` failure from a message.
+-    fn failed(message: impl Into<String>) -> Self {
+-        Self {
+-            reason: SyncStopReason::SyncFailed,
+-            message: message.into(),
+-        }
+-    }
+-
+-    /// Builds a failure from a stop.
+-    fn stop(stop: &Stop) -> Self {
+-        Self {
+-            reason: stop.reason,
+-            message: stop.message.clone(),
+-        }
+-    }
+-}
+-
+-/// One started sync, with everything its stops need to restore the branch.
+-struct Sync<'a> {
+-    /// The command and record rules of the sync's caller.
+-    caller: Caller<'a>,
+-    /// The git reads and writes the sync makes in the change's worktree.
+-    vcs: GitVcs,
+-    /// The change's worktree.
+-    worktree: &'a Path,
+-    /// The change's folder name.
+-    folder: &'a str,
+-    /// The kind of change, which picks the verify and recertification steps.
+-    kind: Kind,
+-    /// The change's folder in the worktree.
+-    change: PathBuf,
+-    /// The change folder's worktree-relative POSIX path.
+-    change_rel: String,
+-    /// The default branch the sync merges.
+-    default_branch: &'a str,
+-    /// The change stream's path in the change folder.
+-    events: PathBuf,
+-    /// The change stream's bytes before the sync, or none when it was absent.
+-    kept_events: Option<Vec<u8>>,
+-    /// The done tasks an active sync verifies, in numeric order.
+-    picked: Vec<active::Picked>,
+-    /// The done-marker and task-event files a recertification overwrote.
+-    backups: recertify::Backups,
+-    /// How many commits the default branch gained.
+-    commits: u64,
+-    /// The author every sync commit carries.
+-    author: String,
+-    /// The version control settings, including `vcs.prepare`.
+-    settings: &'a VcsConfig,
+-    /// Every timeout the sync applies.
+-    timeouts: &'a Timeouts,
+-    /// Every output limit the sync applies.
+-    limits: &'a Limits,
+-}
+-
+-/// Syncs an archived change, giving its commit when it writes one.
+-///
+-/// Returns none when the default branch is already an ancestor of the
+-/// worktree's HEAD, so no sync commit is written.
+-///
+-/// # Errors
+-///
+-/// Returns a `Failed` error with the caller's command for every stop "Land
+-/// sync" and "Land stop record" name.
+-///
+-/// Implements: rust-land/land-sync
+-pub(crate) fn run(
+-    worktree: &Path,
+-    folder: &str,
+-    default_branch: &str,
+-    controls: &Controls<'_>,
+-    caller: Caller<'_>,
+-) -> Result<Option<String>, FeatureError> {
+-    run_kind(
+-        worktree,
+-        folder,
+-        Kind::Archived,
+-        default_branch,
+-        controls,
+-        caller,
+-    )
+-    .map_err(|failure| failed_in(caller.command, failure.message))
+-}
+-
+-/// Syncs an approved active change, giving its commit when it writes one.
+-///
+-/// # Errors
+-///
+-/// Returns the failure whose message `sync` reports; its reason is what the
+-/// active sync's `sync_stopped` event records.
+-///
+-/// Implements: rust-land/active-sync
+-pub(crate) fn run_active(
+-    worktree: &Path,
+-    folder: &str,
+-    default_branch: &str,
+-    controls: &Controls<'_>,
+-    caller: Caller<'_>,
+-) -> Result<Option<String>, Failure> {
+-    run_kind(
+-        worktree,
+-        folder,
+-        Kind::Active,
+-        default_branch,
+-        controls,
+-        caller,
+-    )
+-}
+-
+-/// Syncs one change of either kind, giving its commit when it writes one.
+-fn run_kind(
+-    worktree: &Path,
+-    folder: &str,
+-    kind: Kind,
+-    default_branch: &str,
+-    controls: &Controls<'_>,
+-    caller: Caller<'_>,
+-) -> Result<Option<String>, Failure> {
+-    let vcs = GitVcs::new(worktree).with_timeouts(controls.timeouts);
+-    let head = vcs
+-        .head()
+-        .map_err(|error| Failure::failed(error.to_string()))?
+-        .sha;
+-    if let Some(head) = head.as_deref() {
+-        let ancestor = vcs
+-            .is_ancestor(default_branch, head)
+-            .map_err(|error| Failure::failed(error.to_string()))?;
+-        if ancestor {
+-            return Ok(None);
+-        }
+-    }
+-    let (change, change_rel) = change_path(worktree, folder, kind);
+-    let events = change.join(".run").join("events").join("change.jsonl");
+-    let kept_events = files::read(&events);
+-    let commits = vcs
+-        .count_commits(head.as_deref().unwrap_or("HEAD"), default_branch)
+-        .map_err(|error| Failure::failed(error.to_string()))?;
+-    let mut context = Sync {
+-        caller,
+-        vcs,
+-        worktree,
+-        folder,
+-        kind,
+-        change,
+-        change_rel,
+-        default_branch,
+-        events,
+-        kept_events,
+-        picked: Vec::new(),
+-        backups: Vec::new(),
+-        commits,
+-        author: controls.settings.author.clone().unwrap_or_default(),
+-        settings: controls.settings,
+-        timeouts: controls.timeouts,
+-        limits: controls.limits,
+-    };
+-    let checked = check::run(&context.vcs, &context.change, default_branch)
+-        .map_err(|error| Failure::failed(error.to_string()))?;
+-    if let Some(stop) = checked {
+-        return Err(context.finish(&stop));
+-    }
+-    if context.kind == Kind::Active {
+-        context.picked = active::pick(&context.change, worktree);
+-    }
+-    context.run()
+-}
+-
+-/// The change folder and its worktree-relative path.
+-fn change_path(worktree: &Path, folder: &str, kind: Kind) -> (PathBuf, String) {
+-    let relative = match kind {
+-        Kind::Archived => format!("openspec/changes/archive/{folder}"),
+-        Kind::Active => format!("openspec/changes/{folder}"),
+-    };
+-    (worktree.join(&relative), relative)
+-}
+-
+-impl Sync<'_> {
+-    /// Runs the merge through the sync commit.
+-    ///
+-    /// # Errors
+-    ///
+-    /// Returns the failure a stop gives.
+-    fn run(&mut self) -> Result<Option<String>, Failure> {
+-        let start = Instant::now();
+-        let merge = match self.vcs.merge(self.default_branch, false) {
+-            Ok(merge) => merge,
+-            Err(error) => {
+-                let stop = Stop::vcs(&error);
+-                return Err(self.finish(&stop));
+-            }
+-        };
+-        let conflicts = match merge {
+-            MergeOutcome::Clean => Vec::new(),
+-            MergeOutcome::Conflict { paths } => paths,
+-        };
+-        if let Some(stop) = text::conflict_stop(self.folder, self.default_branch, &conflicts) {
+-            return Err(self.finish(&stop));
+-        }
+-        match self.steps(&conflicts, start) {
+-            Ok(commit) => Ok(Some(commit)),
+-            Err(stop) => Err(self.finish(&stop)),
+-        }
+-    }
+-
+-    /// Steps 3 through 6 of a started merge, giving the sync commit.
+-    ///
+-    /// # Errors
+-    ///
+-    /// Returns the stop a step or the commit raises.
+-    fn steps(&mut self, conflicts: &[String], start: Instant) -> Result<String, Stop> {
+-        specs::rebuild(
+-            &self.vcs,
+-            self.worktree,
+-            &self.change,
+-            self.kind,
+-            self.default_branch,
+-            conflicts,
+-        )?;
+-        locks::rebuild(
+-            &self.vcs,
+-            self.worktree,
+-            self.folder,
+-            self.default_branch,
+-            conflicts,
+-            self.timeouts,
+-            self.limits,
+-        )?;
+-        prepare::run(
+-            self.worktree,
+-            self.folder,
+-            self.settings.prepare.as_deref(),
+-            self.timeouts,
+-        )?;
+-        match self.kind {
+-            Kind::Archived => verify::run(
+-                self.worktree,
+-                &self.change,
+-                self.folder,
+-                self.default_branch,
+-                self.timeouts,
+-                self.limits,
+-            )?,
+-            Kind::Active => {
+-                verify::run_active(
+-                    self.worktree,
+-                    &self.change,
+-                    self.folder,
+-                    self.default_branch,
+-                    self.timeouts,
+-                    self.limits,
+-                    &self.picked,
+-                )?;
+-                recertify::run(
+-                    &self.vcs,
+-                    self.worktree,
+-                    &self.change,
+-                    &self.change_rel,
+-                    &self.picked,
+-                    &mut self.backups,
+-                )?;
+-            }
+-        }
+-        event::synced(
+-            &self.vcs,
+-            &self.events,
+-            &self.change_rel,
+-            self.default_branch,
+-            self.commits,
+-            start,
+-        )?;
+-        let message = text::sync_message(self.folder, self.default_branch);
+-        self.vcs
+-            .commit(&[], &message, &self.author)
+-            .map_err(|error| Stop::vcs(&error))
+-    }
+-
+-    /// Undoes the stop's writes, records the stops that need a record, and fails.
+-    ///
+-    /// Implements: rust-land/land-sync
+-    /// Implements: rust-land/land-stop-record
+-    fn finish(&self, stop: &Stop) -> Failure {
+-        let _ = self.vcs.merge_abort();
+-        let _ = files::restore(&self.events, self.kept_events.as_deref());
+-        restore_recertified(&self.backups);
+-        if self.caller.records
+-            && stop::records(stop.reason)
+-            && let Err(message) =
+-                stop::record(&self.vcs, &self.change, self.folder, &self.author, stop)
+-        {
+-            return Failure {
+-                reason: stop.reason,
+-                message: format!("{}\n{}", stop.message, message),
+-            };
+-        }
+-        Failure::stop(stop)
+-    }
+-}
+-
+-/// Puts every file a recertification wrote back as it was.
+-fn restore_recertified(backups: &recertify::Backups) {
+-    for (path, before) in backups {
+-        let _ = files::restore(path, before.as_deref());
+-    }
+-}
+diff --git a/crates/features/land/src/land/sync_command.rs b/crates/features/land/src/land/sync_command.rs
+index de3a82d54..1729369a0 100644
+--- a/crates/features/land/src/land/sync_command.rs
++++ b/crates/features/land/src/land/sync_command.rs
+@@ -1,17 +1,14 @@
+ //! Running `sync`: settings, the worktree change, its dirt and the sync commit.
+ 
+-use std::fs::{self, OpenOptions};
+-use std::io::Write as _;
+ use std::path::{Path, PathBuf};
+ 
+ use osq_core::FeatureError;
+-use osq_core::event::{Envelope, Event, SyncStopReason, SyncStoppedData, event_line};
+ use osq_kernel_config::load_config;
+ use osq_kernel_storage::{read_land_facts, read_now_facts, read_watch_state};
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, append_sync_stopped};
+ use osq_kernel_vcs::{Vcs, project_git_root};
+ 
+-use super::sync::{self, Caller, Kind};
+-use super::{checks, failed_in, find, git_vcs, land_default_branch, text, time, worktree_changes};
++use super::{checks, failed_in, find, git_vcs, land_default_branch, text, worktree_changes};
+ 
+ /// The command every failure names.
+ const SYNC: &str = "sync";
+@@ -39,8 +36,8 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
+         return Err(failed_in(SYNC, text::no_change(query)));
+     };
+     let change_rel = match kind {
+-        Kind::Archived => format!("openspec/changes/archive/{}", change.folder),
+-        Kind::Active => format!("openspec/changes/{}", change.folder),
++        SyncKind::Archived => format!("openspec/changes/archive/{}", change.folder),
++        SyncKind::Active => format!("openspec/changes/{}", change.folder),
+     };
+     let folder = change.path.join(&change_rel);
+     refuse_watcher(root, change, query)?;
+@@ -58,19 +55,21 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
+         return Err(failed_in(SYNC, message));
+     }
+     let default_branch = land_default_branch(&vcs, &settings, SYNC)?;
+-    let controls = sync::Controls {
++    let request = SyncRequest {
++        worktree: &change.path,
++        folder: &change.folder,
++        kind,
++        default_branch: &default_branch,
+         settings: &settings,
+         timeouts: &timeouts,
+         limits: &limits,
++        options: SyncOptions {
++            records: false,
++            verify: true,
++            tasks: None,
++        },
+     };
+-    let synced = sync_change(
+-        &change.path,
+-        &change.folder,
+-        &folder,
+-        kind,
+-        &default_branch,
+-        &controls,
+-    )?;
++    let synced = sync_change(&request, &folder)?;
+     Ok(if synced.is_some() {
+         text::synced(&change.folder, &default_branch)
+     } else {
+@@ -84,11 +83,11 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
+ fn locate<'a>(
+     worktrees: &'a [find::WorktreeChange],
+     query: &str,
+-) -> Option<(&'a find::WorktreeChange, Kind)> {
++) -> Option<(&'a find::WorktreeChange, SyncKind)> {
+     if let Some(change) = find::archived_change(worktrees, query) {
+-        return Some((change, Kind::Archived));
++        return Some((change, SyncKind::Archived));
+     }
+-    find::approved_change(worktrees, query).map(|change| (change, Kind::Active))
++    find::approved_change(worktrees, query).map(|change| (change, SyncKind::Active))
+ }
+ 
+ /// Refuses while a service or watcher record names a live watcher.
+@@ -140,51 +139,15 @@ fn running_task(folder: &Path, query: &str) -> Option<String> {
+ ///
+ /// Implements: rust-land/sync-command
+ /// Implements: rust-land/active-sync
+-fn sync_change(
+-    worktree: &Path,
+-    folder: &str,
+-    change: &Path,
+-    kind: Kind,
+-    default_branch: &str,
+-    controls: &sync::Controls<'_>,
+-) -> Result<Option<String>, FeatureError> {
+-    let caller = Caller {
+-        command: SYNC,
+-        records: false,
+-    };
+-    match kind {
+-        Kind::Archived => sync::run(worktree, folder, default_branch, controls, caller),
+-        Kind::Active => {
+-            match sync::run_active(worktree, folder, default_branch, controls, caller) {
+-                Ok(synced) => Ok(synced),
+-                Err(failure) => {
+-                    append_stopped(change, failure.reason, &failure.message, default_branch);
+-                    Err(failed_in(SYNC, failure.message))
+-                }
++fn sync_change(request: &SyncRequest<'_>, change: &Path) -> Result<Option<String>, FeatureError> {
++    match osq_kernel_sync::sync_change(request) {
++        Ok(SyncOutcome::AlreadySynced) => Ok(None),
++        Ok(SyncOutcome::Synced { commit }) => Ok(Some(commit)),
++        Err(stop) => {
++            if request.kind == SyncKind::Active {
++                append_sync_stopped(change, &stop, request.default_branch);
+             }
++            Err(failed_in(SYNC, stop.message))
+         }
+     }
+ }
+-
+-/// Appends the active sync's uncommitted `sync_stopped` event.
+-///
+-/// Implements: rust-land/active-sync
+-fn append_stopped(change: &Path, reason: SyncStopReason, message: &str, default_branch: &str) {
+-    let path = change.join(".run").join("events").join("change.jsonl");
+-    if let Some(parent) = path.parent() {
+-        let _ = fs::create_dir_all(parent);
+-    }
+-    let data = SyncStoppedData {
+-        reason,
+-        message: message.to_owned(),
+-        default_branch: default_branch.to_owned(),
+-    };
+-    let envelope = Envelope {
+-        timestamp: time::format_utc(time::now_ms()),
+-        event: Event::SyncStopped(data),
+-    };
+-    let line = format!("{}\n", event_line(&envelope));
+-    if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(path) {
+-        let _ = file.write_all(line.as_bytes());
+-    }
+-}
+diff --git a/crates/kernel/sync/Cargo.toml b/crates/kernel/sync/Cargo.toml
+new file mode 100644
+index 000000000..09677c3eb
+--- /dev/null
++++ b/crates/kernel/sync/Cargo.toml
+@@ -0,0 +1,20 @@
++[package]
++name = "osq-kernel-sync"
++description = "Sync kernel: takes the default branch into a change's branch."
++version.workspace = true
++edition.workspace = true
++rust-version.workspace = true
++license.workspace = true
++publish.workspace = true
++
++[lints]
++workspace = true
++
++[dependencies]
++osq-core.workspace = true
++osq-kernel-config.workspace = true
++osq-kernel-harnesses.workspace = true
++osq-kernel-specs.workspace = true
++osq-kernel-storage.workspace = true
++osq-kernel-vcs.workspace = true
++serde_json.workspace = true
+diff --git a/crates/features/land/src/land/sync/active.rs b/crates/kernel/sync/src/active.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/active.rs
+rename to crates/kernel/sync/src/active.rs
+diff --git a/crates/features/land/src/land/sync/check.rs b/crates/kernel/sync/src/check.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/check.rs
+rename to crates/kernel/sync/src/check.rs
+diff --git a/crates/features/land/src/land/sync/command.rs b/crates/kernel/sync/src/command.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/command.rs
+rename to crates/kernel/sync/src/command.rs
+diff --git a/crates/features/land/src/land/sync/event.rs b/crates/kernel/sync/src/event.rs
+similarity index 97%
+rename from crates/features/land/src/land/sync/event.rs
+rename to crates/kernel/sync/src/event.rs
+index 4caa25886..b6309170f 100644
+--- a/crates/features/land/src/land/sync/event.rs
++++ b/crates/kernel/sync/src/event.rs
+@@ -8,7 +8,7 @@ use std::time::Instant;
+ use osq_core::event::{Envelope, Event, SyncedData, event_line};
+ use osq_kernel_vcs::{GitVcs, Vcs};
+ 
+-use super::{super::time, stop::Stop};
++use super::{stop::Stop, time};
+ 
+ /// Appends and stages the `synced` event, then gives nothing.
+ ///
+diff --git a/crates/features/land/src/land/sync/files.rs b/crates/kernel/sync/src/files.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/files.rs
+rename to crates/kernel/sync/src/files.rs
+diff --git a/crates/kernel/sync/src/lib.rs b/crates/kernel/sync/src/lib.rs
+new file mode 100644
+index 000000000..1e7506f03
+--- /dev/null
++++ b/crates/kernel/sync/src/lib.rs
+@@ -0,0 +1,123 @@
++//! Sync kernel: takes the default branch into a change's branch (ADR 022).
++//!
++//! A kernel crate depends only on core and other kernel crates (ADR 022).
++
++mod active;
++mod check;
++mod command;
++mod event;
++mod files;
++mod locks;
++mod prepare;
++mod recertify;
++mod specs;
++mod stop;
++mod sync;
++mod text;
++mod time;
++mod verify;
++
++use std::fs::{self, OpenOptions};
++use std::io::Write as _;
++use std::path::Path;
++
++use osq_core::event::{Envelope, Event, SyncStopReason, SyncStoppedData, event_line};
++use osq_kernel_config::{Limits, Timeouts, VcsConfig};
++
++/// The kind of change a sync takes the default branch into.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum SyncKind {
++    /// A change under `openspec/changes/archive/`.
++    Archived,
++    /// An approved change under `openspec/changes/`.
++    Active,
++}
++
++/// The caller's choices for recording stops, verifying and picking tasks.
++#[derive(Clone, Debug, Default, PartialEq, Eq)]
++pub struct SyncOptions {
++    /// Whether a stop the land stop record names writes that record.
++    pub records: bool,
++    /// Whether the sync runs its verify and recertification steps.
++    pub verify: bool,
++    /// The done tasks to verify, or every picked one when absent.
++    pub tasks: Option<Vec<String>>,
++}
++
++/// The change a sync takes the default branch into, with every setting it reads.
++pub struct SyncRequest<'a> {
++    /// The worktree that has the change's branch checked out.
++    pub worktree: &'a Path,
++    /// The change's folder name, without its `openspec/changes` prefix.
++    pub folder: &'a str,
++    /// Whether the change is archived or active.
++    pub kind: SyncKind,
++    /// The branch the sync merges into the change's branch.
++    pub default_branch: &'a str,
++    /// The version control settings, including `vcs.prepare`.
++    pub settings: &'a VcsConfig,
++    /// Every timeout the sync applies.
++    pub timeouts: &'a Timeouts,
++    /// Every output limit the sync applies.
++    pub limits: &'a Limits,
++    /// The caller's choices for recording stops, verifying and picking tasks.
++    pub options: SyncOptions,
++}
++
++/// What a finished sync wrote.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub enum SyncOutcome {
++    /// The default branch was already an ancestor of the worktree's HEAD.
++    AlreadySynced,
++    /// The sync committed, with the sync commit's sha.
++    Synced {
++        /// The sync commit's sha.
++        commit: String,
++    },
++}
++
++/// Why a sync stopped, with the message the command fails with.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct SyncStop {
++    /// The stop's reason, or `sync_failed` for any other error.
++    pub reason: SyncStopReason,
++    /// The text the command fails with.
++    pub message: String,
++    /// The conflicted paths a `sync_conflict` stop names, in merge order.
++    pub conflicts: Vec<String>,
++}
++
++/// Takes the default branch into the branch checked out in the request's worktree.
++///
++/// # Errors
++///
++/// Returns a `SyncStop` for every stop and every other error, after undoing the
++/// sync's own writes.
++///
++/// Implements: rust-sync/sync-change
++pub fn sync_change(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
++    sync::run(request)
++}
++
++/// Appends the active sync's uncommitted `sync_stopped` event.
++///
++/// Implements: rust-sync/sync-stopped-event
++pub fn append_sync_stopped(change: &Path, stop: &SyncStop, default_branch: &str) {
++    let path = change.join(".run").join("events").join("change.jsonl");
++    if let Some(parent) = path.parent() {
++        let _ = fs::create_dir_all(parent);
++    }
++    let data = SyncStoppedData {
++        reason: stop.reason,
++        message: stop.message.clone(),
++        default_branch: default_branch.to_owned(),
++    };
++    let envelope = Envelope {
++        timestamp: time::format_utc(time::now_ms()),
++        event: Event::SyncStopped(data),
++    };
++    let line = format!("{}\n", event_line(&envelope));
++    if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(path) {
++        let _ = file.write_all(line.as_bytes());
++    }
++}
+diff --git a/crates/features/land/src/land/sync/locks.rs b/crates/kernel/sync/src/locks.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/locks.rs
+rename to crates/kernel/sync/src/locks.rs
+diff --git a/crates/features/land/src/land/sync/prepare.rs b/crates/kernel/sync/src/prepare.rs
+similarity index 100%
+rename from crates/features/land/src/land/sync/prepare.rs
+rename to crates/kernel/sync/src/prepare.rs
+diff --git a/crates/features/land/src/land/sync/recertify.rs b/crates/kernel/sync/src/recertify.rs
+similarity index 99%
+rename from crates/features/land/src/land/sync/recertify.rs
+rename to crates/kernel/sync/src/recertify.rs
+index ad67c6c5d..7d2e20cc1 100644
+--- a/crates/features/land/src/land/sync/recertify.rs
++++ b/crates/kernel/sync/src/recertify.rs
+@@ -11,7 +11,7 @@ use serde_json::json;
+ 
+ use super::active::Picked;
+ use super::stop::Stop;
+-use super::{super::time, files};
++use super::{files, time};
+ 
+ /// One file a recertification overwrote, kept so a stop can restore it.
+ pub(crate) type Backups = Vec<(PathBuf, Option<Vec<u8>>)>;
+diff --git a/crates/features/land/src/land/sync/specs.rs b/crates/kernel/sync/src/specs.rs
+similarity index 97%
+rename from crates/features/land/src/land/sync/specs.rs
+rename to crates/kernel/sync/src/specs.rs
+index 60cd2ca1b..021b624b8 100644
+--- a/crates/features/land/src/land/sync/specs.rs
++++ b/crates/kernel/sync/src/specs.rs
+@@ -7,7 +7,8 @@ use std::path::Path;
+ use osq_kernel_specs::{MergedSpec, merge_change};
+ use osq_kernel_vcs::{GitVcs, Vcs};
+ 
+-use super::{Kind, files, stop::Stop, text};
++use super::{files, stop::Stop, text};
++use crate::SyncKind;
+ 
+ /// The living specs folder under the worktree.
+ const SPECS: &str = "openspec/specs";
+@@ -26,7 +27,7 @@ pub(crate) fn rebuild(
+     vcs: &GitVcs,
+     worktree: &Path,
+     change: &Path,
+-    kind: Kind,
++    kind: SyncKind,
+     default_branch: &str,
+     conflicts: &[String],
+ ) -> Result<(), Stop> {
+@@ -50,7 +51,7 @@ pub(crate) fn rebuild(
+         staged.insert(relative);
+     }
+     stage(vcs, &staged)?;
+-    if kind == Kind::Active {
++    if kind == SyncKind::Active {
+         return Ok(());
+     }
+     let merged = merge_change(change, &worktree.join(SPECS))
+diff --git a/crates/features/land/src/land/sync/stop.rs b/crates/kernel/sync/src/stop.rs
+similarity index 91%
+rename from crates/features/land/src/land/sync/stop.rs
+rename to crates/kernel/sync/src/stop.rs
+index f95899717..decac4a53 100644
+--- a/crates/features/land/src/land/sync/stop.rs
++++ b/crates/kernel/sync/src/stop.rs
+@@ -9,8 +9,7 @@ use osq_core::event::{
+ };
+ use osq_kernel_vcs::{GitVcs, Vcs, VcsError};
+ 
+-use super::super::{text, time};
+-use super::files;
++use super::{files, text, time};
+ 
+ /// Why a sync stopped, with the message the land fails with.
+ #[derive(Debug)]
+@@ -19,6 +18,8 @@ pub(crate) struct Stop {
+     pub(crate) reason: SyncStopReason,
+     /// The message the land fails with.
+     pub(crate) message: String,
++    /// The conflicted paths a conflict stop names, in merge order.
++    pub(crate) conflicts: Vec<String>,
+ }
+ 
+ impl Stop {
+@@ -29,6 +30,22 @@ impl Stop {
+         Self {
+             reason,
+             message: message.into(),
++            conflicts: Vec::new(),
++        }
++    }
++
++    /// Builds a stop that names the conflicted paths it blocks on.
++    ///
++    /// Implements: rust-land/land-sync
++    pub(crate) fn conflicting(
++        reason: SyncStopReason,
++        message: impl Into<String>,
++        conflicts: Vec<String>,
++    ) -> Self {
++        Self {
++            reason,
++            message: message.into(),
++            conflicts,
+         }
+     }
+ 
+diff --git a/crates/kernel/sync/src/sync.rs b/crates/kernel/sync/src/sync.rs
+new file mode 100644
+index 000000000..ef00d6db9
+--- /dev/null
++++ b/crates/kernel/sync/src/sync.rs
+@@ -0,0 +1,263 @@
++//! Taking the default branch into a change's branch before land.
++
++use std::path::{Path, PathBuf};
++use std::time::Instant;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_vcs::{GitVcs, MergeOutcome, Vcs};
++
++use crate::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, SyncStop};
++
++use super::{
++    active, check, event, files, locks, prepare, recertify, specs,
++    stop::{self, Stop},
++    text, verify,
++};
++
++/// Builds a `sync_failed` stop from a message.
++fn failed(message: impl Into<String>) -> SyncStop {
++    SyncStop {
++        reason: SyncStopReason::SyncFailed,
++        message: message.into(),
++        conflicts: Vec::new(),
++    }
++}
++
++/// Turns a private stop into the public stop a caller sees.
++fn stopped(stop: &Stop) -> SyncStop {
++    SyncStop {
++        reason: stop.reason,
++        message: stop.message.clone(),
++        conflicts: stop.conflicts.clone(),
++    }
++}
++
++/// One started sync, with everything its stops need to restore the branch.
++struct Sync<'a> {
++    /// The caller's choices for recording stops, verifying and picking tasks.
++    options: &'a SyncOptions,
++    /// The git reads and writes the sync makes in the change's worktree.
++    vcs: GitVcs,
++    /// The change's worktree.
++    worktree: &'a Path,
++    /// The change's folder name.
++    folder: &'a str,
++    /// The kind of change, which picks the verify and recertification steps.
++    kind: SyncKind,
++    /// The change's folder in the worktree.
++    change: PathBuf,
++    /// The change folder's worktree-relative POSIX path.
++    change_rel: String,
++    /// The default branch the sync merges.
++    default_branch: &'a str,
++    /// The change stream's path in the change folder.
++    events: PathBuf,
++    /// The change stream's bytes before the sync, or none when it was absent.
++    kept_events: Option<Vec<u8>>,
++    /// The done tasks an active sync verifies, in numeric order.
++    picked: Vec<active::Picked>,
++    /// The done-marker and task-event files a recertification overwrote.
++    backups: recertify::Backups,
++    /// How many commits the default branch gained.
++    commits: u64,
++    /// The author every sync commit carries.
++    author: String,
++    /// The version control settings, including `vcs.prepare`.
++    settings: &'a osq_kernel_config::VcsConfig,
++    /// Every timeout the sync applies.
++    timeouts: &'a osq_kernel_config::Timeouts,
++    /// Every output limit the sync applies.
++    limits: &'a osq_kernel_config::Limits,
++}
++
++/// Syncs one change of either kind, giving the outcome its caller sees.
++pub(crate) fn run(request: &SyncRequest<'_>) -> Result<SyncOutcome, SyncStop> {
++    let vcs = GitVcs::new(request.worktree).with_timeouts(request.timeouts);
++    let head = vcs.head().map_err(|error| failed(error.to_string()))?.sha;
++    if let Some(head) = head.as_deref() {
++        let ancestor = vcs
++            .is_ancestor(request.default_branch, head)
++            .map_err(|error| failed(error.to_string()))?;
++        if ancestor {
++            return Ok(SyncOutcome::AlreadySynced);
++        }
++    }
++    let (change, change_rel) = change_path(request.worktree, request.folder, request.kind);
++    let events = change.join(".run").join("events").join("change.jsonl");
++    let kept_events = files::read(&events);
++    let commits = vcs
++        .count_commits(head.as_deref().unwrap_or("HEAD"), request.default_branch)
++        .map_err(|error| failed(error.to_string()))?;
++    let mut context = Sync {
++        options: &request.options,
++        vcs,
++        worktree: request.worktree,
++        folder: request.folder,
++        kind: request.kind,
++        change,
++        change_rel,
++        default_branch: request.default_branch,
++        events,
++        kept_events,
++        picked: Vec::new(),
++        backups: Vec::new(),
++        commits,
++        author: request.settings.author.clone().unwrap_or_default(),
++        settings: request.settings,
++        timeouts: request.timeouts,
++        limits: request.limits,
++    };
++    let checked = check::run(&context.vcs, &context.change, request.default_branch)
++        .map_err(|error| failed(error.to_string()))?;
++    if let Some(stop) = checked {
++        return Err(context.finish(&stop));
++    }
++    if context.kind == SyncKind::Active {
++        context.picked = active::pick(&context.change, request.worktree);
++        if let Some(ids) = &request.options.tasks {
++            context.picked.retain(|task| ids.contains(&task.id));
++        }
++    }
++    context.run()
++}
++
++/// The change folder and its worktree-relative path.
++fn change_path(worktree: &Path, folder: &str, kind: SyncKind) -> (PathBuf, String) {
++    let relative = match kind {
++        SyncKind::Archived => format!("openspec/changes/archive/{folder}"),
++        SyncKind::Active => format!("openspec/changes/{folder}"),
++    };
++    (worktree.join(&relative), relative)
++}
++
++impl Sync<'_> {
++    /// Runs the merge through the sync commit.
++    ///
++    /// # Errors
++    ///
++    /// Returns the stop a step raises.
++    fn run(&mut self) -> Result<SyncOutcome, SyncStop> {
++        let start = Instant::now();
++        let merge = match self.vcs.merge(self.default_branch, false) {
++            Ok(merge) => merge,
++            Err(error) => {
++                let stop = Stop::vcs(&error);
++                return Err(self.finish(&stop));
++            }
++        };
++        let conflicts = match merge {
++            MergeOutcome::Clean => Vec::new(),
++            MergeOutcome::Conflict { paths } => paths,
++        };
++        if let Some(stop) = text::conflict_stop(self.folder, self.default_branch, &conflicts) {
++            return Err(self.finish(&stop));
++        }
++        match self.steps(&conflicts, start) {
++            Ok(commit) => Ok(SyncOutcome::Synced { commit }),
++            Err(stop) => Err(self.finish(&stop)),
++        }
++    }
++
++    /// Steps 3 through 6 of a started merge, giving the sync commit.
++    ///
++    /// # Errors
++    ///
++    /// Returns the stop a step or the commit raises.
++    fn steps(&mut self, conflicts: &[String], start: Instant) -> Result<String, Stop> {
++        specs::rebuild(
++            &self.vcs,
++            self.worktree,
++            &self.change,
++            self.kind,
++            self.default_branch,
++            conflicts,
++        )?;
++        locks::rebuild(
++            &self.vcs,
++            self.worktree,
++            self.folder,
++            self.default_branch,
++            conflicts,
++            self.timeouts,
++            self.limits,
++        )?;
++        prepare::run(
++            self.worktree,
++            self.folder,
++            self.settings.prepare.as_deref(),
++            self.timeouts,
++        )?;
++        if self.options.verify {
++            match self.kind {
++                SyncKind::Archived => verify::run(
++                    self.worktree,
++                    &self.change,
++                    self.folder,
++                    self.default_branch,
++                    self.timeouts,
++                    self.limits,
++                )?,
++                SyncKind::Active => {
++                    verify::run_active(
++                        self.worktree,
++                        &self.change,
++                        self.folder,
++                        self.default_branch,
++                        self.timeouts,
++                        self.limits,
++                        &self.picked,
++                    )?;
++                    recertify::run(
++                        &self.vcs,
++                        self.worktree,
++                        &self.change,
++                        &self.change_rel,
++                        &self.picked,
++                        &mut self.backups,
++                    )?;
++                }
++            }
++        }
++        event::synced(
++            &self.vcs,
++            &self.events,
++            &self.change_rel,
++            self.default_branch,
++            self.commits,
++            start,
++        )?;
++        let message = text::sync_message(self.folder, self.default_branch);
++        self.vcs
++            .commit(&[], &message, &self.author)
++            .map_err(|error| Stop::vcs(&error))
++    }
++
++    /// Undoes the stop's writes, records the stops that need a record, and fails.
++    ///
++    /// Implements: rust-land/land-sync
++    /// Implements: rust-land/land-stop-record
++    fn finish(&self, stop: &Stop) -> SyncStop {
++        let _ = self.vcs.merge_abort();
++        let _ = files::restore(&self.events, self.kept_events.as_deref());
++        restore_recertified(&self.backups);
++        if self.options.records
++            && stop::records(stop.reason)
++            && let Err(message) =
++                stop::record(&self.vcs, &self.change, self.folder, &self.author, stop)
++        {
++            return SyncStop {
++                reason: stop.reason,
++                message: format!("{}\n{}", stop.message, message),
++                conflicts: stop.conflicts.clone(),
++            };
++        }
++        stopped(stop)
++    }
++}
++
++/// Puts every file a recertification wrote back as it was.
++fn restore_recertified(backups: &recertify::Backups) {
++    for (path, before) in backups {
++        let _ = files::restore(path, before.as_deref());
++    }
++}
+diff --git a/crates/features/land/src/land/sync/text.rs b/crates/kernel/sync/src/text.rs
+similarity index 89%
+rename from crates/features/land/src/land/sync/text.rs
+rename to crates/kernel/sync/src/text.rs
+index 052139336..8c87bf817 100644
+--- a/crates/features/land/src/land/sync/text.rs
++++ b/crates/kernel/sync/src/text.rs
+@@ -4,9 +4,15 @@ use std::path::Path;
+ 
+ use osq_core::event::SyncStopReason;
+ 
+-use super::super::text::change_id;
+ use super::stop::Stop;
+ 
++/// The folder's text before its first dash, or the whole name.
++///
++/// Implements: rust-land/land-commit
++pub(crate) fn change_id(folder: &str) -> &str {
++    folder.split_once('-').map_or(folder, |(id, _)| id)
++}
++
+ /// Whether a conflicting path a living spec or an archived folder owns.
+ ///
+ /// Implements: rust-land/land-sync
+@@ -56,7 +62,11 @@ pub(crate) fn conflict_stop(
+         "{folder}: {} conflict with {default_branch}; run osq plan {id}, and approving the revised plan restarts osq/{folder} from {default_branch}",
+         blocked.join(", ")
+     );
+-    Some(Stop::new(SyncStopReason::SyncConflict, message))
++    Some(Stop::conflicting(
++        SyncStopReason::SyncConflict,
++        message,
++        blocked.iter().map(|path| (*path).to_owned()).collect(),
++    ))
+ }
+ 
+ /// The message for requirements the default branch changed under the change.
+diff --git a/crates/kernel/sync/src/time.rs b/crates/kernel/sync/src/time.rs
+new file mode 100644
+index 000000000..208c7d1ee
+--- /dev/null
++++ b/crates/kernel/sync/src/time.rs
+@@ -0,0 +1,52 @@
++//! Reading the clock and writing UTC in TypeScript's fixed ISO form.
++
++use std::time::{SystemTime, UNIX_EPOCH};
++
++/// The current time as epoch milliseconds.
++///
++/// Implements: rust-land/land-after-land-command
++pub(crate) fn now_ms() -> i64 {
++    let elapsed = SystemTime::now()
++        .duration_since(UNIX_EPOCH)
++        .unwrap_or_default();
++    i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX)
++}
++
++/// Writes epoch milliseconds as `YYYY-MM-DDTHH:MM:SS.mmmZ` in UTC.
++///
++/// Implements: rust-land/land-after-land-command
++pub(crate) fn format_utc(ms: i64) -> String {
++    let seconds = ms.div_euclid(1000);
++    let millis = ms.rem_euclid(1000);
++    let days = seconds.div_euclid(86_400);
++    let day_seconds = seconds.rem_euclid(86_400);
++    let (year, month, day) = civil_from_days(days);
++    let hour = day_seconds / 3_600;
++    let minute = (day_seconds % 3_600) / 60;
++    let second = day_seconds % 60;
++    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}Z")
++}
++
++/// Turns days since the Unix epoch into a proleptic Gregorian date.
++fn civil_from_days(days: i64) -> (i64, i64, i64) {
++    let shifted = days + 719_468;
++    let era = if shifted >= 0 {
++        shifted
++    } else {
++        shifted - 146_096
++    } / 146_097;
++    let day_of_era = shifted - era * 146_097;
++    let year_of_era =
++        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
++    let year = year_of_era + era * 400;
++    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
++    let month_prime = (5 * day_of_year + 2) / 153;
++    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
++    let month = if month_prime < 10 {
++        month_prime + 3
++    } else {
++        month_prime - 9
++    };
++    let year = if month <= 2 { year + 1 } else { year };
++    (year, month, day)
++}
+diff --git a/crates/features/land/src/land/sync/verify.rs b/crates/kernel/sync/src/verify.rs
+similarity index 99%
+rename from crates/features/land/src/land/sync/verify.rs
+rename to crates/kernel/sync/src/verify.rs
+index e76d73259..177bf30f0 100644
+--- a/crates/features/land/src/land/sync/verify.rs
++++ b/crates/kernel/sync/src/verify.rs
+@@ -9,7 +9,7 @@ use osq_core::event::{Envelope, Event, SyncStopReason, VerifyRanData, event_line
+ use osq_kernel_config::{Limits, Timeouts};
+ use osq_kernel_specs::{Frontmatter, js_trim, parse_frontmatter, parse_proposal};
+ 
+-use super::{super::time, active::Picked, command, stop::Stop, text};
++use super::{active::Picked, command, stop::Stop, text, time};
+ 
+ /// The archived proposal's commands.
+ #[derive(Default)]
+diff --git a/crates/kernel/sync/tests/options_chosen_by_caller.rs b/crates/kernel/sync/tests/options_chosen_by_caller.rs
+new file mode 100644
+index 000000000..e6ab24ea6
+--- /dev/null
++++ b/crates/kernel/sync/tests/options_chosen_by_caller.rs
+@@ -0,0 +1,176 @@
++//! Proves the three options choose what a sync records, verifies and picks.
++
++mod support;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncStop};
++use support::{ChangeTree, SyncRepo};
++
++/// The alpha change's delta, as the land goldens write it.
++const ALPHA_DELTA: &str = "## ADDED Requirements\n\n### Requirement: Alpha\nThe system SHALL alpha.\n\n#### Scenario: Alpha works\n- **WHEN** alpha\n- **THEN** alpha\n";
++
++/// The orders spec with one requirement `name` and its lowercase body.
++fn orders_spec(name: &str) -> String {
++    let lower = name.to_lowercase();
++    format!(
++        "# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: {name}\nThe system SHALL {lower}.\n\n#### Scenario: {name} works\n- **WHEN** {lower}\n- **THEN** {lower}\n"
++    )
++}
++
++/// The options one row names.
++fn options(records: bool, verify: bool, tasks: Option<&[&str]>) -> SyncOptions {
++    SyncOptions {
++        records,
++        verify,
++        tasks: tasks.map(|ids| ids.iter().map(|id| (*id).to_owned()).collect()),
++    }
++}
++
++/// Whether a task stream holds a `verify_ran` event, or missing text has none.
++fn verify_ran(repo: &SyncRepo, change: &ChangeTree, relative: &str) -> bool {
++    if !repo.exists(&change.path, relative) {
++        return false;
++    }
++    repo.read(&change.path, relative)
++        .lines()
++        .any(|line| line.contains("\"verify_ran\""))
++}
++
++/// Proves the row that runs verify with a red proposal command.
++///
++/// Covers: rust-sync/options-chosen-by-the-caller
++#[test]
++fn archived_verify_true_stops_red() {
++    let repo = SyncRepo::new("options-archived-red");
++    let change = repo.add_archived_change("001-alpha-orders", "false");
++    let branch = repo.head(&change.path);
++    repo.main_file("other.txt", "other\n", "main adds other");
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options(false, true, None));
++
++    assert!(matches!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncVerifyRed,
++            ..
++        })
++    ));
++    assert_eq!(repo.head(&change.path), branch);
++}
++
++/// Proves the row that turns verify off.
++///
++/// Covers: rust-sync/options-chosen-by-the-caller
++#[test]
++fn archived_verify_false_writes_no_verify_log_or_event() {
++    let repo = SyncRepo::new("options-archived-no-verify");
++    let change = repo.add_archived_change("001-alpha-orders", "false");
++    repo.main_file("other.txt", "other\n", "main adds other");
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options(false, false, None));
++
++    assert!(matches!(result, Ok(SyncOutcome::Synced { .. })));
++    assert!(!repo.exists(
++        &change.path,
++        "openspec/changes/archive/001-alpha-orders/.run/logs"
++    ));
++    assert!(!verify_ran(
++        &repo,
++        &change,
++        "openspec/changes/archive/001-alpha-orders/.run/events/change.jsonl"
++    ));
++}
++
++/// Proves the row that records a conflict stop on the change's branch.
++///
++/// Covers: rust-sync/options-chosen-by-the-caller
++#[test]
++fn records_true_commits_the_stop_record() {
++    let repo = SyncRepo::new("options-recorded-conflict");
++    let change = repo.add_archived_change("001-alpha-orders", "true");
++    let branch = repo.head(&change.path);
++    repo.main_file("src/one.txt", "main\n", "main edits one");
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options(true, true, None));
++
++    assert!(matches!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncConflict,
++            conflicts,
++            ..
++        }) if conflicts == vec!["src/one.txt".to_owned()]
++    ));
++    let commit = repo.head(&change.path);
++    assert_ne!(commit, branch);
++    assert_eq!(repo.message(&commit), "osq: 001 land stopped\n");
++    let marker = repo.git(
++        &change.path,
++        &[
++            "show",
++            &format!("{commit}:openspec/changes/archive/001-alpha-orders/.run/regressed/change.md"),
++        ],
++    );
++    assert!(marker.contains("reason: sync_conflict"), "{marker}");
++}
++
++/// Proves the active row that verifies a red task with no task filter.
++///
++/// Covers: rust-sync/options-chosen-by-the-caller
++#[test]
++fn active_verify_true_stops_on_the_red_task() {
++    let repo = SyncRepo::new("options-active-red");
++    let change = repo.add_active_change("001-alpha-orders", &[(1, "false"), (2, "true")]);
++    let branch = repo.head(&change.path);
++    repo.main_file("other.txt", "other\n", "main adds other");
++
++    let result = SyncRepo::sync(&change, SyncKind::Active, options(false, true, None));
++
++    assert!(matches!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncVerifyRed,
++            ..
++        })
++    ));
++    assert_eq!(repo.head(&change.path), branch);
++}
++
++/// Proves the active row that keeps only the task its caller names.
++///
++/// Covers: rust-sync/options-chosen-by-the-caller
++#[test]
++fn active_tasks_keep_only_the_named_task() {
++    let repo = SyncRepo::new("options-active-picked");
++    repo.main_file(
++        "openspec/specs/orders/spec.md",
++        orders_spec("Beta"),
++        "main adds beta",
++    );
++    let change = repo.add_active_change("001-alpha-orders", &[(1, "false"), (2, "true")]);
++    repo.write(
++        &change.path,
++        "openspec/changes/001-alpha-orders/specs/orders/spec.md",
++        ALPHA_DELTA,
++    );
++    repo.commit_all(&change.path, "branch adds alpha delta");
++    repo.main_file("other.txt", "other\n", "main adds other");
++
++    let result = SyncRepo::sync(
++        &change,
++        SyncKind::Active,
++        options(false, true, Some(&["2"])),
++    );
++
++    assert!(matches!(result, Ok(SyncOutcome::Synced { .. })));
++    assert_eq!(
++        repo.read(&change.path, "openspec/specs/orders/spec.md"),
++        orders_spec("Beta"),
++        "an active sync leaves the default branch's living spec"
++    );
++    assert!(!verify_ran(
++        &repo,
++        &change,
++        "openspec/changes/001-alpha-orders/.run/events/1.jsonl"
++    ));
++}
+diff --git a/crates/kernel/sync/tests/recertification_restores.rs b/crates/kernel/sync/tests/recertification_restores.rs
+new file mode 100644
+index 000000000..dcae1cc90
+--- /dev/null
++++ b/crates/kernel/sync/tests/recertification_restores.rs
+@@ -0,0 +1,58 @@
++//! Proves a stop after recertification puts the done marker and events back.
++
++mod support;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_storage::task_scope_hash;
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncStop};
++use support::SyncRepo;
++
++/// The active change's folder.
++const ACTIVE: &str = "openspec/changes/001-alpha-orders";
++
++/// Proves a failed commit restores the files a recertification overwrote.
++///
++/// Covers: rust-sync/sync-outcomes
++#[test]
++fn a_stop_restores_the_recertified_files() {
++    let repo = SyncRepo::new("sync-restores-recertified");
++    let change = repo.add_active_change("001-alpha-orders", &[(1, "true")]);
++    repo.write(
++        &change.path,
++        &format!("{ACTIVE}/tasks/1.md"),
++        "---\ntitle: Task 1\nverify: \"true\"\nscope:\n  - src/**\n---\n## Acceptance\n\n- [ ] Task 1 works.\n",
++    );
++    let _ = std::fs::remove_file(change.path.join(format!("{ACTIVE}/.run/done/1")));
++    repo.commit_all(&change.path, "record task one's scope");
++    let hash = task_scope_hash(&change.path, &["src/**".to_owned()]);
++    let marker = format!(
++        "---\nscope_hash: {}\n---\n2026-10-20T08:00:00.000Z\n",
++        hash.hash
++    );
++    repo.write(&change.path, &format!("{ACTIVE}/.run/done/1"), &marker);
++    repo.main_file("src/three.txt", "three\n", "main adds three");
++    repo.install_failing_hook();
++
++    let result = SyncRepo::sync(
++        &change,
++        SyncKind::Active,
++        SyncOptions {
++            records: false,
++            verify: true,
++            tasks: None,
++        },
++    );
++
++    assert!(matches!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncFailed,
++            ..
++        })
++    ));
++    assert_eq!(
++        repo.read(&change.path, &format!("{ACTIVE}/.run/done/1")),
++        marker
++    );
++    assert!(!repo.exists(&change.path, &format!("{ACTIVE}/.run/events/1.jsonl")));
++}
+diff --git a/crates/kernel/sync/tests/stopped_event.rs b/crates/kernel/sync/tests/stopped_event.rs
+new file mode 100644
+index 000000000..5bd2d7514
+--- /dev/null
++++ b/crates/kernel/sync/tests/stopped_event.rs
+@@ -0,0 +1,55 @@
++//! Proves the active sync's uncommitted stopped event.
++
++use std::fs;
++use std::path::Path;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_sync::{SyncStop, append_sync_stopped};
++use serde_json::{Value, json};
++
++/// Whether `text` is UTC in the form `YYYY-MM-DDTHH:MM:SS.mmmZ`.
++fn is_utc_millis(text: &str) -> bool {
++    let bytes = text.as_bytes();
++    bytes.len() == 24
++        && bytes[4] == b'-'
++        && bytes[7] == b'-'
++        && bytes[10] == b'T'
++        && bytes[13] == b':'
++        && bytes[16] == b':'
++        && bytes[19] == b'.'
++        && bytes[23] == b'Z'
++        && [0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 22]
++            .iter()
++            .all(|index| bytes[*index].is_ascii_digit())
++}
++
++/// Proves the stopped event's line, data and timestamp.
++///
++/// Covers: rust-sync/stopped-event-appended
++#[test]
++fn stopped_event_is_appended_uncommitted() {
++    let folder = Path::new(env!("CARGO_TARGET_TMPDIR"))
++        .join("sync_kernel")
++        .join("stopped-event");
++    let _ = fs::remove_dir_all(&folder);
++    fs::create_dir_all(&folder).expect("the scratch folder is created");
++    let stop = SyncStop {
++        reason: SyncStopReason::SyncConflict,
++        message: "m".to_owned(),
++        conflicts: vec!["a".to_owned()],
++    };
++
++    append_sync_stopped(&folder, &stop, "main");
++
++    let text = fs::read_to_string(folder.join(".run/events/change.jsonl"))
++        .expect("the change stream is written");
++    assert_eq!(text.lines().count(), 1, "{text}");
++    let event: Value = serde_json::from_str(text.trim_end()).expect("the line is JSON");
++    assert_eq!(event["type"], "sync_stopped");
++    assert_eq!(
++        event["data"],
++        json!({"reason": "sync_conflict", "message": "m", "defaultBranch": "main"})
++    );
++    let timestamp = event["timestamp"].as_str().expect("the timestamp is text");
++    assert!(is_utc_millis(timestamp), "{timestamp}");
++}
+diff --git a/crates/kernel/sync/tests/support/mod.rs b/crates/kernel/sync/tests/support/mod.rs
+new file mode 100644
+index 000000000..93b34117e
+--- /dev/null
++++ b/crates/kernel/sync/tests/support/mod.rs
+@@ -0,0 +1,291 @@
++//! Helpers shared by the sync kernel's tests: scratch repositories, worktree
++//! changes and the kernel's invocation.
++//!
++//! Each test binary compiles this module on its own, so some helpers are
++//! unused in a given binary even though another test uses them.
++#![allow(dead_code)]
++
++use std::fs;
++use std::os::unix::fs::PermissionsExt;
++use std::path::{Path, PathBuf};
++use std::process::Command;
++
++use osq_kernel_config::{Limits, Timeouts, VcsConfig};
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, SyncStop, sync_change};
++
++/// The date every setup commit gets.
++const DATE: &str = "2000-01-01T00:00:00+0000";
++/// The author and committer name every setup commit gets.
++const NAME: &str = "Osq Test";
++/// The author and committer email every setup commit gets.
++const EMAIL: &str = "osq@example.com";
++/// The author every sync commit carries.
++const AUTHOR: &str = "osq <osq@example.invalid>";
++
++/// One worktree change: its folder and the worktree it lives in.
++#[derive(Clone, Debug)]
++pub struct ChangeTree {
++    /// The change folder's name.
++    pub folder: String,
++    /// The worktree's canonical path.
++    pub path: PathBuf,
++}
++
++/// One sync repository under `CARGO_TARGET_TMPDIR`.
++#[derive(Debug)]
++pub struct SyncRepo {
++    /// The fresh folder holding the checkout and every worktree.
++    scratch: PathBuf,
++    /// The canonical checkout on `main`.
++    root: PathBuf,
++}
++
++impl SyncRepo {
++    /// Creates a sync repository named after the test.
++    pub fn new(name: &str) -> Self {
++        let base = Path::new(env!("CARGO_TARGET_TMPDIR"))
++            .join("sync_kernel")
++            .join(name);
++        let _ = fs::remove_dir_all(&base);
++        fs::create_dir_all(&base).expect("the scratch folder is created");
++        let scratch = fs::canonicalize(&base).expect("the scratch folder resolves");
++        let root = scratch.join("checkout");
++        fs::create_dir_all(&root).expect("the checkout folder is created");
++        let repo = Self {
++            root: fs::canonicalize(&root).expect("the checkout resolves"),
++            scratch,
++        };
++        repo.git(&repo.root, &["init", "-q", "-b", "main"]);
++        repo.git(&repo.root, &["config", "user.name", NAME]);
++        repo.git(&repo.root, &["config", "user.email", EMAIL]);
++        repo.git(&repo.root, &["config", "commit.gpgSign", "false"]);
++        repo.write(&repo.root, "src/one.txt", "one\n");
++        repo.commit(&repo.root, "initial", &["src/one.txt"]);
++        repo
++    }
++
++    /// The canonical checkout on `main`.
++    pub fn checkout(&self) -> &Path {
++        &self.root
++    }
++
++    /// Runs `git` in `dir` with the isolated settings, giving its output.
++    pub fn git(&self, dir: &Path, args: &[&str]) -> String {
++        let mut command = Command::new("git");
++        command.args(args).current_dir(dir);
++        isolate(&mut command, &self.scratch);
++        command
++            .env("GIT_AUTHOR_NAME", NAME)
++            .env("GIT_AUTHOR_EMAIL", EMAIL)
++            .env("GIT_AUTHOR_DATE", DATE)
++            .env("GIT_COMMITTER_NAME", NAME)
++            .env("GIT_COMMITTER_EMAIL", EMAIL)
++            .env("GIT_COMMITTER_DATE", DATE);
++        let output = command.output().expect("git starts");
++        assert!(
++            output.status.success(),
++            "git {} failed in {}: {}",
++            args.join(" "),
++            dir.display(),
++            String::from_utf8_lossy(&output.stderr)
++        );
++        String::from_utf8_lossy(&output.stdout).into_owned()
++    }
++
++    /// Writes one file under `dir`, creating its folders.
++    pub fn write(&self, dir: &Path, relative: &str, contents: impl AsRef<[u8]>) {
++        assert!(
++            dir.starts_with(&self.scratch),
++            "the file sits in this repository"
++        );
++        let path = dir.join(relative);
++        fs::create_dir_all(path.parent().expect("the file has a parent"))
++            .expect("the file's folders are created");
++        fs::write(path, contents).expect("the file is written");
++    }
++
++    /// Reads one file under `dir` as text.
++    pub fn read(&self, dir: &Path, relative: &str) -> String {
++        assert!(
++            dir.starts_with(&self.scratch),
++            "the file sits in this repository"
++        );
++        fs::read_to_string(dir.join(relative)).expect("the file reads")
++    }
++
++    /// Whether one path under `dir` exists.
++    pub fn exists(&self, dir: &Path, relative: &str) -> bool {
++        assert!(
++            dir.starts_with(&self.scratch),
++            "the path sits in this repository"
++        );
++        dir.join(relative).exists()
++    }
++
++    /// Stages exactly `paths` and commits them.
++    pub fn commit(&self, dir: &Path, message: &str, paths: &[&str]) {
++        let mut add = vec!["add", "--"];
++        add.extend_from_slice(paths);
++        let _ = self.git(dir, &add);
++        let _ = self.git(dir, &["commit", "-q", "-m", message]);
++    }
++
++    /// Stages everything and commits it.
++    pub fn commit_all(&self, dir: &Path, message: &str) {
++        let _ = self.git(dir, &["add", "-A"]);
++        let _ = self.git(dir, &["commit", "-q", "-m", message]);
++    }
++
++    /// HEAD's commit in `dir`.
++    pub fn head(&self, dir: &Path) -> String {
++        self.git(dir, &["rev-parse", "HEAD"]).trim().to_owned()
++    }
++
++    /// The commit a branch names.
++    pub fn branch_head(&self, branch: &str) -> String {
++        self.git(&self.root, &["rev-parse", branch])
++            .trim()
++            .to_owned()
++    }
++
++    /// The commit message a commit holds, exactly as stored.
++    pub fn message(&self, commit: &str) -> String {
++        let text = self.git(&self.root, &["cat-file", "commit", commit]);
++        let (_, message) = text.split_once("\n\n").expect("a commit has a message");
++        message.to_owned()
++    }
++
++    /// The absolute path `git rev-parse --git-path <name>` prints in `dir`.
++    pub fn git_path(&self, dir: &Path, name: &str) -> PathBuf {
++        let path = self.git(dir, &["rev-parse", "--git-path", name]);
++        dir.join(path.trim())
++    }
++
++    /// Writes one checkout file and commits it as `message`.
++    pub fn main_file(&self, relative: &str, contents: impl AsRef<[u8]>, message: &str) {
++        self.write(&self.root, relative, contents);
++        self.commit(&self.root, message, &[relative]);
++    }
++
++    /// Points git at a pre-commit hook that always fails.
++    pub fn install_failing_hook(&self) {
++        self.write(&self.scratch, "hooks/pre-commit", "#!/bin/sh\nexit 1\n");
++        let hook = self.scratch.join("hooks/pre-commit");
++        let mut permissions = fs::metadata(&hook).expect("the hook reads").permissions();
++        permissions.set_mode(0o755);
++        fs::set_permissions(&hook, permissions).expect("the hook is executable");
++        self.git(
++            &self.root,
++            &[
++                "config",
++                "core.hooksPath",
++                self.scratch
++                    .join("hooks")
++                    .to_str()
++                    .expect("the hooks path is text"),
++            ],
++        );
++    }
++
++    /// Adds a worktree change with branch `osq/<folder>`, cut from `main`.
++    pub fn add_worktree(&self, folder: &str) -> ChangeTree {
++        let path = self.scratch.join("worktrees").join(folder);
++        fs::create_dir_all(path.parent().expect("the worktree has a parent"))
++            .expect("the worktree's folder is created");
++        let branch = format!("osq/{folder}");
++        let _ = self.git(
++            &self.root,
++            &[
++                "worktree",
++                "add",
++                "-q",
++                "-b",
++                &branch,
++                path.to_str().expect("the worktree path is text"),
++                "main",
++            ],
++        );
++        ChangeTree {
++            folder: folder.to_owned(),
++            path: fs::canonicalize(path).expect("the worktree resolves"),
++        }
++    }
++
++    /// Adds the archived change of "Sync outcomes" with the proposal verify.
++    pub fn add_archived_change(&self, folder: &str, verify: &str) -> ChangeTree {
++        let change = self.add_worktree(folder);
++        self.write(&change.path, "src/one.txt", "two\n");
++        let archived = format!("openspec/changes/archive/{folder}");
++        self.write(
++            &change.path,
++            &format!("{archived}/proposal.md"),
++            format!("---\ntitle: A\nverify: \"{verify}\"\n---\n## Verify\n\nx\n"),
++        );
++        self.commit_all(&change.path, &format!("work on {folder}"));
++        change
++    }
++
++    /// Adds an active change with each task's verify command and a done marker.
++    pub fn add_active_change(&self, folder: &str, tasks: &[(u32, &str)]) -> ChangeTree {
++        let change = self.add_worktree(folder);
++        self.write(&change.path, "src/one.txt", "two\n");
++        let active = format!("openspec/changes/{folder}");
++        self.write(
++            &change.path,
++            &format!("{active}/proposal.md"),
++            "---\ntitle: A\n---\n## Verify\n\nx\n",
++        );
++        for (number, verify) in tasks {
++            self.write(
++                &change.path,
++                &format!("{active}/tasks/{number}.md"),
++                format!(
++                    "---\ntitle: Task {number}\nverify: \"{verify}\"\nscope:\n  - src/one.txt\n---\n## Acceptance\n\n- [ ] Task {number} works.\n"
++                ),
++            );
++            self.write(
++                &change.path,
++                &format!("{active}/.run/done/{number}"),
++                "---\n---\n",
++            );
++        }
++        self.commit_all(&change.path, &format!("work on {folder}"));
++        change
++    }
++
++    /// Runs the sync kernel on one change with the row's options.
++    pub fn sync(
++        change: &ChangeTree,
++        kind: SyncKind,
++        options: SyncOptions,
++    ) -> Result<SyncOutcome, SyncStop> {
++        let settings = VcsConfig {
++            author: Some(AUTHOR.to_owned()),
++            ..VcsConfig::default()
++        };
++        let timeouts = Timeouts::default();
++        let limits = Limits::default();
++        let request = SyncRequest {
++            worktree: &change.path,
++            folder: &change.folder,
++            kind,
++            default_branch: "main",
++            settings: &settings,
++            timeouts: &timeouts,
++            limits: &limits,
++            options,
++        };
++        sync_change(&request)
++    }
++}
++
++/// Applies the isolated settings no global or system git config may override.
++fn isolate(command: &mut Command, scratch: &Path) {
++    command
++        .env("GIT_CONFIG_GLOBAL", "/dev/null")
++        .env("GIT_CONFIG_NOSYSTEM", "1")
++        .env("GIT_CEILING_DIRECTORIES", scratch)
++        .env("GIT_CONFIG_COUNT", "1")
++        .env("GIT_CONFIG_KEY_0", "maintenance.auto")
++        .env("GIT_CONFIG_VALUE_0", "false");
++}
+diff --git a/crates/kernel/sync/tests/sync_outcomes.rs b/crates/kernel/sync/tests/sync_outcomes.rs
+new file mode 100644
+index 000000000..03ba22d2c
+--- /dev/null
++++ b/crates/kernel/sync/tests/sync_outcomes.rs
+@@ -0,0 +1,80 @@
++//! Proves the three outcomes a sync returns.
++
++mod support;
++
++use osq_core::event::SyncStopReason;
++use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncStop};
++use support::SyncRepo;
++
++/// The options "Sync outcomes" uses.
++fn options() -> SyncOptions {
++    SyncOptions {
++        records: false,
++        verify: true,
++        tasks: None,
++    }
++}
++
++/// Proves the row whose default branch added no commit.
++///
++/// Covers: rust-sync/sync-outcomes
++#[test]
++fn already_synced_writes_nothing() {
++    let repo = SyncRepo::new("sync-outcomes-already");
++    let change = repo.add_archived_change("001-alpha-orders", "true");
++    let branch = repo.head(&change.path);
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options());
++
++    assert_eq!(result, Ok(SyncOutcome::AlreadySynced));
++    assert_eq!(repo.head(&change.path), branch);
++}
++
++/// Proves the row whose default branch added a commit.
++///
++/// Covers: rust-sync/sync-outcomes
++#[test]
++fn synced_returns_the_merge_commit() {
++    let repo = SyncRepo::new("sync-outcomes-synced");
++    let change = repo.add_archived_change("001-alpha-orders", "true");
++    let branch = repo.head(&change.path);
++    repo.main_file("other.txt", "other\n", "main adds other");
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options());
++
++    let commit = match result {
++        Ok(SyncOutcome::Synced { commit }) => commit,
++        other => panic!("the sync commits: {other:?}"),
++    };
++    assert_eq!(repo.head(&change.path), commit);
++    assert_ne!(commit, branch);
++    assert_eq!(
++        repo.message(&commit),
++        "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n"
++    );
++    assert_eq!(repo.read(&change.path, "other.txt"), "other\n");
++}
++
++/// Proves the row whose default branch changed the same source file.
++///
++/// Covers: rust-sync/sync-outcomes
++#[test]
++fn conflict_returns_its_paths_and_leaves_the_branch() {
++    let repo = SyncRepo::new("sync-outcomes-conflict");
++    let change = repo.add_archived_change("001-alpha-orders", "true");
++    let branch = repo.head(&change.path);
++    repo.main_file("src/one.txt", "main\n", "main edits one");
++
++    let result = SyncRepo::sync(&change, SyncKind::Archived, options());
++
++    assert_eq!(
++        result,
++        Err(SyncStop {
++            reason: SyncStopReason::SyncConflict,
++            message: "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main".to_owned(),
++            conflicts: vec!["src/one.txt".to_owned()],
++        })
++    );
++    assert_eq!(repo.head(&change.path), branch);
++    assert!(!repo.git_path(&change.path, "MERGE_HEAD").exists());
++}
+diff --git a/crates/kernel/sync/tests/time.rs b/crates/kernel/sync/tests/time.rs
+new file mode 100644
+index 000000000..2ac9added
+--- /dev/null
++++ b/crates/kernel/sync/tests/time.rs
+@@ -0,0 +1,46 @@
++//! Proves the UTC text every sync event's timestamp uses.
++
++#[path = "../src/time.rs"]
++mod time;
++
++use std::time::{SystemTime, UNIX_EPOCH};
++
++/// Proves the fixed UTC form across era, leap-year and month edges.
++///
++/// Covers: rust-sync/stopped-event-appended
++#[test]
++fn utc_text_for_fixed_times() {
++    let rows: [(i64, &str); 16] = [
++        (-62_162_121_600_000, "0000-02-29T00:00:00.000Z"),
++        (-62_162_035_200_001, "0000-02-29T23:59:59.999Z"),
++        (-62_162_035_200_000, "0000-03-01T00:00:00.000Z"),
++        (-62_135_596_800_000, "0001-01-01T00:00:00.000Z"),
++        (-59_006_316_303_211, "0100-03-01T12:34:56.789Z"),
++        (-49_539_254_400_001, "0400-02-29T23:59:59.999Z"),
++        (-11_670_998_400_000, "1600-02-29T00:00:00.000Z"),
++        (-1, "1969-12-31T23:59:59.999Z"),
++        (0, "1970-01-01T00:00:00.000Z"),
++        (951_804_428_009, "2000-02-29T06:07:08.009Z"),
++        (1_709_208_000_000, "2024-02-29T12:00:00.000Z"),
++        (1_735_689_599_999, "2024-12-31T23:59:59.999Z"),
++        (1_735_689_600_000, "2025-01-01T00:00:00.000Z"),
++        (1_792_231_200_000, "2026-10-17T10:00:00.000Z"),
++        (13_574_563_200_000, "2400-02-29T00:00:00.000Z"),
++        (253_402_300_799_999, "9999-12-31T23:59:59.999Z"),
++    ];
++    for (ms, expected) in rows {
++        assert_eq!(time::format_utc(ms), expected, "{ms}");
++    }
++    let before = elapsed_ms();
++    let now = time::now_ms();
++    let after = elapsed_ms();
++    assert!(before <= now && now <= after, "the clock is UTC now");
++}
++
++/// The current time as epoch milliseconds, for the clock's bounds.
++fn elapsed_ms() -> i64 {
++    let elapsed = SystemTime::now()
++        .duration_since(UNIX_EPOCH)
++        .expect("the clock is after the epoch");
++    i64::try_from(elapsed.as_millis()).expect("the time fits in i64")
++}
+diff --git a/openspec/changes/345-rust-sync-kernel/.run/dead/1.md b/openspec/changes/345-rust-sync-kernel/.run/dead/1.md
+new file mode 100644
+index 000000000..3255dccb3
+--- /dev/null
++++ b/openspec/changes/345-rust-sync-kernel/.run/dead/1.md
+@@ -0,0 +1,48 @@
++---
++reason: change_verify_red
++command: "sh scripts/verify-rust.sh"
++exit_code: 2
++fingerprint: sha256:d0890da60efa72975cfe4bf677e885d49540c4945ed053668befc50d8ca2e3e0
++---
++Change-level verification failed after task verification passed.
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_runners
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_specs
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_storage
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_sync
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_vcs
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++Found 140 mutants to test
++ok       Unmutated baseline in 10s build + 5s test
++ INFO Auto-set test timeout to 29s
++MISSED   crates/kernel/sync/src/specs.rs:34:5: replace rebuild -> Result<(), Stop> with Ok(()) in 0s build + 0s test
++140 mutants tested in 85s: 1 missed, 128 caught, 11 unviable
++Full output: .run/logs/change-1.log
+diff --git a/openspec/changes/345-rust-sync-kernel/.run/events/1.jsonl b/openspec/changes/345-rust-sync-kernel/.run/events/1.jsonl
+new file mode 100644
+index 000000000..535ac2abd
+--- /dev/null
++++ b/openspec/changes/345-rust-sync-kernel/.run/events/1.jsonl
+@@ -0,0 +1,219 @@
++{"type":"verify_ran","timestamp":"2026-10-25T11:54:51.798Z","data":{"command":"cargo test -p osq-kernel-sync -p osq-feature-land","exitCode":101,"duration":0.69,"log":".run/logs/1-1.log","output":"error: package ID specification `osq-kernel-sync` did not match any packages\n\nhelp: a package with a similar name exists: `osq-kernel-specs`\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-25T11:54:58.236Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":17,"scopeLines":2580,"repoFiles":13468,"repoLines":1062409,"importFanIn":0,"proposalWords":741,"taskWords":540,"deltaRequirements":4,"deltaScenarios":4,"dependencies":{"Cargo.toml":["insta","osq-core","osq-feature-approve","osq-feature-archive","osq-feature-doctor","osq-feature-inbox","osq-feature-land","osq-feature-lint","osq-feature-manual","osq-feature-metaloop","osq-feature-plan","osq-feature-report","osq-feature-retry","osq-feature-run","osq-feature-show","osq-kernel-agents","osq-kernel-config","osq-kernel-harnesses","osq-kernel-linter","osq-kernel-loop","osq-kernel-runners","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","proc-macro2","proptest","rusqlite","serde","serde_json","sha2","syn","toml","yaml-rust2"],"crates/features/land/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-harnesses","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","serde_json","sha2"]}}}
++{"type":"started","timestamp":"2026-10-25T11:54:58.539Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"fb1e5f92","pid":2627244,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"38b5f686"}}
++{"type":"text","timestamp":"2026-10-25T11:55:00.493Z","data":{"text":"I'll start by reading the task file, proposal, and delta spec."}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:00.493Z","data":{"promptTokens":5693,"candidateTokens":252,"totalTokens":6457,"cachedTokens":512,"reasoningTokens":0,"cost":0.0020133719999999994,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:00.494Z","data":{"tool":"read","summary":"openspec/changes/345-rust-sync-kernel/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:00.495Z","data":{"tool":"read","summary":"openspec/changes/345-rust-sync-kernel/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:00.495Z","data":{"tool":"read","summary":"openspec/changes/345-rust-sync-kernel/specs/rust-sync/spec.m"}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:02.274Z","data":{"promptTokens":4562,"candidateTokens":188,"totalTokens":11150,"cachedTokens":6400,"reasoningTokens":20,"cost":0.0016326000000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:02.275Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:02.275Z","data":{"tool":"read","summary":"crates/features/land/src/land/sync.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:04.246Z","data":{"promptTokens":3937,"candidateTokens":99,"totalTokens":15172,"cachedTokens":11136,"reasoningTokens":9,"cost":0.001366716,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:04.247Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:06.850Z","data":{"promptTokens":12235,"candidateTokens":295,"totalTokens":27634,"cachedTokens":15104,"reasoningTokens":31,"cost":0.0041151239999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:06.850Z","data":{"tool":"read","summary":"crates/features/land/src/land.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:06.851Z","data":{"tool":"read","summary":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:06.851Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:09.386Z","data":{"promptTokens":8109,"candidateTokens":320,"totalTokens":35949,"cachedTokens":27520,"reasoningTokens":86,"cost":0.00298182,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:09.387Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:09.387Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:11.772Z","data":{"promptTokens":8440,"candidateTokens":291,"totalTokens":44571,"cachedTokens":35840,"reasoningTokens":81,"cost":0.00309624,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:11.772Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:11.773Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:35.079Z","data":{"promptTokens":3925,"candidateTokens":4410,"totalTokens":52879,"cachedTokens":44544,"reasoningTokens":4132,"cost":0.006736763999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:35.080Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:35.080Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:40.286Z","data":{"promptTokens":2125,"candidateTokens":771,"totalTokens":55760,"cachedTokens":52864,"reasoningTokens":554,"cost":0.0018798839999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:40.287Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:40.287Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:55:42.187Z","data":{"promptTokens":726,"candidateTokens":185,"totalTokens":56591,"cachedTokens":55680,"reasoningTokens":0,"cost":0.00077388,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:55:42.188Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:55:42.188Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:06.882Z","data":{"promptTokens":5546,"candidateTokens":4760,"totalTokens":66882,"cachedTokens":56576,"reasoningTokens":4577,"cost":0.007715256,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:06.883Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:56:06.883Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:09.009Z","data":{"promptTokens":5755,"candidateTokens":165,"totalTokens":72736,"cachedTokens":66816,"reasoningTokens":61,"cost":0.002325396,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:09.009Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:20.102Z","data":{"promptTokens":1610,"candidateTokens":1692,"totalTokens":76006,"cachedTokens":72704,"reasoningTokens":1480,"cost":0.0029496239999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:20.103Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T11:56:20.103Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:27.189Z","data":{"promptTokens":5492,"candidateTokens":1190,"totalTokens":82586,"cachedTokens":75904,"reasoningTokens":1104,"cost":0.003531024,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:27.189Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:28.858Z","data":{"promptTokens":187,"candidateTokens":85,"totalTokens":82704,"cachedTokens":82432,"reasoningTokens":0,"cost":0.000652692,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:28.858Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:46.774Z","data":{"promptTokens":1065,"candidateTokens":3396,"totalTokens":87149,"cachedTokens":82688,"reasoningTokens":3184,"cost":0.004890828000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:46.775Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:49.615Z","data":{"promptTokens":167,"candidateTokens":584,"totalTokens":87791,"cachedTokens":87040,"reasoningTokens":27,"cost":0.0012731399999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:49.616Z","data":{"tool":"edit","summary":"Cargo.toml"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:49.616Z","data":{"tool":"write","summary":"crates/kernel/sync/Cargo.toml"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:49.617Z","data":{"tool":"edit","summary":"crates/features/land/Cargo.toml"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:56:49.621Z","data":{"path":"crates/kernel/sync/Cargo.toml"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:56:49.623Z","data":{"path":"crates/features/land/Cargo.toml"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:56:49.623Z","data":{"path":"Cargo.toml"}}
++{"type":"tokens","timestamp":"2026-10-25T11:56:54.320Z","data":{"promptTokens":188,"candidateTokens":1098,"totalTokens":88966,"cachedTokens":87680,"reasoningTokens":14,"cost":0.00190008,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:56:54.321Z","data":{"tool":"write","summary":"crates/kernel/sync/src/lib.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:56:54.323Z","data":{"path":"crates/kernel/sync/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:14.924Z","data":{"promptTokens":159,"candidateTokens":6453,"totalTokens":95444,"cachedTokens":88832,"reasoningTokens":692,"cost":0.008324292,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:14.925Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/sync.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:14.938Z","data":{"path":"crates/kernel/sync/src/sync.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:18.242Z","data":{"promptTokens":243,"candidateTokens":561,"totalTokens":96036,"cachedTokens":95232,"reasoningTokens":22,"cost":0.001317492,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:18.242Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/stop.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:18.243Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/text.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:18.244Z","data":{"path":"crates/kernel/sync/src/stop.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:19.900Z","data":{"promptTokens":238,"candidateTokens":92,"totalTokens":96202,"cachedTokens":95872,"reasoningTokens":15,"cost":0.0007570319999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:19.901Z","data":{"tool":"read","summary":"crates/kernel/sync/src/text.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:23.497Z","data":{"promptTokens":650,"candidateTokens":717,"totalTokens":97495,"cachedTokens":96128,"reasoningTokens":41,"cost":0.0016321679999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:23.497Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/text.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:23.498Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/event.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:23.498Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/recertify.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:23.499Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/verify.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:23.499Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/specs.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:23.500Z","data":{"path":"crates/kernel/sync/src/text.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:23.500Z","data":{"path":"crates/kernel/sync/src/event.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:23.501Z","data":{"path":"crates/kernel/sync/src/recertify.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:23.501Z","data":{"path":"crates/kernel/sync/src/verify.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:23.502Z","data":{"path":"crates/kernel/sync/src/specs.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:27.233Z","data":{"promptTokens":228,"candidateTokens":745,"totalTokens":98381,"cachedTokens":97408,"reasoningTokens":114,"cost":0.001546848,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:27.233Z","data":{"tool":"edit","summary":"crates/features/land/src/land.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:27.235Z","data":{"path":"crates/features/land/src/land.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:37.160Z","data":{"promptTokens":236,"candidateTokens":2765,"totalTokens":101177,"cachedTokens":98176,"reasoningTokens":937,"cost":0.003977856,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:37.160Z","data":{"tool":"edit","summary":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:37.162Z","data":{"path":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:43.629Z","data":{"promptTokens":219,"candidateTokens":1429,"totalTokens":102640,"cachedTokens":100992,"reasoningTokens":597,"cost":0.002386452,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:43.630Z","data":{"tool":"edit","summary":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:43.631Z","data":{"path":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:45.520Z","data":{"promptTokens":146,"candidateTokens":125,"totalTokens":102799,"cachedTokens":102528,"reasoningTokens":18,"cost":0.000808968,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:45.521Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:54.727Z","data":{"promptTokens":1422,"candidateTokens":363,"totalTokens":104569,"cachedTokens":102784,"reasoningTokens":115,"cost":0.001478904,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:54.727Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/sync.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:54.727Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/specs.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:54.728Z","data":{"path":"crates/kernel/sync/src/sync.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:54.728Z","data":{"path":"crates/kernel/sync/src/specs.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:56.640Z","data":{"promptTokens":180,"candidateTokens":196,"totalTokens":104824,"cachedTokens":104448,"reasoningTokens":63,"cost":0.000915888,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:56.640Z","data":{"tool":"edit","summary":"crates/kernel/sync/src/sync.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:57:56.641Z","data":{"path":"crates/kernel/sync/src/sync.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:57:58.575Z","data":{"promptTokens":151,"candidateTokens":111,"totalTokens":104966,"cachedTokens":104704,"reasoningTokens":4,"cost":0.000806724,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:57:58.575Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:00.447Z","data":{"promptTokens":272,"candidateTokens":118,"totalTokens":105350,"cachedTokens":104960,"reasoningTokens":9,"cost":0.00085296,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:00.447Z","data":{"tool":"edit","summary":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:00.448Z","data":{"path":"crates/features/land/src/land/sync_command.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:14.572Z","data":{"promptTokens":168,"candidateTokens":3542,"totalTokens":108926,"cachedTokens":105216,"reasoningTokens":924,"cost":0.0049320959999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:14.573Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:14.573Z","data":{"path":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:20.758Z","data":{"promptTokens":154,"candidateTokens":1076,"totalTokens":110030,"cachedTokens":108800,"reasoningTokens":314,"cost":0.0019902,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:20.758Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/sync_outcomes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:20.759Z","data":{"path":"crates/kernel/sync/tests/sync_outcomes.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:23.799Z","data":{"promptTokens":235,"candidateTokens":378,"totalTokens":110437,"cachedTokens":109824,"reasoningTokens":217,"cost":0.0011830439999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:23.800Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/sync_outcomes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:23.801Z","data":{"path":"crates/kernel/sync/tests/sync_outcomes.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:35.287Z","data":{"promptTokens":135,"candidateTokens":2245,"totalTokens":112716,"cachedTokens":110336,"reasoningTokens":861,"cost":0.003396516,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:35.287Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/options_chosen_by_caller.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:35.288Z","data":{"path":"crates/kernel/sync/tests/options_chosen_by_caller.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:37.394Z","data":{"promptTokens":236,"candidateTokens":197,"totalTokens":112945,"cachedTokens":112512,"reasoningTokens":106,"cost":0.000982272,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:37.395Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:41.316Z","data":{"promptTokens":1085,"candidateTokens":691,"totalTokens":114672,"cachedTokens":112896,"reasoningTokens":32,"cost":0.0018320760000000002,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:41.316Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/stopped_event.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:41.317Z","data":{"path":"crates/kernel/sync/tests/stopped_event.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:46.192Z","data":{"promptTokens":141,"candidateTokens":1026,"totalTokens":115727,"cachedTokens":114560,"reasoningTokens":266,"cost":0.00196086,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:46.193Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/time.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T11:58:46.195Z","data":{"path":"crates/kernel/sync/tests/time.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:58:48.182Z","data":{"promptTokens":169,"candidateTokens":114,"totalTokens":115867,"cachedTokens":115584,"reasoningTokens":7,"cost":0.0008810039999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:58:48.183Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:59:02.330Z","data":{"promptTokens":3844,"candidateTokens":205,"totalTokens":119889,"cachedTokens":115840,"reasoningTokens":103,"cost":0.00209424,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:59:02.330Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T11:59:16.003Z","data":{"promptTokens":1708,"candidateTokens":504,"totalTokens":122020,"cachedTokens":119808,"reasoningTokens":188,"cost":0.001836048,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:59:16.004Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tool","timestamp":"2026-10-25T11:59:16.004Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"file_changed","timestamp":"2026-10-25T11:59:16.008Z","data":{"path":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T11:59:18.190Z","data":{"promptTokens":381,"candidateTokens":110,"totalTokens":122475,"cachedTokens":121984,"reasoningTokens":8,"cost":0.0009782039999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T11:59:18.190Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:00:57.113Z","data":{"promptTokens":5461,"candidateTokens":216,"totalTokens":128045,"cachedTokens":122368,"reasoningTokens":92,"cost":0.002631708,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:00:57.114Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:02:04.373Z","data":{"promptTokens":1573,"candidateTokens":382,"totalTokens":129955,"cachedTokens":128000,"reasoningTokens":235,"cost":0.0016983,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:02:04.374Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:03:59.433Z","data":{"promptTokens":903,"candidateTokens":310,"totalTokens":131133,"cachedTokens":129920,"reasoningTokens":222,"cost":0.00142242,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:03:59.434Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:04:01.296Z","data":{"promptTokens":215,"candidateTokens":191,"totalTokens":131350,"cachedTokens":130944,"reasoningTokens":23,"cost":0.001079364,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:04:01.297Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:23.246Z","data":{"promptTokens":233,"candidateTokens":294,"totalTokens":131727,"cachedTokens":131200,"reasoningTokens":226,"cost":0.0012098999999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:23.247Z","data":{"tool":"bash","summary":"cargo mutants --help | sed -n '1,200p'"}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:25.475Z","data":{"promptTokens":1538,"candidateTokens":181,"totalTokens":133431,"cachedTokens":131712,"reasoningTokens":67,"cost":0.001468872,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:25.476Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:28.766Z","data":{"promptTokens":457,"candidateTokens":280,"totalTokens":134113,"cachedTokens":133376,"reasoningTokens":122,"cost":0.0012733559999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:28.767Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:51.241Z","data":{"promptTokens":220,"candidateTokens":732,"totalTokens":134968,"cachedTokens":134016,"reasoningTokens":657,"cost":0.001748496,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:51.241Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:54.309Z","data":{"promptTokens":338,"candidateTokens":254,"totalTokens":135504,"cachedTokens":134912,"reasoningTokens":98,"cost":0.001215672,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:54.310Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:05:57.830Z","data":{"promptTokens":986,"candidateTokens":375,"totalTokens":136785,"cachedTokens":135424,"reasoningTokens":206,"cost":0.0015583440000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:05:57.831Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:06:35.969Z","data":{"promptTokens":669,"candidateTokens":954,"totalTokens":138327,"cachedTokens":136704,"reasoningTokens":877,"cost":0.002165724,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:06:35.970Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:06:44.348Z","data":{"promptTokens":965,"candidateTokens":1197,"totalTokens":140402,"cachedTokens":138240,"reasoningTokens":1065,"cost":0.00255534,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:06:44.348Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:06:57.346Z","data":{"promptTokens":800,"candidateTokens":813,"totalTokens":141901,"cachedTokens":140288,"reasoningTokens":713,"cost":0.0020573279999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:06:57.347Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:01.173Z","data":{"promptTokens":150,"candidateTokens":456,"totalTokens":142430,"cachedTokens":141824,"reasoningTokens":363,"cost":0.001443144,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:01.173Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:04.161Z","data":{"promptTokens":385,"candidateTokens":325,"totalTokens":143046,"cachedTokens":142336,"reasoningTokens":232,"cost":0.0013595159999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:04.161Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:15.502Z","data":{"promptTokens":18447,"candidateTokens":1913,"totalTokens":163336,"cachedTokens":142976,"reasoningTokens":948,"cost":0.008687556,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:15.505Z","data":{"tool":"write","summary":"openspec/changes/345-rust-sync-kernel/.run/results/1.md"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:07:15.506Z","data":{"path":"openspec/changes/345-rust-sync-kernel/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:19.362Z","data":{"promptTokens":171,"candidateTokens":557,"totalTokens":163928,"cachedTokens":163200,"reasoningTokens":418,"cost":0.0016989,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:19.362Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:38.322Z","data":{"promptTokens":2146,"candidateTokens":2721,"totalTokens":168707,"cachedTokens":163840,"reasoningTokens":2606,"cost":0.004892039999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:38.323Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:07:40.493Z","data":{"promptTokens":305,"candidateTokens":200,"totalTokens":169209,"cachedTokens":168704,"reasoningTokens":39,"cost":0.001343724,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:07:40.493Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:08:04.203Z","data":{"promptTokens":651,"candidateTokens":544,"totalTokens":170283,"cachedTokens":169088,"reasoningTokens":461,"cost":0.0018626279999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:08:04.203Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:08:26.077Z","data":{"promptTokens":415,"candidateTokens":3848,"totalTokens":174503,"cachedTokens":170240,"reasoningTokens":2972,"cost":0.005763539999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:08:26.077Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/options_chosen_by_caller.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:08:26.079Z","data":{"path":"crates/kernel/sync/tests/options_chosen_by_caller.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T12:08:28.454Z","data":{"promptTokens":204,"candidateTokens":170,"totalTokens":174710,"cachedTokens":174336,"reasoningTokens":34,"cost":0.001311216,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:08:28.455Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:08:32.096Z","data":{"promptTokens":349,"candidateTokens":174,"totalTokens":175115,"cachedTokens":174592,"reasoningTokens":11,"cost":0.001361052,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:08:32.097Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:16.647Z","data":{"promptTokens":506,"candidateTokens":4566,"totalTokens":180176,"cachedTokens":175104,"reasoningTokens":3473,"cost":0.006681624,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:16.648Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:16.648Z","data":{"tool":"write","summary":"crates/kernel/sync/tests/recertification_restores.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:09:16.649Z","data":{"path":"crates/kernel/sync/tests/recertification_restores.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:09:16.650Z","data":{"path":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:18.327Z","data":{"promptTokens":141,"candidateTokens":139,"totalTokens":180376,"cachedTokens":180096,"reasoningTokens":7,"cost":0.001289676,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:18.327Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:22.084Z","data":{"promptTokens":373,"candidateTokens":210,"totalTokens":180935,"cachedTokens":180352,"reasoningTokens":26,"cost":0.001446012,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:22.084Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/recertification_restores.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:09:22.085Z","data":{"path":"crates/kernel/sync/tests/recertification_restores.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:23.872Z","data":{"promptTokens":236,"candidateTokens":136,"totalTokens":181108,"cachedTokens":180736,"reasoningTokens":4,"cost":0.001318416,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:23.872Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:27.816Z","data":{"promptTokens":289,"candidateTokens":171,"totalTokens":181452,"cachedTokens":180992,"reasoningTokens":11,"cost":0.0013778520000000002,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:27.817Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:49.449Z","data":{"promptTokens":198,"candidateTokens":785,"totalTokens":182359,"cachedTokens":181376,"reasoningTokens":681,"cost":0.0020896559999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:49.450Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:09:57.352Z","data":{"promptTokens":1850,"candidateTokens":1313,"totalTokens":185435,"cachedTokens":182272,"reasoningTokens":727,"cost":0.0032242319999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:09:57.353Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tool","timestamp":"2026-10-25T12:09:57.353Z","data":{"tool":"edit","summary":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:09:57.357Z","data":{"path":"crates/kernel/sync/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-25T12:10:01.049Z","data":{"promptTokens":134,"candidateTokens":370,"totalTokens":185848,"cachedTokens":185344,"reasoningTokens":195,"cost":0.001596264,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:10:01.049Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:12:52.659Z","data":{"promptTokens":201,"candidateTokens":2366,"totalTokens":188295,"cachedTokens":185728,"reasoningTokens":1311,"cost":0.004013868,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:12:52.659Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:12:56.074Z","data":{"promptTokens":180,"candidateTokens":166,"totalTokens":188634,"cachedTokens":188288,"reasoningTokens":6,"cost":0.0013829279999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:12:56.075Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:13:18.893Z","data":{"promptTokens":171,"candidateTokens":903,"totalTokens":189618,"cachedTokens":188544,"reasoningTokens":769,"cost":0.002266164,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:13:18.893Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:13:27.023Z","data":{"promptTokens":960,"candidateTokens":152,"totalTokens":190680,"cachedTokens":189568,"reasoningTokens":9,"cost":0.0016078079999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:13:27.024Z","data":{"tool":"bash","summary":"cd . && "}}
++{"type":"tokens","timestamp":"2026-10-25T12:15:30.079Z","data":{"promptTokens":610,"candidateTokens":1074,"totalTokens":192276,"cachedTokens":190592,"reasoningTokens":69,"cost":0.0026153519999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-25T12:15:30.079Z","data":{"tool":"write","summary":"openspec/changes/345-rust-sync-kernel/.run/results/1.md"}}
++{"type":"file_changed","timestamp":"2026-10-25T12:15:30.080Z","data":{"path":"openspec/changes/345-rust-sync-kernel/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-25T12:15:33.288Z","data":{"text":"Implemented task 1 and wrote the result to `openspec/changes/345-rust-sync-kernel/.run/results/1.md`.\n\nSummary:\n- Added `osq-kernel-sync`, moved the sync engine and step modules into it, and exposed the typed outcome/stop/options API.\n- Updated land and sync to call the kernel with the required options.\n- Added kernel tests for all required scenario rows, the stopped event, UTC formatting, and recertification restoration.\n- Verified with:\n  - `cargo test -p osq-kernel-sync -p osq-feature-land`\n  - `OSQ_CHANGE=openspec/changes/345-rust-sync-kernel sh scripts/verify-rust.sh`\n  - targeted `cargo mutants` runs over the changed kernel and land lines; changed kernel lines are covered."}}
++{"type":"tokens","timestamp":"2026-10-25T12:15:33.288Z","data":{"promptTokens":183,"candidateTokens":282,"totalTokens":192593,"cachedTokens":192128,"reasoningTokens":104,"cost":0.0015460679999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-25T12:15:33.331Z","data":{"exitCode":0,"pid":2627244,"timedOut":false,"elapsedSeconds":1234.8}}
++{"type":"dependencies_added","timestamp":"2026-10-25T12:15:35.147Z","data":{"added":[{"file":"Cargo.toml","name":"osq-kernel-sync"},{"file":"crates/features/land/Cargo.toml","name":"osq-kernel-sync"}]}}
++{"type":"format_ran","timestamp":"2026-10-25T12:15:36.550Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'Cargo.toml' 'crates/features/land/Cargo.toml' 'crates/features/land/src/land.rs' 'crates/features/land/src/land/sync_command.rs' 'crates/kernel/sync/Cargo.toml' 'crates/kernel/sync/src/active.rs' 'crates/kernel/sync/src/check.rs' 'crates/kernel/sync/src/command.rs' 'crates/kernel/sync/src/event.rs' 'crates/kernel/sync/src/files.rs' 'crates/kernel/sync/src/lib.rs' 'crates/kernel/sync/src/locks.rs' 'crates/kernel/sync/src/prepare.rs' 'crates/kernel/sync/src/recertify.rs' 'crates/kernel/sync/src/specs.rs' 'crates/kernel/sync/src/stop.rs' 'crates/kernel/sync/src/sync.rs' 'crates/kernel/sync/src/text.rs' 'crates/kernel/sync/src/time.rs' 'crates/kernel/sync/src/verify.rs' 'crates/kernel/sync/tests/options_chosen_by_caller.rs' 'crates/kernel/sync/tests/recertification_restores.rs' 'crates/kernel/sync/tests/stopped_event.rs' 'crates/kernel/sync/tests/support/mod.rs' 'crates/kernel/sync/tests/sync_outcomes.rs' 'crates/kernel/sync/tests/time.rs'","files":["Cargo.toml","crates/features/land/Cargo.toml","crates/features/land/src/land.rs","crates/features/land/src/land/sync_command.rs","crates/kernel/sync/Cargo.toml","crates/kernel/sync/src/active.rs","crates/kernel/sync/src/check.rs","crates/kernel/sync/src/command.rs","crates/kernel/sync/src/event.rs","crates/kernel/sync/src/files.rs","crates/kernel/sync/src/lib.rs","crates/kernel/sync/src/locks.rs","crates/kernel/sync/src/prepare.rs","crates/kernel/sync/src/recertify.rs","crates/kernel/sync/src/specs.rs","crates/kernel/sync/src/stop.rs","crates/kernel/sync/src/sync.rs","crates/kernel/sync/src/text.rs","crates/kernel/sync/src/time.rs","crates/kernel/sync/src/verify.rs","crates/kernel/sync/tests/options_chosen_by_caller.rs","crates/kernel/sync/tests/recertification_restores.rs","crates/kernel/sync/tests/stopped_event.rs","crates/kernel/sync/tests/support/mod.rs","crates/kernel/sync/tests/sync_outcomes.rs","crates/kernel/sync/tests/time.rs"],"exitCode":0,"duration":1.37,"timedOut":false,"output":"Checked 0 files in 417µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-25T12:15:47.194Z","data":{"command":"cargo test -p osq-kernel-sync -p osq-feature-land","exitCode":0,"duration":6.89,"log":".run/logs/1-2.log","output":"\nrunning 1 test\ntest a_stop_restores_the_recertified_files ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/stopped_event.rs (target/debug/deps/stopped_event-dc00df6a6d673622)\n\nrunning 1 test\ntest stopped_event_is_appended_uncommitted ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/sync_outcomes.rs (target/debug/deps/sync_outcomes-9cf07f6ccb27626b)\n\nrunning 3 tests\ntest already_synced_writes_nothing ... ok\ntest conflict_returns_its_paths_and_leaves_the_branch ... ok\ntest synced_returns_the_merge_commit ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/time.rs (target/debug/deps/time-11a0cf9bcac9569e)\n\nrunning 1 test\ntest utc_text_for_fixed_times ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_feature_land\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"}}
++{"type":"measures","timestamp":"2026-10-25T12:19:08.245Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":17,"scopeLines":2580,"repoFiles":13468,"repoLines":1062409,"importFanIn":0,"proposalWords":741,"taskWords":540,"deltaRequirements":4,"deltaScenarios":4,"dependencies":{"Cargo.toml":["insta","osq-core","osq-feature-approve","osq-feature-archive","osq-feature-doctor","osq-feature-inbox","osq-feature-land","osq-feature-lint","osq-feature-manual","osq-feature-metaloop","osq-feature-plan","osq-feature-report","osq-feature-retry","osq-feature-run","osq-feature-show","osq-kernel-agents","osq-kernel-config","osq-kernel-harnesses","osq-kernel-linter","osq-kernel-loop","osq-kernel-runners","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","proc-macro2","proptest","rusqlite","serde","serde_json","sha2","syn","toml","yaml-rust2"],"crates/features/land/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-harnesses","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","serde_json","sha2"]},"changedFiles":39,"changedLines":4434,"scopeHashes":{"Cargo.toml":{"before":"sha256:95be4643877abfc66199bc1ba77ecf32bded0cc199df2d22d4e92b560affe7f6","after":"sha256:e47cc69d57321385302d4013933382754ff212e0c478b3f9864f22d6fe840f69"},"crates/features/land/Cargo.toml":{"before":"sha256:e319c6b6944c213f938755b70354189627cfadeaf72c9db3922dd54adadff093","after":"sha256:2b1fa4e3cf6e1a91d88e8c86f872483046a5d08276fd68b62721fc996618441a"},"crates/features/land/src/land.rs":{"before":"sha256:08eec687f12f1bfb8bb6c0d28abe0dfbc43904f685cd4e67c99d08424bd6253d","after":"sha256:24979226d9e1cdf716bb548bcc0c17acc83eb8625dd54e09da8f52796a5326c4"},"crates/features/land/src/land/sync.rs":{"before":"sha256:62e2687fb3c964b10f7e6fb90c9ca7f93fd6412e2ebcd43e191dd739bab967ff","after":null},"crates/features/land/src/land/sync/active.rs":{"before":"sha256:c039c5128d9c8b8dc35fb7d1c8222e48a1296e9a834baf6b43f169fbf1b992fb","after":null},"crates/features/land/src/land/sync/check.rs":{"before":"sha256:c04d260f50b7035b98dcd3c4d8c6b8986b14bd2b6b273426753126f6de17fad5","after":null},"crates/features/land/src/land/sync/command.rs":{"before":"sha256:ccfd8ed3b292e8b56baa80847a4e626ff26a8de77c7c74dc866d0b1d3dbb195b","after":null},"crates/features/land/src/land/sync/event.rs":{"before":"sha256:104c63c0a44650b4b9bbd80559430d0db7b83f6a27fe06b02b8fb3fbef15b354","after":null},"crates/features/land/src/land/sync/files.rs":{"before":"sha256:f8774e7fb5d5fe36e8a2285428a402ea8f604ad3daca51c74dd12a2a04051b7b","after":null},"crates/features/land/src/land/sync/locks.rs":{"before":"sha256:b9c7bbe4334a8c7e400fc9111ef036747cfc990b3197a97fe506ceb4b486c67c","after":null},"crates/features/land/src/land/sync/prepare.rs":{"before":"sha256:29a6c0d2813bfbcdd158e668d2afe2649972d28c178485b006d4e41a5974bbf1","after":null},"crates/features/land/src/land/sync/recertify.rs":{"before":"sha256:35510eaa4bda4b58b0e554e4384755187adaf555753d4cf38e8e8720077031e9","after":null},"crates/features/land/src/land/sync/specs.rs":{"before":"sha256:af9d3798eae7088c4401189d66f7551031c756b57b2dae7cdf23e46da25d1d33","after":null},"crates/features/land/src/land/sync/stop.rs":{"before":"sha256:b4440928f18eb7c54bdcea59b20fd7c40eaf34561a875dc755e5c91491a80ee2","after":null},"crates/features/land/src/land/sync/text.rs":{"before":"sha256:ae2347af0d2b7788fc4f9d2add099348fcb98f94af6b879508d000e02a69f8a2","after":null},"crates/features/land/src/land/sync/verify.rs":{"before":"sha256:b81fcd14af3854c431bd61fe55293fdf2892387715e67807e9134044856c2fa4","after":null},"crates/features/land/src/land/sync_command.rs":{"before":"sha256:3d1c69acfb772f310105f7665f731cd9966e56650f9e1c1233b514fe009f4f2b","after":"sha256:b2b42e0fda2391b7d31be1c7e941c589a7a64176323ef8fdc4257e7f4d935e45"},"crates/kernel/sync/Cargo.toml":{"before":null,"after":"sha256:946600bddeb1b06a02eb9b1a0cab40dc3799ec3d233c02c734dbb92985843254"},"crates/kernel/sync/src/active.rs":{"before":null,"after":"sha256:c039c5128d9c8b8dc35fb7d1c8222e48a1296e9a834baf6b43f169fbf1b992fb"},"crates/kernel/sync/src/check.rs":{"before":null,"after":"sha256:c04d260f50b7035b98dcd3c4d8c6b8986b14bd2b6b273426753126f6de17fad5"},"crates/kernel/sync/src/command.rs":{"before":null,"after":"sha256:ccfd8ed3b292e8b56baa80847a4e626ff26a8de77c7c74dc866d0b1d3dbb195b"},"crates/kernel/sync/src/event.rs":{"before":null,"after":"sha256:cc91adf1110b33b7531fd189139a6babfd6026883b99d9ffe82a0995e9a83566"},"crates/kernel/sync/src/files.rs":{"before":null,"after":"sha256:f8774e7fb5d5fe36e8a2285428a402ea8f604ad3daca51c74dd12a2a04051b7b"},"crates/kernel/sync/src/lib.rs":{"before":null,"after":"sha256:ec645c477027a05433ed9a8d463a7703c410129cf1ec58ec8e34607cf0bd54b2"},"crates/kernel/sync/src/locks.rs":{"before":null,"after":"sha256:b9c7bbe4334a8c7e400fc9111ef036747cfc990b3197a97fe506ceb4b486c67c"},"crates/kernel/sync/src/prepare.rs":{"before":null,"after":"sha256:29a6c0d2813bfbcdd158e668d2afe2649972d28c178485b006d4e41a5974bbf1"},"crates/kernel/sync/src/recertify.rs":{"before":null,"after":"sha256:4e80e2053bcc3fbbb6848179a5197eee55b9088e620669042277d38128ed16d0"},"crates/kernel/sync/src/specs.rs":{"before":null,"after":"sha256:9e373609e07c8433503ae5946037f745733d2be2c96e67cecadedbfe43a305f3"},"crates/kernel/sync/src/stop.rs":{"before":null,"after":"sha256:ba33e5b88cbbfc2a327ffaa81f4e9c9737872572668d87740d40ce76c321d63c"},"crates/kernel/sync/src/sync.rs":{"before":null,"after":"sha256:bde7bdb96c6b4ca384e2e19839103efe1d5697ba860754fc132ddc7754c0d1ca"},"crates/kernel/sync/src/text.rs":{"before":null,"after":"sha256:e1d520671a8fdec315fd7f405747bbd533d941722c2c41763d11de566de03f52"},"crates/kernel/sync/src/time.rs":{"before":null,"after":"sha256:6717c6896afcb0a5df9ab3f3d2f44b615e98052d9d13fc0bbdbd4f12572ce351"},"crates/kernel/sync/src/verify.rs":{"before":null,"after":"sha256:213969097a3425a86ccf12496e83ac7be7c4c2cd4b03110e9a394950563e5f53"},"crates/kernel/sync/tests/options_chosen_by_caller.rs":{"before":null,"after":"sha256:ae9d888911dd8ceeceedda59d1c7864d9e051b77570cf231d4593f3eb442e79f"},"crates/kernel/sync/tests/recertification_restores.rs":{"before":null,"after":"sha256:c7cd9d9a5d0374bc8b10de4d625f29befd83e12b939e6782377456494c2ad966"},"crates/kernel/sync/tests/stopped_event.rs":{"before":null,"after":"sha256:f9fedf7db13881ed3399a613a88bd33117888e9a195a47545604b518e61fc159"},"crates/kernel/sync/tests/support/mod.rs":{"before":null,"after":"sha256:f68a22b4ab55a7674f09d61e35696fb6e197dd3f692b8c2254932f0e870e9e73"},"crates/kernel/sync/tests/sync_outcomes.rs":{"before":null,"after":"sha256:95c400956bb122a2f90c41e26f076347542a21eb703a75c711f51e64ff9b8c49"},"crates/kernel/sync/tests/time.rs":{"before":null,"after":"sha256:f1fcfff84f2f3968a5d7502308cd77aac33c3532526a7350c67e046657e321fe"}}}}
++{"type":"dead","timestamp":"2026-10-25T12:19:08.247Z","data":{"task":"1","reason":"change_verify_red"}}
+diff --git a/openspec/changes/345-rust-sync-kernel/.run/events/change.jsonl b/openspec/changes/345-rust-sync-kernel/.run/events/change.jsonl
+new file mode 100644
+index 000000000..4eb2bcdf5
+--- /dev/null
++++ b/openspec/changes/345-rust-sync-kernel/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-25T11:54:51.106Z","data":{"outcome":"passed","command":"pnpm verify","commit":"fb1e5f92ccd2b38db28a2dc64401833c9a721312","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":284.07}}
++{"type":"verify_ran","timestamp":"2026-10-25T12:19:08.229Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":2,"duration":201.01,"log":".run/logs/change-1.log","output":"\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_sync\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 140 mutants to test\nok       Unmutated baseline in 10s build + 5s test\n INFO Auto-set test timeout to 29s\nMISSED   crates/kernel/sync/src/specs.rs:34:5: replace rebuild -> Result<(), Stop> with Ok(()) in 0s build + 0s test\n140 mutants tested in 85s: 1 missed, 128 caught, 11 unviable"}}
+diff --git a/openspec/changes/345-rust-sync-kernel/.run/results/1.md b/openspec/changes/345-rust-sync-kernel/.run/results/1.md
+new file mode 100644
+index 000000000..3937187f9
+--- /dev/null
++++ b/openspec/changes/345-rust-sync-kernel/.run/results/1.md
+@@ -0,0 +1,18 @@
++## Changed
++
++- Added the `osq-kernel-sync` workspace member and dependency, its manifest, and `osq-kernel-sync.workspace = true` in the land crate.
++- Moved `sync.rs` and its 12 step modules into `crates/kernel/sync/src/`, copied land's `time.rs` byte for byte, and deleted the land copies. `src/lib.rs` now exposes `sync_change`, `append_sync_stopped`, `SyncRequest`, `SyncKind`, `SyncOptions`, `SyncOutcome` and `SyncStop`.
++- `sync_change` returns `AlreadySynced`, `Synced { commit }`, or a `SyncStop` with the stop's reason, message and conflicted paths, in merge order.
++- The two options no caller used before now work: `verify: false` skips both verify and recertification, `tasks: Some(ids)` filters the picked done tasks, and `records` still controls the land stop record.
++- `land.rs` and `sync_command.rs` call the kernel with `records: true`/`false`, `verify: true` and `tasks: None`; `sync_command.rs` uses the kernel's `append_sync_stopped` for a failed active sync.
++- Added kernel tests with their own repository builder: the three "Sync outcomes" rows, the five "Options chosen by the caller" rows (including that an active sync leaves the default branch's living spec), "Stopped event appended", a stop that restores recertified files, and the copied fixed-time UTC rows.
++
++## Deviated
++
++- `Cargo.lock` was rewritten by cargo when the workspace member and dependencies were added; it holds only the new `osq-kernel-sync` package entry and the land crate's new dependency.
++
++## Missing context
++
++- The task's scope names the root `Cargo.toml` but not `Cargo.lock`, so the generated lock update is listed under Touched rather than written by hand.
++
++Touched: Cargo.lock, Cargo.toml, crates/kernel/sync/Cargo.toml, crates/kernel/sync/src/lib.rs, crates/kernel/sync/src/sync.rs, crates/kernel/sync/src/active.rs, crates/kernel/sync/src/check.rs, crates/kernel/sync/src/command.rs, crates/kernel/sync/src/event.rs, crates/kernel/sync/src/files.rs, crates/kernel/sync/src/locks.rs, crates/kernel/sync/src/prepare.rs, crates/kernel/sync/src/recertify.rs, crates/kernel/sync/src/specs.rs, crates/kernel/sync/src/stop.rs, crates/kernel/sync/src/text.rs, crates/kernel/sync/src/time.rs, crates/kernel/sync/src/verify.rs, crates/kernel/sync/tests/support/mod.rs, crates/kernel/sync/tests/sync_outcomes.rs, crates/kernel/sync/tests/options_chosen_by_caller.rs, crates/kernel/sync/tests/stopped_event.rs, crates/kernel/sync/tests/recertification_restores.rs, crates/kernel/sync/tests/time.rs, crates/features/land/Cargo.toml, crates/features/land/src/land.rs, crates/features/land/src/land/sync_command.rs, crates/features/land/src/land/sync.rs, crates/features/land/src/land/sync/active.rs, crates/features/land/src/land/sync/check.rs, crates/features/land/src/land/sync/command.rs, crates/features/land/src/land/sync/event.rs, crates/features/land/src/land/sync/files.rs, crates/features/land/src/land/sync/locks.rs, crates/features/land/src/land/sync/prepare.rs, crates/features/land/src/land/sync/recertify.rs, crates/features/land/src/land/sync/specs.rs, crates/features/land/src/land/sync/stop.rs, crates/features/land/src/land/sync/text.rs, crates/features/land/src/land/sync/verify.rs

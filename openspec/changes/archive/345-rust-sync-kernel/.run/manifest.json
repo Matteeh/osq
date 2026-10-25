@@ -1,0 +1,67 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4",
+    "PLANNER.md": "sha256:e78b9fe10ef7967681f886db370ae4e5e7f426211e7d40125825fbc39a2f417c",
+    "config": "sha256:bc943577dee42d2128a86991604f86de2b45d2b8007878cde5f8323244f43015",
+    "rust-land": "sha256:03b67b9694aa86d8f4e801bca8006766043098fdb9d2b531d3b4d9ddff6d7d82",
+    "rust-land/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-core": "sha256:2b219821ab6d552b1dc1051cc22cdf92e697f99e6cdbd8e1fd9a9fe44ef9dbe3",
+    "rust-core/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-sync": null,
+    "rust-sync/osq.yml": null
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-25T11:18:39.003Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-25T11:50:03.182Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path",
+      "verify_without_test"
+    ],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "rules_path",
+        "severity": "red",
+        "folded": false
+      },
+      {
+        "id": "large_scope",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "new_capability",
+        "severity": "grey",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a"
+  }
+}

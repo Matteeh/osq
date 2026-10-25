@@ -8,7 +8,7 @@ use std::time::Instant;
 use osq_core::event::{Envelope, Event, SyncedData, event_line};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{super::time, stop::Stop};
+use super::{stop::Stop, time};
 
 /// Appends and stages the `synced` event, then gives nothing.
 ///

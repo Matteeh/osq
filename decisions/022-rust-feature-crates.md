@@ -10,6 +10,8 @@ checks:
 
 Date: 2026-10-17
 
+Amended 2026-10-25 (change 345): the kernel lists name the config kernel (ADR 029) and the sync kernel, which takes the default branch into a change's branch for every caller.
+
 ## Status
 
 Accepted by Mathias on 2026-10-17 in the project thread. This is the first ADR
@@ -46,7 +48,7 @@ boundaries hold without a human checking them.
 ```
 apps      cli, server, integrations   parse, dispatch, print
 features  plan, approve, run, archive, land, inbox, report, metaloop
-kernel    vcs, storage, specs, linter, runners, harnesses, agents, loop
+kernel    vcs, storage, specs, linter, runners, harnesses, agents, loop, config, sync
 core      types, state machines, traits, no IO
 ```
 
@@ -56,7 +58,7 @@ anything else, so no test is needed to check it.
 
 ```
 crates/core/
-crates/kernel/{vcs,storage,specs,linter,runners,harnesses,agents,loop}/
+crates/kernel/{vcs,storage,specs,linter,runners,harnesses,agents,loop,config,sync}/
 crates/features/{plan,approve,run,archive,land,inbox,report,metaloop}/
 crates/apps/{cli,server,integrations}/
 ui/  agents/  openspec/  decisions/  fixtures/

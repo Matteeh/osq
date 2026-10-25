@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:454e32b47a28aa082ca40757522426628edc0079510542ddab8c85e0092f3026"
+build_stamp: "38b5f686"
+project_commit: "abd5cf60"
+exit_code: 0
+scope_files: {"decisions/022-rust-feature-crates.md":"sha256:afe2e048e798d4f058fdae8b64622f295567bf44df01a903fcfe67dc73b3d75a","tests/adr-022-kernels.test.ts":"sha256:1e4b250d8e72557eb619147cf969ac5a2a2d5f7aad29204a8b05efd80557717e"}
+---
+2026-10-25T12:38:44.483Z

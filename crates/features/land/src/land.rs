@@ -7,7 +7,6 @@ mod cleanup;
 mod find;
 mod message;
 pub(crate) mod message_command;
-mod sync;
 pub(crate) mod sync_command;
 mod text;
 mod time;
@@ -18,6 +17,7 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::{Limits, ManualEdits, Timeouts, VcsConfig, load_config};
 use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
+use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, sync_change};
 use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree, project_git_root};
 
 use find::{Located, WorktreeChange};
@@ -136,20 +136,25 @@ fn sync_land(
     timeouts: &Timeouts,
     limits: &Limits,
 ) -> Result<Option<String>, FeatureError> {
-    sync::run(
-        &change.path,
+    let request = SyncRequest {
+        worktree: &change.path,
         folder,
+        kind: SyncKind::Archived,
         default_branch,
-        &sync::Controls {
-            settings,
-            timeouts,
-            limits,
-        },
-        sync::Caller {
-            command: LAND,
+        settings,
+        timeouts,
+        limits,
+        options: SyncOptions {
             records: true,
+            verify: true,
+            tasks: None,
         },
-    )
+    };
+    match sync_change(&request) {
+        Ok(SyncOutcome::AlreadySynced) => Ok(None),
+        Ok(SyncOutcome::Synced { commit }) => Ok(Some(commit)),
+        Err(stop) => Err(failed_in(LAND, stop.message)),
+    }
 }
 
 /// The output of a finished land, with its after-land lines when configured.

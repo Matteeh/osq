@@ -14,6 +14,7 @@ members = [
     "crates/kernel/agents",
     "crates/kernel/loop",
     "crates/kernel/config",
+    "crates/kernel/sync",
     "crates/features/plan",
     "crates/features/approve",
     "crates/features/run",
@@ -50,6 +51,7 @@ osq-kernel-harnesses = { path = "crates/kernel/harnesses" }
 osq-kernel-agents = { path = "crates/kernel/agents" }
 osq-kernel-loop = { path = "crates/kernel/loop" }
 osq-kernel-config = { path = "crates/kernel/config" }
+osq-kernel-sync = { path = "crates/kernel/sync" }
 osq-feature-plan = { path = "crates/features/plan" }
 osq-feature-approve = { path = "crates/features/approve" }
 osq-feature-run = { path = "crates/features/run" }

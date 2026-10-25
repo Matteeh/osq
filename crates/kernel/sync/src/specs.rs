@@ -7,7 +7,8 @@ use std::path::Path;
 use osq_kernel_specs::{MergedSpec, merge_change};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{Kind, files, stop::Stop, text};
+use super::{files, stop::Stop, text};
+use crate::SyncKind as Kind;
 
 /// The living specs folder under the worktree.
 const SPECS: &str = "openspec/specs";

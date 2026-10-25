@@ -1,17 +1,14 @@
 //! Running `sync`: settings, the worktree change, its dirt and the sync commit.
 
-use std::fs::{self, OpenOptions};
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_core::event::{Envelope, Event, SyncStopReason, SyncStoppedData, event_line};
 use osq_kernel_config::load_config;
 use osq_kernel_storage::{read_land_facts, read_now_facts, read_watch_state};
+use osq_kernel_sync::{SyncKind, SyncOptions, SyncOutcome, SyncRequest, append_sync_stopped};
 use osq_kernel_vcs::{Vcs, project_git_root};
 
-use super::sync::{self, Caller, Kind};
-use super::{checks, failed_in, find, git_vcs, land_default_branch, text, time, worktree_changes};
+use super::{checks, failed_in, find, git_vcs, land_default_branch, text, worktree_changes};
 
 /// The command every failure names.
 const SYNC: &str = "sync";
@@ -39,8 +36,8 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
         return Err(failed_in(SYNC, text::no_change(query)));
     };
     let change_rel = match kind {
-        Kind::Archived => format!("openspec/changes/archive/{}", change.folder),
-        Kind::Active => format!("openspec/changes/{}", change.folder),
+        SyncKind::Archived => format!("openspec/changes/archive/{}", change.folder),
+        SyncKind::Active => format!("openspec/changes/{}", change.folder),
     };
     let folder = change.path.join(&change_rel);
     refuse_watcher(root, change, query)?;
@@ -58,19 +55,21 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
         return Err(failed_in(SYNC, message));
     }
     let default_branch = land_default_branch(&vcs, &settings, SYNC)?;
-    let controls = sync::Controls {
+    let request = SyncRequest {
+        worktree: &change.path,
+        folder: &change.folder,
+        kind,
+        default_branch: &default_branch,
         settings: &settings,
         timeouts: &timeouts,
         limits: &limits,
+        options: SyncOptions {
+            records: false,
+            verify: true,
+            tasks: None,
+        },
     };
-    let synced = sync_change(
-        &change.path,
-        &change.folder,
-        &folder,
-        kind,
-        &default_branch,
-        &controls,
-    )?;
+    let synced = sync_change(&request, &folder)?;
     Ok(if synced.is_some() {
         text::synced(&change.folder, &default_branch)
     } else {
@@ -84,11 +83,11 @@ pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
 fn locate<'a>(
     worktrees: &'a [find::WorktreeChange],
     query: &str,
-) -> Option<(&'a find::WorktreeChange, Kind)> {
+) -> Option<(&'a find::WorktreeChange, SyncKind)> {
     if let Some(change) = find::archived_change(worktrees, query) {
-        return Some((change, Kind::Archived));
+        return Some((change, SyncKind::Archived));
     }
-    find::approved_change(worktrees, query).map(|change| (change, Kind::Active))
+    find::approved_change(worktrees, query).map(|change| (change, SyncKind::Active))
 }
 
 /// Refuses while a service or watcher record names a live watcher.
@@ -140,51 +139,15 @@ fn running_task(folder: &Path, query: &str) -> Option<String> {
 ///
 /// Implements: rust-land/sync-command
 /// Implements: rust-land/active-sync
-fn sync_change(
-    worktree: &Path,
-    folder: &str,
-    change: &Path,
-    kind: Kind,
-    default_branch: &str,
-    controls: &sync::Controls<'_>,
-) -> Result<Option<String>, FeatureError> {
-    let caller = Caller {
-        command: SYNC,
-        records: false,
-    };
-    match kind {
-        Kind::Archived => sync::run(worktree, folder, default_branch, controls, caller),
-        Kind::Active => {
-            match sync::run_active(worktree, folder, default_branch, controls, caller) {
-                Ok(synced) => Ok(synced),
-                Err(failure) => {
-                    append_stopped(change, failure.reason, &failure.message, default_branch);
-                    Err(failed_in(SYNC, failure.message))
-                }
+fn sync_change(request: &SyncRequest<'_>, change: &Path) -> Result<Option<String>, FeatureError> {
+    match osq_kernel_sync::sync_change(request) {
+        Ok(SyncOutcome::AlreadySynced) => Ok(None),
+        Ok(SyncOutcome::Synced { commit }) => Ok(Some(commit)),
+        Err(stop) => {
+            if request.kind == SyncKind::Active {
+                append_sync_stopped(change, &stop, request.default_branch);
             }
+            Err(failed_in(SYNC, stop.message))
         }
-    }
-}
-
-/// Appends the active sync's uncommitted `sync_stopped` event.
-///
-/// Implements: rust-land/active-sync
-fn append_stopped(change: &Path, reason: SyncStopReason, message: &str, default_branch: &str) {
-    let path = change.join(".run").join("events").join("change.jsonl");
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
-    }
-    let data = SyncStoppedData {
-        reason,
-        message: message.to_owned(),
-        default_branch: default_branch.to_owned(),
-    };
-    let envelope = Envelope {
-        timestamp: time::format_utc(time::now_ms()),
-        event: Event::SyncStopped(data),
-    };
-    let line = format!("{}\n", event_line(&envelope));
-    if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(path) {
-        let _ = file.write_all(line.as_bytes());
     }
 }

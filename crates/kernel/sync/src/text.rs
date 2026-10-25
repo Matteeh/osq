@@ -4,8 +4,14 @@ use std::path::Path;
 
 use osq_core::event::SyncStopReason;
 
-use super::super::text::change_id;
 use super::stop::Stop;
+
+/// The folder's text before its first dash, or the whole name.
+///
+/// Implements: rust-land/land-commit
+pub(crate) fn change_id(folder: &str) -> &str {
+    folder.split_once('-').map_or(folder, |(id, _)| id)
+}
 
 /// Whether a conflicting path a living spec or an archived folder owns.
 ///
@@ -56,7 +62,11 @@ pub(crate) fn conflict_stop(
         "{folder}: {} conflict with {default_branch}; run osq plan {id}, and approving the revised plan restarts osq/{folder} from {default_branch}",
         blocked.join(", ")
     );
-    Some(Stop::new(SyncStopReason::SyncConflict, message))
+    Some(Stop::conflicting(
+        SyncStopReason::SyncConflict,
+        message,
+        blocked.iter().map(|path| (*path).to_owned()).collect(),
+    ))
 }
 
 /// The message for requirements the default branch changed under the change.

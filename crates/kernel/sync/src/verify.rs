@@ -9,7 +9,7 @@ use osq_core::event::{Envelope, Event, SyncStopReason, VerifyRanData, event_line
 use osq_kernel_config::{Limits, Timeouts};
 use osq_kernel_specs::{Frontmatter, js_trim, parse_frontmatter, parse_proposal};
 
-use super::{super::time, active::Picked, command, stop::Stop, text};
+use super::{active::Picked, command, stop::Stop, text, time};
 
 /// The archived proposal's commands.
 #[derive(Default)]

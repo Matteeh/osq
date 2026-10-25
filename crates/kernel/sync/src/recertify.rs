@@ -11,7 +11,7 @@ use serde_json::json;
 
 use super::active::Picked;
 use super::stop::Stop;
-use super::{super::time, files};
+use super::{files, time};
 
 /// One file a recertification overwrote, kept so a stop can restore it.
 pub(crate) type Backups = Vec<(PathBuf, Option<Vec<u8>>)>;

@@ -1,0 +1,20 @@
+[package]
+name = "osq-kernel-sync"
+description = "Sync kernel: takes the default branch into a change's branch."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+osq-core.workspace = true
+osq-kernel-config.workspace = true
+osq-kernel-harnesses.workspace = true
+osq-kernel-specs.workspace = true
+osq-kernel-storage.workspace = true
+osq-kernel-vcs.workspace = true
+serde_json.workspace = true

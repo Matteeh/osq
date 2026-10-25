@@ -380,6 +380,7 @@ dependencies = [
  "osq-kernel-harnesses",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-sync",
  "osq-kernel-vcs",
  "serde_json",
  "sha2",
@@ -564,6 +565,19 @@ dependencies = [
  "serde_json",
  "sha2",
  "yaml-rust2",
+]
+
+[[package]]
+name = "osq-kernel-sync"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
 ]
 
 [[package]]
