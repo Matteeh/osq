@@ -51,11 +51,13 @@ pub enum DeadReason {
     VcsViolation,
     /// The agent changed files outside its scope.
     ScopeViolation,
+    /// The agent named its own change folder's path.
+    OwnFolderPath,
 }
 
 impl DeadReason {
     /// Every dead reason, in "Reason and outcome values" order.
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 19] = [
         Self::SpecConflict,
         Self::AlreadyRunning,
         Self::NoResult,
@@ -74,6 +76,7 @@ impl DeadReason {
         Self::Regressed,
         Self::VcsViolation,
         Self::ScopeViolation,
+        Self::OwnFolderPath,
     ];
 
     /// The string TypeScript writes for this reason.
@@ -100,6 +103,7 @@ impl DeadReason {
             Self::Regressed => "regressed",
             Self::VcsViolation => "vcs_violation",
             Self::ScopeViolation => "scope_violation",
+            Self::OwnFolderPath => "own_folder_path",
         }
     }
 }
@@ -222,6 +226,8 @@ pub enum FailureReason {
     VcsViolation,
     /// The agent changed files outside its scope.
     ScopeViolation,
+    /// The agent named its own change folder's path.
+    OwnFolderPath,
     /// The recorded scope no longer matches the task.
     ScopeRegression,
     /// The worktree is on another branch.
@@ -250,7 +256,7 @@ pub enum FailureReason {
 
 impl FailureReason {
     /// Every failure reason, in "Reason and outcome values" order.
-    pub const ALL: [Self; 30] = [
+    pub const ALL: [Self; 31] = [
         Self::SpecConflict,
         Self::AlreadyRunning,
         Self::NoResult,
@@ -269,6 +275,7 @@ impl FailureReason {
         Self::Regressed,
         Self::VcsViolation,
         Self::ScopeViolation,
+        Self::OwnFolderPath,
         Self::ScopeRegression,
         Self::WorktreeOffBranch,
         Self::WorktreeDirty,
@@ -307,6 +314,7 @@ impl FailureReason {
             Self::Regressed => "regressed",
             Self::VcsViolation => "vcs_violation",
             Self::ScopeViolation => "scope_violation",
+            Self::OwnFolderPath => "own_folder_path",
             Self::ScopeRegression => "scope_regression",
             Self::WorktreeOffBranch => "worktree_off_branch",
             Self::WorktreeDirty => "worktree_dirty",
@@ -347,6 +355,7 @@ impl From<DeadReason> for FailureReason {
             DeadReason::Regressed => Self::Regressed,
             DeadReason::VcsViolation => Self::VcsViolation,
             DeadReason::ScopeViolation => Self::ScopeViolation,
+            DeadReason::OwnFolderPath => Self::OwnFolderPath,
         }
     }
 }

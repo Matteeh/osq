@@ -55,6 +55,7 @@ fn dead_reason_values() {
             "regressed",
             "vcs_violation",
             "scope_violation",
+            "own_folder_path",
         ],
     );
 }
@@ -112,6 +113,7 @@ fn failure_reason_values() {
             "regressed",
             "vcs_violation",
             "scope_violation",
+            "own_folder_path",
             "scope_regression",
             "worktree_off_branch",
             "worktree_dirty",
