@@ -4,6 +4,7 @@ pub(crate) mod find;
 mod lint;
 mod lookup;
 mod refuse;
+mod stack;
 mod steered;
 mod steering;
 pub(crate) mod text;
@@ -44,6 +45,7 @@ pub(crate) struct ApproveOptions {
 /// Implements: rust-approve/approve-validation
 /// Implements: rust-approve/approval-marker
 /// Implements: rust-approve/worktree-approval
+/// Implements: rust-approve/stacked-approval
 /// Implements: rust-approve/approval-refusals-with-git-on
 /// Implements: rust-approve/rejected-branch-claim
 pub(crate) fn run_approve(
@@ -92,6 +94,18 @@ pub(crate) fn run_approve(
     };
     let seal = change_folder_seal(&entry.path).map_err(|error| failed(&error.to_string()))?;
     if let Some(repo) = repo {
+        let awaited = stack::awaited(root, &config, &repo, &entry.path, &entry.folder)?;
+        if !awaited.is_empty() {
+            return stack::approve(
+                root,
+                entry,
+                seal.as_str(),
+                &config,
+                &repo,
+                kept.as_deref(),
+                &awaited,
+            );
+        }
         return worktree::approve(root, entry, seal.as_str(), &config, &repo, kept.as_deref());
     }
     write_marker(&entry.path, seal.as_str()).map_err(|error| failed(&error.to_string()))?;

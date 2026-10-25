@@ -5,7 +5,7 @@ use std::path::Path;
 
 /// The names of the folders directly under `folder/specs`, sorted.
 ///
-/// Implements: rust-approve/stacked-approval-refusal
+/// Implements: rust-approve/stacked-approval
 pub(super) fn read(folder: &Path) -> BTreeSet<String> {
     let Ok(entries) = std::fs::read_dir(folder.join("specs")) else {
         return BTreeSet::new();

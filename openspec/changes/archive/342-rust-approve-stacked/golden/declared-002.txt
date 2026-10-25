@@ -1,0 +1,30 @@
+outcome: output
+Approved 002 (002-gamma)
+  Hash: sha256:9f45bf97dece4971ac148db1f336f3a807c11f0acbb5de082c1b0006bd47a7d4
+  Waiting for: 001-alpha-twice
+  Stacked: <root>/worktrees/repo/.stacked/002-gamma
+branches:
+osq/001-alpha-twice
+worktrees:
+<root>/worktrees/repo/001-alpha-twice osq/001-alpha-twice
+checkout copy: present
+record:
+{"at":"<at>","op":"worktree-add","root":"<root>/repo"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+stacked:
+openspec/changes/002-gamma/.run/approved
+openspec/changes/002-gamma/.run/approver
+openspec/changes/002-gamma/.run/stacked-on
+openspec/changes/002-gamma/notes/why.md
+openspec/changes/002-gamma/proposal.md
+openspec/changes/002-gamma/specs/gamma/spec.md
+openspec/changes/002-gamma/tasks.md
+openspec/changes/002-gamma/tasks/1.md
+tree:
+--- .run/approved
+sha256:9f45bf97dece4971ac148db1f336f3a807c11f0acbb5de082c1b0006bd47a7d4
+--- .run/approver
+Osq Tester <tester@example.com>
+--- .run/stacked-on
+001-alpha-twice sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
+(no newline)

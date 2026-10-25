@@ -1,7 +1,7 @@
 //! Approving a change into its own branch and linked worktree.
 
-mod copy;
-mod markers;
+pub(crate) mod copy;
+pub(crate) mod markers;
 mod path;
 mod prepare;
 mod record;
@@ -45,11 +45,6 @@ pub(crate) fn approve(
     let folder = entry.folder.as_str();
     let branch = format!("osq/{folder}");
     let worktree = path::worktree(&config.vcs, repo, folder);
-    if let Some(kept) = kept {
-        checkout
-            .rename_branch(&branch, kept)
-            .map_err(|error| failed(&error.to_string()))?;
-    }
     create(&worktree, &branch, base.as_deref(), &checkout)?;
     recorder.record("worktree-add", root);
     if let Some(command) = &config.vcs.prepare

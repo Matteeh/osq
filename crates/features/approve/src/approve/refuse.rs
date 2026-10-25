@@ -1,8 +1,6 @@
-//! The refusals and rejected branch claim that run before a worktree approval writes.
+//! The refusals and rejected branch claim that run before either approval writes.
 
 mod kept;
-#[path = "stack.rs"]
-mod stack;
 mod text;
 
 use std::collections::BTreeSet;
@@ -15,17 +13,16 @@ use osq_kernel_vcs::{GitVcs, Vcs};
 
 use super::{ApproveOptions, failed};
 
-/// Checks every refusal, then decides whether the rejected branch must move aside.
+/// Checks every refusal, then renames a rejected branch before any approval writes.
 ///
 /// # Errors
 ///
 /// Returns a `Failed` error with the command `approve` and the refusal's text
-/// when HEAD is off the default branch, a task-scoped path is dirty, the change
-/// would stack or its branch is taken, and the display of a git error when a
-/// read fails.
+/// when HEAD is off the default branch, a task-scoped path is dirty or the
+/// change's branch is taken, and the display of a git error when a read or the
+/// rejected branch rename fails.
 ///
 /// Implements: rust-approve/approval-refusals-with-git-on
-/// Implements: rust-approve/stacked-approval-refusal
 /// Implements: rust-approve/rejected-branch-claim
 pub(crate) fn check(
     repo: &Path,
@@ -43,7 +40,6 @@ pub(crate) fn check(
         config.vcs.manual_edits,
         options.ignore_dirty,
     )?;
-    stack::refuse(repo, config, folder)?;
     claim(&vcs, folder)
 }
 
@@ -98,7 +94,12 @@ fn refuse_dirty(
     Err(failed(&text::dirty(&paths, manual)))
 }
 
-/// Refuses a taken branch, or names the kept branch a rejected one must take.
+/// Refuses a taken branch, or renames a rejected one to the first free kept name.
+///
+/// # Errors
+///
+/// Returns a `Failed` error with the command `approve` when the branch is taken
+/// or checked out, and the display of a git error when a read or rename fails.
 ///
 /// Implements: rust-approve/approval-refusals-with-git-on
 /// Implements: rust-approve/rejected-branch-claim
@@ -127,5 +128,8 @@ fn claim(vcs: &GitVcs, folder: &str) -> Result<Option<String>, FeatureError> {
     let taken = vcs
         .list_branches(&format!("{branch}-rejected-"))
         .map_err(|error| failed(&error.to_string()))?;
-    Ok(Some(kept::next(&branch, &taken)))
+    let kept = kept::next(&branch, &taken);
+    vcs.rename_branch(&branch, &kept)
+        .map_err(|error| failed(&error.to_string()))?;
+    Ok(Some(kept))
 }

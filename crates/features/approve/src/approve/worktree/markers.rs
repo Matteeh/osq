@@ -26,6 +26,20 @@ pub(crate) fn write(
     fs::write(run.join("approver"), approver(vcs)?).map_err(|error| error.to_string())
 }
 
+/// Writes `.run/approved` and `.run/approver` into a stacked copy, no `.run/base`.
+///
+/// # Errors
+///
+/// Returns the display of the first git or file error.
+///
+/// Implements: rust-approve/stacked-approval
+pub(crate) fn write_stacked(folder: &Path, seal: &str, vcs: &GitVcs) -> Result<(), String> {
+    let run = folder.join(".run");
+    fs::create_dir_all(&run).map_err(|error| error.to_string())?;
+    fs::write(run.join("approved"), format!("{seal}\n")).map_err(|error| error.to_string())?;
+    fs::write(run.join("approver"), approver(vcs)?).map_err(|error| error.to_string())
+}
+
 /// The approver line, `<name> <<email>>` with each value empty when unset.
 fn approver(vcs: &GitVcs) -> Result<String, String> {
     let name = vcs

@@ -1,11 +1,11 @@
-//! Proves a change TypeScript would stack is refused before any write.
+//! Proves what a stacked approval waits for, every row of its scenario.
 
 mod worktree_support;
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use worktree_support::{Repo, approve, branches, build_with, git, worktrees};
+use worktree_support::{Repo, SEAL, approve, branches, build_with, git};
 
 /// The change every row queries by `1`.
 const ALPHA: &str = "001-alpha-twice";
@@ -14,7 +14,7 @@ const GAMMA: &str = "002-gamma";
 /// The copy of the alpha change some rows add.
 const THRICE: &str = "003-alpha-thrice";
 
-/// One row of "Stacking refusals": its setup, query and expected outcome.
+/// One row of "What a stacked approval waits for".
 struct Row {
     /// A name for the scratch repository.
     name: &'static str,
@@ -24,152 +24,155 @@ struct Row {
     query: &'static str,
     /// The folder the query names.
     folder: &'static str,
-    /// The refusal after `approve failed: `, or none when the row approves.
-    refusal: Option<&'static str>,
+    /// The `.run/stacked-on` text, or none when the row does not stack.
+    expected: Option<String>,
 }
 
-/// Proves every row of "Stacking refusals".
+/// Proves every row of "What a stacked approval waits for".
 ///
-/// Covers: rust-approve/stacking-refusals
+/// Covers: rust-approve/what-a-stacked-approval-waits-for
 #[test]
-fn stacking_refusals() {
+fn what_a_stacked_approval_waits_for() {
     let rows = [
         Row {
             name: "declared-approved",
             setup: alpha_then_depends,
             query: "2",
             folder: GAMMA,
-            refusal: Some(
-                "Change 002-gamma would stack on 001-alpha-twice. Rust approve does not stack approvals yet.",
-            ),
+            expected: Some(format!("001-alpha-twice {SEAL}")),
         },
         Row {
             name: "declared-unapproved",
             setup: depends_on_alpha,
             query: "2",
             folder: GAMMA,
-            refusal: None,
+            expected: None,
         },
         Row {
             name: "overlap-approved",
             setup: thrice_then_approved,
             query: "1",
             folder: ALPHA,
-            refusal: Some(
-                "Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.",
-            ),
+            expected: Some(format!("003-alpha-thrice {SEAL} overlap alpha")),
         },
         Row {
             name: "no-shared-capability",
             setup: approve_gamma,
             query: "1",
             folder: ALPHA,
-            refusal: None,
+            expected: None,
         },
         Row {
             name: "overlap-stacked",
             setup: stacked_thrice,
             query: "1",
             folder: ALPHA,
-            refusal: Some(
-                "Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.",
-            ),
+            expected: Some("003-alpha-thrice sealed overlap alpha".to_owned()),
         },
         Row {
             name: "declared-archived-branch",
             setup: archived_branch,
             query: "2",
             folder: GAMMA,
-            refusal: Some(
-                "Change 002-gamma would stack on 001-alpha-twice. Rust approve does not stack approvals yet.",
-            ),
+            expected: Some("001-alpha-twice sealed".to_owned()),
         },
         Row {
             name: "declared-overlap",
             setup: approved_thrice_depends,
             query: "1",
             folder: ALPHA,
-            refusal: Some(
-                "Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.",
-            ),
+            expected: Some(format!("003-alpha-thrice {SEAL}")),
         },
         Row {
             name: "declared-landed",
             setup: landed_alpha,
             query: "2",
             folder: GAMMA,
-            refusal: None,
+            expected: None,
+        },
+        Row {
+            name: "stacked-on-lines",
+            setup: written_stacked_on,
+            query: "1",
+            folder: ALPHA,
+            expected: Some("002-gamma sha256:old overlap gamma,beta".to_owned()),
+        },
+        Row {
+            name: "unawaited-stacked-on",
+            setup: unawaited_stacked_on,
+            query: "1",
+            folder: ALPHA,
+            expected: None,
         },
     ];
     for row in rows {
-        let repo = build_with(row.name, &[], row.setup);
-        let before = (branches(&repo.path), worktrees(&repo.path));
+        let name = format!("what_a_stacked_approval_waits_for_{}", row.name);
+        let repo = build_with(&name, &[], row.setup);
         let result = approve(&repo.path, &[row.query]);
-        check(&repo, &row, &before, &result);
+        result.unwrap_or_else(|error| panic!("{}: {error}", row.name));
+        check(&repo, &row);
     }
 }
 
-/// Proves a checkout approval marker counts as an approved dependency.
+/// Proves a checkout approval marker counts as an awaited dependency.
 ///
-/// Covers: rust-approve/stacking-refusals
+/// Covers: rust-approve/what-a-stacked-approval-waits-for
 #[test]
 fn checkout_marker_awaits() {
-    let repo = build_with("checkout-marker", &[], depends_on_alpha);
-    approved_marker(&change(&repo, ALPHA));
-    let error = approve(&repo.path, &["2"]).expect_err("the dependency awaits");
+    let repo = build_with(
+        "what_a_stacked_approval_waits_for_checkout_marker",
+        &[],
+        checkout_marker,
+    );
+    approve(&repo.path, &["2"]).expect("the dependency awaits");
+    let path = repo
+        .root
+        .join("worktrees/repo/.stacked")
+        .join(GAMMA)
+        .join("openspec/changes")
+        .join(GAMMA)
+        .join(".run/stacked-on");
     assert_eq!(
-        error.to_string(),
-        "approve failed: Change 002-gamma would stack on 001-alpha-twice. \
-         Rust approve does not stack approvals yet.",
+        fs::read_to_string(path).expect("the stacked-on file reads"),
+        "001-alpha-twice sealed",
         "the checkout marker makes alpha an awaited dependency"
     );
 }
 
-/// Checks one row's outcome and that a refusal left every branch and worktree.
-fn check(
-    repo: &Repo,
-    row: &Row,
-    before: &(Vec<String>, Vec<String>),
-    result: &Result<osq_core::Output, osq_core::FeatureError>,
-) {
-    let branch = format!("osq/{}", row.folder);
-    if let Some(message) = row.refusal {
-        let error = result.as_ref().expect_err("the row is refused");
+/// Makes gamma depend on alpha, and writes alpha's checkout approval marker.
+fn checkout_marker(repo: &Repo) {
+    depends_on(repo, GAMMA, "\"001\"");
+    approved_marker(&change(repo, ALPHA), "sealed\n");
+}
+
+/// Checks one row's stacked-on text, or that the row did not stack.
+fn check(repo: &Repo, row: &Row) {
+    let stacked = repo.root.join("worktrees/repo/.stacked").join(row.folder);
+    if let Some(expected) = &row.expected {
+        let path = stacked
+            .join("openspec/changes")
+            .join(row.folder)
+            .join(".run/stacked-on");
         assert_eq!(
-            error.to_string(),
-            format!("approve failed: {message}"),
-            "{}: message",
-            row.name
-        );
-        assert_eq!(
-            &(branches(&repo.path), worktrees(&repo.path)),
-            before,
-            "{}: no write",
-            row.name
-        );
-        assert!(
-            !branches(&repo.path).contains(&branch),
-            "{}: no branch for {branch}",
+            fs::read_to_string(&path).expect("the stacked-on file reads"),
+            *expected,
+            "{}: stacked-on",
             row.name
         );
     } else {
-        result.as_ref().expect("the row approves");
+        let branch = format!("osq/{}", row.folder);
         assert!(
             branches(&repo.path).contains(&branch),
-            "{}: the branch {branch} exists",
+            "{}: the branch {branch} is created",
             row.name
         );
+        assert!(!stacked.exists(), "{}: no stacked folder", row.name);
     }
 }
 
 /// Approves the alpha change, then makes the gamma change depend on it.
 fn alpha_then_depends(repo: &Repo) {
-    let result = approve(&repo.path, &["1"]);
-    assert!(
-        result.is_ok(),
-        "the first approve gives an Output: {:?}",
-        result.err()
-    );
+    approve_ok(repo, "1");
     depends_on(repo, GAMMA, "\"001\"");
 }
 
@@ -181,26 +184,19 @@ fn depends_on_alpha(repo: &Repo) {
 /// Adds a copy of the alpha change as `003-alpha-thrice` and approves it.
 fn thrice_then_approved(repo: &Repo) {
     add_thrice(repo);
-    let result = approve(&repo.path, &["3"]);
-    assert!(result.is_ok(), "the copy is approved");
+    approve_ok(repo, "3");
 }
 
 /// Approves the gamma change.
 fn approve_gamma(repo: &Repo) {
-    let result = approve(&repo.path, &["2"]);
-    assert!(result.is_ok(), "the gamma change is approved");
+    approve_ok(repo, "2");
 }
 
 /// Leaves an approved copy of the alpha change under the stacked root.
 fn stacked_thrice(repo: &Repo) {
-    let target = repo
-        .root
-        .join("worktrees/repo/.stacked")
-        .join(THRICE)
-        .join("openspec/changes")
-        .join(THRICE);
+    let target = stacked_folder(repo, THRICE);
     copy_tree(&change(repo, ALPHA), &target);
-    approved_marker(&target);
+    approved_marker(&target, "sealed\n");
 }
 
 /// Makes gamma depend on alpha, and archives alpha on its branch.
@@ -208,7 +204,7 @@ fn archived_branch(repo: &Repo) {
     depends_on(repo, GAMMA, "\"001\"");
     git(&repo.path, &["checkout", "-q", "-b", "osq/001-alpha-twice"]);
     let target = repo.path.join("openspec/changes/archive").join(ALPHA);
-    approved_marker(&target);
+    approved_marker(&target, "sealed\n");
     git(
         &repo.path,
         &["add", "openspec/changes/archive/001-alpha-twice"],
@@ -228,12 +224,44 @@ fn landed_alpha(repo: &Repo) {
     depends_on(repo, GAMMA, "\"001\"");
     let target = repo.path.join("openspec/changes/archive").join(ALPHA);
     copy_tree(&change(repo, ALPHA), &target);
-    approved_marker(&target);
+    approved_marker(&target, "sealed\n");
     git(
         &repo.path,
         &["add", "openspec/changes/archive/001-alpha-twice"],
     );
     git(&repo.path, &["commit", "-q", "-m", "archive alpha"]);
+}
+
+/// Approves gamma, then writes the alpha change's own valid and junk lines.
+fn written_stacked_on(repo: &Repo) {
+    approve_ok(repo, "2");
+    write(
+        &change(repo, ALPHA).join(".run/stacked-on"),
+        "002-gamma sha256:old overlap gamma,,beta\njunk\n001-alpha-twice x\n",
+    );
+}
+
+/// Approves gamma, then names an unapproved folder in alpha's overlap line.
+fn unawaited_stacked_on(repo: &Repo) {
+    approve_ok(repo, "2");
+    write(
+        &change(repo, ALPHA).join(".run/stacked-on"),
+        "003-alpha-thrice sha256:old overlap alpha",
+    );
+}
+
+/// Approves a query, requiring an Output.
+fn approve_ok(repo: &Repo, query: &str) {
+    approve(&repo.path, &[query]).unwrap_or_else(|error| panic!("approve {query}: {error}"));
+}
+
+/// The path of `name` under the stacked root.
+fn stacked_folder(repo: &Repo, name: &str) -> PathBuf {
+    repo.root
+        .join("worktrees/repo/.stacked")
+        .join(name)
+        .join("openspec/changes")
+        .join(name)
 }
 
 /// Adds an uncommitted `003-alpha-thrice` copy of the alpha change.
@@ -250,15 +278,21 @@ fn depends_on(repo: &Repo, folder: &str, ids: &str) {
 }
 
 /// The path of one active change folder in the checkout.
-fn change(repo: &Repo, folder: &str) -> std::path::PathBuf {
+fn change(repo: &Repo, folder: &str) -> PathBuf {
     repo.path.join("openspec/changes").join(folder)
 }
 
-/// Writes an approval marker into a folder, creating its `.run` folder.
-fn approved_marker(folder: &Path) {
-    let run = folder.join(".run");
-    fs::create_dir_all(&run).expect("the .run folder is created");
-    fs::write(run.join("approved"), "sealed\n").expect("the marker is written");
+/// Writes a file, creating its parent folders.
+fn write(path: &Path, text: &str) {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).expect("the parent folder is created");
+    }
+    fs::write(path, text).expect("the file is written");
+}
+
+/// Writes an approval marker with exactly `text`, creating its `.run` folder.
+fn approved_marker(folder: &Path, text: &str) {
+    write(&folder.join(".run/approved"), text);
 }
 
 /// Copies a folder tree, dot folders and files included.

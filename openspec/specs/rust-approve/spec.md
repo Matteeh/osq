@@ -307,7 +307,8 @@ checks its arguments and before it reads any change, failing with the
 call rust-vcs `project_git_root` on the root and fail with the `NestedRoot`'s
 display when it gives one, as rust-vcs "Project root check" says. Git is on
 when `project_git_root` gives a folder. With git on, once every check the other approve
-requirements name has passed, `approve` SHALL approve the change into its
+requirements name has passed, and when "Stacked approval" finds nothing the
+change waits for, `approve` SHALL approve the change into its
 own branch and worktree as TypeScript's `approveIntoNewWorktree` in
 `src/core/spec/approve-worktree.ts` does, instead of writing the
 checkout's marker as "Approval marker" says. With git off, including when
@@ -454,61 +455,15 @@ any other write, rename it with rust-vcs `rename_branch` to
 `osq/<folder>-rejected-<n>`, with the lowest `<n>` from 1 that no branch
 rust-vcs `list_branches` gives for the prefix `osq/<folder>-rejected-`
 has, as TypeScript's `claimBranch` in `src/core/spec/approve-branch.ts`
-does. Unlike TypeScript, which renames it before deciding whether the
-change stacks, Rust renames it after "Stacked approval refusal" has
-passed, so a refused change renames nothing. Its output SHALL then hold
+does. As in TypeScript, it renames the branch before "Stacked approval"
+decides whether the change stacks, so a stacked approval renames it too.
+Its output, worktree or stacked, SHALL then hold
 `  Kept rejected branch: <kept>` and a newline right after the hash line,
 where `<kept>` is the new name.
 
 #### Scenario: Kept branch name skips a taken one
 - **WHEN** `approve` runs with the query `1` on the repository of the row `rejected-branch-001.txt` of "Worktree refusals equal TypeScript's", which also holds a branch `osq/001-alpha-twice-rejected-1` at `main`
 - **THEN** its output's third line is `  Kept rejected branch: osq/001-alpha-twice-rejected-2`, and the `osq/` branches are `osq/001-alpha-twice`, `osq/001-alpha-twice-rejected-1` and `osq/001-alpha-twice-rejected-2`
-
-### Requirement: Stacked approval refusal
-With git on, as "Worktree approval" says, once the refusals "Approval
-refusals with git on" names have passed and before any write, `approve`
-SHALL refuse a change TypeScript's `awaitedForApproval` in
-`src/core/spec/stack-overlap.ts` would stack, with
-`Change <folder> would stack on <folders>. Rust approve does not stack approvals yet.`,
-where `<folders>` are joined by `, `: first each `depends_on` entry of the
-change's proposal, in order, whose folder reads approved or archived, then
-each other change folder that shares a delta capability with the change
-and reads approved or archived, sorted by name, each folder once. Unlike
-TypeScript, which stacks such a change, Rust refuses it, and it reads no
-`.run/stacked-on` lines from the change's folder.
-
-- The changes are rust-storage `list_tree_changes` of `change_trees` for
-  the root, the worktrees rust-vcs `worktree_list` gives, and the folders
-  directly under rust-vcs `stacked_root`. A `depends_on` entry names the
-  first change whose folder matches it as "Approve lookup" matches a
-  query, and an entry that names none is left out.
-- A change's delta capabilities are the names of the folders directly
-  under its `specs/`.
-- A folder `<f>` reads, as TypeScript's `readDependencyState` gives it:
-  landed when the default branch, read as "Approval refusals with git on"
-  reads it, holds `openspec/changes/archive/<f>`; otherwise, when the
-  branch `osq/<f>` exists, archived when it holds
-  `openspec/changes/archive/<f>/.run/approved`, approved when it holds
-  `openspec/changes/<f>/.run/approved`, and unapproved otherwise;
-  otherwise approved when `<f>/openspec/changes/<f>/.run/approved` under
-  `stacked_root`, or the root's `openspec/changes/<f>/.run/approved` or
-  `openspec/changes/archive/<f>/.run/approved`, exists; and unapproved
-  otherwise.
-
-#### Scenario: Stacking refusals
-- **WHEN** `approve` runs with the row's query on a repository built as "Worktree approvals equal TypeScript's" builds it, with no settings, after the row's setup, where `003-alpha-thrice` is a copy of the folder `001-alpha-twice` under that name, not committed
-- **THEN** it gives a `Failed` error displayed `approve failed: ` and the row's message, and creates no branch, or, where the row says approved, it gives an `Output` and creates the branch `osq/<folder>` for the queried folder:
-
-| Setup | Query | Result |
-|---|---|---|
-| `approve` ran with `1`; `002-gamma`'s proposal says `depends_on: ["001"]` | `2` | `Change 002-gamma would stack on 001-alpha-twice. Rust approve does not stack approvals yet.` |
-| `002-gamma`'s proposal says `depends_on: ["001"]` | `2` | approved |
-| `003-alpha-thrice` exists and `approve` ran with `3` | `1` | `Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.` |
-| `approve` ran with `2` | `1` | approved |
-| `<root>/worktrees/repo/.stacked/003-alpha-thrice/openspec/changes/003-alpha-thrice` is a copy of `001-alpha-twice` holding `.run/approved` | `1` | `Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.` |
-| `002-gamma`'s proposal says `depends_on: ["001"]`; a branch `osq/001-alpha-twice` whose one commit past `main` adds `openspec/changes/archive/001-alpha-twice/.run/approved` | `2` | `Change 002-gamma would stack on 001-alpha-twice. Rust approve does not stack approvals yet.` |
-| `003-alpha-thrice` exists and `approve` ran with `3`; `001-alpha-twice`'s proposal says `depends_on: ["003"]` | `1` | `Change 001-alpha-twice would stack on 003-alpha-thrice. Rust approve does not stack approvals yet.` |
-| `002-gamma`'s proposal says `depends_on: ["001"]`; `main` gains a commit that adds `openspec/changes/archive/001-alpha-twice/` as a copy of `001-alpha-twice` holding `.run/approved` | `2` | approved |
 
 ### Requirement: Worktree rejection
 After it checks its arguments and before it reads any change, `reject`
@@ -637,3 +592,120 @@ delivered (ADR 030).
 | `blocked-001` with `.run/regressed/change.md` holding `reason: sync_conflict` instead of its dead marker | `Change 001-alpha-twice needs steering: change conflict (sync_conflict). Rust approve does not approve default-branch steering yet.` |
 | `blocked-001` with its markers written in the checkout's folder, which is not moved, and no worktree | `Change 001-alpha-twice needs steering: task 1 blocked (blocked). Rust approve steers a change with git on only in its worktree.` |
 | `blocked-001` with no `author` in `osq.toml` | `vcs.author is required when vcs.enabled is true` |
+
+### Requirement: Stacked approval
+With git on, as "Worktree approval" says, once the refusals "Approval
+refusals with git on" names have passed and "Rejected branch claim" has
+renamed any rejected branch, `approve` SHALL work out what the change waits
+for as TypeScript's `awaitedForApproval` in `src/core/spec/stack-overlap.ts`
+does. When that is not empty, it SHALL record a stacked approval as
+TypeScript's `recordStackedApproval` in `src/core/spec/stack-dependencies.ts`
+does, in place of the branch and worktree "Worktree approval" makes.
+
+The reads:
+
+- The changes are rust-storage `list_tree_changes` of `change_trees` for
+  the root, the worktrees rust-vcs `worktree_list` gives, and the folders
+  directly under rust-vcs `stacked_root`. A folder's path is the path of
+  the first of these changes with that folder name. A `depends_on` entry
+  names the first change whose folder matches it as "Approve lookup"
+  matches a query. An entry that names none is left out.
+- A change's delta capabilities are the names of the folders directly
+  under its `specs/`.
+- A folder `<f>` reads, as TypeScript's `readDependencyState` gives it,
+  with its hash:
+  - landed when the default branch, read as "Approval refusals with git
+    on" reads it, holds `openspec/changes/archive/<f>`;
+  - otherwise, when the branch `osq/<f>` exists: archived when it holds
+    `openspec/changes/archive/<f>/.run/approved`, approved when it holds
+    `openspec/changes/<f>/.run/approved`, and unapproved otherwise, with
+    that marker's text from rust-vcs `show`, trimmed, as its hash;
+  - otherwise approved, with the first of these files that exists, trimmed,
+    as its hash: `<f>/openspec/changes/<f>/.run/approved` under
+    `stacked_root`, then the root's `openspec/changes/<f>/.run/approved`,
+    then its `openspec/changes/archive/<f>/.run/approved`;
+  - otherwise unapproved.
+  A folder is awaited when it reads approved or archived.
+- A `.run/stacked-on` line, split on whitespace, is an overlap line when
+  it has a folder, a hash, the word `overlap` and a fourth word. Its
+  capabilities are that word's `,`-separated parts, empty ones left out.
+  Every other line is passed over.
+- The awaited entries of a change folder at `<p>` are, in order:
+  - each `depends_on` entry of `<p>/proposal.md` that names an awaited
+    folder not named yet, as a declared entry with that folder's hash;
+  - then each overlap line of `<p>/.run/stacked-on` whose folder no
+    earlier entry names and is awaited, as an overlap entry with the
+    line's hash and capabilities.
+- The overlaps are each other awaited change folder, once per name, that
+  shares a delta capability with the change, as an overlap entry with its
+  hash and the shared capabilities, sorted. The overlaps are sorted by
+  folder name. A change with no delta capability has none.
+- The closure of a folder `<f>` is every folder reached by following
+  awaited entries from `<f>`'s path, then from each folder reached, leaving
+  out `<f>`. A folder with no path adds nothing.
+- What the change waits for is the awaited entries of the checkout's change
+  folder. After them come each of the overlaps that no earlier entry names
+  and that no closure of another endpoint holds, where the endpoints are the
+  folders of those entries and of the overlaps, each once.
+
+With `<stacked>` the folder `<folder>` under `stacked_root` for `vcs`, the
+folder `project_git_root` gives and the `HOME` variable, empty when unset,
+and `<seal>` as "Worktree approval" says, a stacked approval SHALL, in this
+order:
+
+1. remove `<stacked>` when it exists;
+2. copy the checkout's change folder, `.run/` included, to
+   `<stacked>/openspec/changes/<folder>`;
+3. write `<seal>` and a newline to the copy's `.run/approved`, creating
+   `.run/` when needed, and `.run/approver` as "Worktree approval" writes
+   it;
+4. write the copy's `.run/stacked-on`: one line per entry of what the
+   change waits for, in order, `<folder> <hash>` for a declared entry and
+   `<folder> <hash> overlap <capabilities>` for an overlap entry, with the
+   capabilities joined by `,`, the lines joined by a newline, with none
+   after the last;
+5. remove the checkout's change folder, unless rust-vcs `path_exists` says
+   `HEAD` holds `openspec/changes/<folder>`.
+
+A stacked approval makes no branch, worktree or commit, adds no line to the
+tree record, and writes no `.run/base` and no event. A `VcsError` or a file
+error SHALL fail with its display. `approve` SHALL then return as its output
+`Approved <id> (<folder>)`, `  Hash: <seal>`, the line "Rejected branch
+claim" adds when it renamed a branch, `  Waiting for: <folders>` with the
+folders of what the change waits for joined by `, `, one
+`  Runs after <f>, which also writes <capabilities>` per overlap entry, in
+order, with its capabilities joined by `, `, and `  Stacked: <stacked>`,
+each followed by a newline. As in "Worktree approval", it writes no
+`.run/manifest.json` and no `.run/plan.jsonl` and prints no digest lines.
+
+#### Scenario: Stacked approvals equal TypeScript's
+- **WHEN** `approve` runs with each query of the row's steps in turn on a repository built as "Worktree approvals equal TypeScript's" builds it, with no settings, after the row's setup, where `003-alpha-thrice` and `004-alpha-four` are uncommitted copies of the folder `001-alpha-twice` under those names, made before the first run
+- **THEN** the last run's outcome and approval lines, the `osq/` branches, the osq worktrees, whether the queried folder's checkout copy exists, the lines of `<root>/repo/.git/osq-trees.jsonl` with each `at` written as `<at>`, every file under `<root>/worktrees/repo/.stacked/<folder>` and the stacked copy's `.run/` files, written as `golden/print-stacked-goldens.mjs.txt` writes them, equal `tests/fixtures/stacked-golden/<golden>`, which TypeScript's built `dist` printed for the same repository:
+
+| Golden | Steps | Setup |
+|---|---|---|
+| `overlap-003.txt` | `1`, `3` | `003-alpha-thrice` exists |
+| `chain-004.txt` | `1`, `3`, `4` | `003-alpha-thrice` and `004-alpha-four` exist |
+| `declared-002.txt` | `1`, `2` | `002-gamma`'s proposal says `depends_on: ["001"]` |
+| `kept-003.txt` | `1`, `3` | `003-alpha-thrice` exists; a branch `osq/003-alpha-thrice` whose one commit past `main` adds `openspec/changes/rejected/003-alpha-thrice/.run/rejected.md` |
+
+#### Scenario: What a stacked approval waits for
+- **WHEN** `approve` runs with the row's query on a repository built as "Worktree approvals equal TypeScript's" builds it, with no settings, after the row's setup, where `003-alpha-thrice` is a copy of the folder `001-alpha-twice` under that name, not committed, `<seal>` is `sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1`, and "sealed" is a `.run/approved` holding `sealed` and a newline
+- **THEN** it gives an `Output`, and `<root>/worktrees/repo/.stacked/<folder>/openspec/changes/<folder>/.run/stacked-on` for the queried folder holds the row's lines, joined by a newline with none after the last, or, where the row says not stacked, it creates the branch `osq/<folder>` and no folder `<root>/worktrees/repo/.stacked/<folder>`:
+
+| Setup | Query | Result |
+|---|---|---|
+| `approve` ran with `1`; `002-gamma`'s proposal says `depends_on: ["001"]` | `2` | `001-alpha-twice <seal>` |
+| `002-gamma`'s proposal says `depends_on: ["001"]` | `2` | not stacked |
+| `003-alpha-thrice` exists and `approve` ran with `3` | `1` | `003-alpha-thrice <seal> overlap alpha` |
+| `approve` ran with `2` | `1` | not stacked |
+| `<root>/worktrees/repo/.stacked/003-alpha-thrice/openspec/changes/003-alpha-thrice` is a copy of `001-alpha-twice` that is sealed | `1` | `003-alpha-thrice sealed overlap alpha` |
+| `002-gamma`'s proposal says `depends_on: ["001"]`; a branch `osq/001-alpha-twice` whose one commit past `main` adds `openspec/changes/archive/001-alpha-twice/.run/approved`, sealed | `2` | `001-alpha-twice sealed` |
+| `003-alpha-thrice` exists and `approve` ran with `3`; `001-alpha-twice`'s proposal says `depends_on: ["003"]` | `1` | `003-alpha-thrice <seal>` |
+| `002-gamma`'s proposal says `depends_on: ["001"]`; `main` gains a commit that adds `openspec/changes/archive/001-alpha-twice/` as a copy of `001-alpha-twice` that is sealed | `2` | not stacked |
+| `approve` ran with `2`; `001-alpha-twice/.run/stacked-on` in the checkout holds `002-gamma sha256:old overlap gamma,,beta` and a newline, then `junk`, then `001-alpha-twice x` | `1` | `002-gamma sha256:old overlap gamma,beta` |
+| `approve` ran with `2`; `001-alpha-twice/.run/stacked-on` in the checkout holds `003-alpha-thrice sha256:old overlap alpha` | `1` | not stacked |
+
+#### Scenario: Stacked folder replaced
+- **WHEN** `approve` runs with the query `1` and then `3` on a repository built as the row `overlap-003.txt` of "Stacked approvals equal TypeScript's" builds it, which also holds the file `<root>/worktrees/repo/.stacked/003-alpha-thrice/note.txt`, written before the first run
+- **THEN** the second run gives an `Output`, and the folder `<root>/worktrees/repo/.stacked/003-alpha-thrice` holds no `note.txt`

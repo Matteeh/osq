@@ -10,7 +10,7 @@ use super::super::failed;
 
 /// Every change folder of the root, its worktrees and its stacked approvals.
 ///
-/// Implements: rust-approve/stacked-approval-refusal
+/// Implements: rust-approve/stacked-approval
 pub(super) fn list(
     root: &Path,
     config: &Config,
@@ -32,7 +32,7 @@ pub(super) fn list(
 
 /// Turns one git worktree into a tree candidate.
 ///
-/// Implements: rust-approve/stacked-approval-refusal
+/// Implements: rust-approve/stacked-approval
 fn candidate(worktree: osq_kernel_vcs::Worktree) -> TreeCandidate {
     TreeCandidate {
         path: PathBuf::from(worktree.path),
@@ -43,7 +43,7 @@ fn candidate(worktree: osq_kernel_vcs::Worktree) -> TreeCandidate {
 /// The folders directly under the stacked approvals root, or none when the
 /// home is unset or the root cannot be read.
 ///
-/// Implements: rust-approve/stacked-approval-refusal
+/// Implements: rust-approve/stacked-approval
 fn stacked_folders(
     root: &Path,
     config: &Config,

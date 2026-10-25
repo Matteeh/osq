@@ -1,0 +1,218 @@
+// Prints TypeScript's `osq approve` result for a change it stacks, for each
+// row of rust-approve "Stacked approvals equal TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-stacked-goldens.mjs <fixture approve-repo> <golden folder>
+// Each case builds a fresh scratch repository as rust-approve "Worktree
+// approvals equal TypeScript's" builds it: `<root>/repo` is a copy of the
+// fixture with git on, `main` holds every file except the uncommitted draft
+// `001-alpha-twice`, and the worktree root is `<root>/worktrees`. TypeScript
+// reads the same settings from `osq.config.mjs`, which git ignores, and
+// `node_modules` links to this repository's for the pinned OpenSpec
+// validator. HOME is a scratch folder, so no planning session is found.
+// The case's setup runs, then `approve` runs once per query in `steps`; the
+// golden describes the last run only.
+// A golden holds the outcome and the approval lines, then the `osq/`
+// branches, the osq worktrees, whether the queried folder's checkout copy
+// exists, the lines of the tree record `.git/osq-trees.jsonl` with each `at`
+// written as `<at>`, every file under the stacked folder
+// `<root>/worktrees/repo/.stacked/<folder>`, sorted, and the stacked copy's
+// `.run/` files. `manifest.json` and `plan.jsonl` are left out, as Rust
+// writes neither. `<root>` stands for the case's scratch root.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'Osq Bot <bot@example.com>';
+const DATE = '2026-10-22T10:00:00Z';
+const LEFT_OUT = new Set(['.run/manifest.json', '.run/plan.jsonl']);
+const KEPT_LINES = [
+  'Approved ',
+  '  Hash: ',
+  '  Kept rejected branch: ',
+  '  Waiting for: ',
+  '  Runs after ',
+  '  Stacked: ',
+  '  Worktree: ',
+  '  Branch: ',
+];
+const ALPHA = '001-alpha-twice';
+
+const cases = [
+  { name: 'overlap-003', steps: ['1', '3'], folder: '003-alpha-thrice', setup: oneCopy },
+  { name: 'chain-004', steps: ['1', '3', '4'], folder: '004-alpha-four', setup: twoCopies },
+  { name: 'declared-002', steps: ['1', '2'], folder: '002-gamma', setup: gammaDepends },
+  { name: 'kept-003', steps: ['1', '3'], folder: '003-alpha-thrice', setup: rejectedThrice },
+];
+
+function git(cwd, args) {
+  const env = {
+    ...process.env,
+    GIT_AUTHOR_DATE: DATE,
+    GIT_COMMITTER_DATE: DATE,
+    GIT_AUTHOR_NAME: 'Osq Tester',
+    GIT_AUTHOR_EMAIL: 'tester@example.com',
+    GIT_COMMITTER_NAME: 'Osq Tester',
+    GIT_COMMITTER_EMAIL: 'tester@example.com',
+  };
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8', env });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function copyAlpha(repo, name) {
+  const changes = path.join(repo, 'openspec', 'changes');
+  fs.cpSync(path.join(changes, ALPHA), path.join(changes, name), { recursive: true });
+}
+
+function oneCopy(repo) {
+  copyAlpha(repo, '003-alpha-thrice');
+}
+
+function twoCopies(repo) {
+  copyAlpha(repo, '003-alpha-thrice');
+  copyAlpha(repo, '004-alpha-four');
+}
+
+function gammaDepends(repo) {
+  const proposal = path.join(repo, 'openspec', 'changes', '002-gamma', 'proposal.md');
+  const text = fs.readFileSync(proposal, 'utf8');
+  fs.writeFileSync(proposal, text.replace('depends_on: []', 'depends_on: ["001"]'));
+}
+
+// An uncommitted copy of alpha whose branch was rejected before.
+function rejectedThrice(repo) {
+  copyAlpha(repo, '003-alpha-thrice');
+  git(repo, ['branch', 'osq/003-alpha-thrice']);
+  git(repo, ['checkout', '-q', 'osq/003-alpha-thrice']);
+  const record = path.join(repo, 'openspec/changes/rejected/003-alpha-thrice/.run');
+  fs.mkdirSync(record, { recursive: true });
+  fs.writeFileSync(path.join(record, 'rejected.md'), 'rejected\n');
+  git(repo, ['add', 'openspec/changes/rejected']);
+  git(repo, ['commit', '-q', '-m', 'osq: 003 rejected']);
+  git(repo, ['checkout', '-q', 'main']);
+}
+
+function configText(worktrees) {
+  const settings = { enabled: true, author: AUTHOR, worktreeRoot: worktrees };
+  return `export default { vcs: ${JSON.stringify(settings)} };\n`;
+}
+
+function buildRepo(root, c) {
+  const repo = path.join(root, 'repo');
+  fs.cpSync(fixture, repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'Osq Tester']);
+  git(repo, ['config', 'user.email', 'tester@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.appendFileSync(path.join(repo, '.git/info/exclude'), 'osq.config.mjs\nosq.toml\nnode_modules\n');
+  fs.symlinkSync(path.resolve('node_modules'), path.join(repo, 'node_modules'));
+  fs.writeFileSync(path.join(repo, 'osq.config.mjs'), configText(path.join(root, 'worktrees')));
+  git(repo, ['add', '-A', '--', '.', `:!openspec/changes/${ALPHA}`]);
+  git(repo, ['commit', '-q', '-m', 'fixture']);
+  c.setup(repo, root);
+  return repo;
+}
+
+function files(base, dir, out) {
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function stackedFiles(stacked) {
+  return files(stacked, stacked, [])
+    .filter((relative) => !LEFT_OUT.has(relative.replace(/^.*\/(\.run\/)/, '$1')))
+    .sort();
+}
+
+function runTree(folder) {
+  const lines = [];
+  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
+    if (LEFT_OUT.has(relative)) continue;
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    lines.push(text.endsWith('\n') ? text.slice(0, -1) : `${text}\n(no newline)`);
+  }
+  return lines.join('\n');
+}
+
+function worktrees(repo) {
+  const lines = [];
+  let current = null;
+  for (const line of git(repo, ['worktree', 'list', '--porcelain']).split('\n')) {
+    if (line.startsWith('worktree ')) current = { path: line.slice(9), branch: '' };
+    if (line.startsWith('branch refs/heads/') && current) current.branch = line.slice(18);
+    if (line === '' && current) {
+      if (current.branch.startsWith('osq/')) lines.push(`${current.path} ${current.branch}`);
+      current = null;
+    }
+  }
+  return lines.sort();
+}
+
+function treeRecord(repo) {
+  const file = path.join(repo, '.git', 'osq-trees.jsonl');
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .filter((line) => line !== '')
+    .map((line) => JSON.stringify({ ...JSON.parse(line), at: '<at>' }));
+}
+
+function approve(repo, home, query) {
+  return spawnSync(process.execPath, [BIN, 'approve', query], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, HOME: home, NO_COLOR: '1', OSQ_SERVER: '' },
+  });
+}
+
+function outcome(run, c) {
+  if (run.status !== 0) throw new Error(`${c.name}: approve failed: ${run.stderr}`);
+  const kept = run.stdout
+    .split('\n')
+    .filter((line) => KEPT_LINES.some((p) => line.startsWith(p)))
+    .map((line) => line.replace(/^(Approved \S+ \(\S+\)) with .*$/, '$1'));
+  return `outcome: output\n${kept.join('\n')}`;
+}
+
+for (const c of cases) {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-approve-stack-')));
+  const home = path.join(root, 'home');
+  fs.mkdirSync(home);
+  const repo = buildRepo(root, c);
+  let run = null;
+  for (const query of c.steps) {
+    run = approve(repo, home, query);
+    if (run.status !== 0) throw new Error(`${c.name} ${query}: ${run.stderr}`);
+  }
+  const stacked = path.join(root, 'worktrees', 'repo', '.stacked', c.folder);
+  const copy = path.join(stacked, 'openspec', 'changes', c.folder);
+  const checkout = path.join(repo, 'openspec', 'changes', c.folder);
+  const text = [
+    outcome(run, c),
+    'branches:',
+    ...git(repo, ['branch', '--list', 'osq/*', '--format=%(refname:short)']).trim().split('\n').filter(Boolean).sort(),
+    'worktrees:',
+    ...worktrees(repo),
+    `checkout copy: ${fs.existsSync(checkout) ? 'present' : 'absent'}`,
+    'record:',
+    ...treeRecord(repo),
+    'stacked:',
+    ...stackedFiles(stacked),
+    'tree:',
+    runTree(copy),
+  ].join('\n');
+  const placed = text.split(root).join('<root>');
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${placed.replace(/\n+$/, '')}\n`);
+  fs.rmSync(root, { recursive: true, force: true });
+}

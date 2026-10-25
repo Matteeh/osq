@@ -1,0 +1,31 @@
+outcome: output
+Approved 003 (003-alpha-thrice)
+  Hash: sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
+  Waiting for: 001-alpha-twice
+  Runs after 001-alpha-twice, which also writes alpha
+  Stacked: <root>/worktrees/repo/.stacked/003-alpha-thrice
+branches:
+osq/001-alpha-twice
+worktrees:
+<root>/worktrees/repo/001-alpha-twice osq/001-alpha-twice
+checkout copy: absent
+record:
+{"at":"<at>","op":"worktree-add","root":"<root>/repo"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+stacked:
+openspec/changes/003-alpha-thrice/.run/approved
+openspec/changes/003-alpha-thrice/.run/approver
+openspec/changes/003-alpha-thrice/.run/stacked-on
+openspec/changes/003-alpha-thrice/plan-prompt.md
+openspec/changes/003-alpha-thrice/proposal.md
+openspec/changes/003-alpha-thrice/specs/alpha/spec.md
+openspec/changes/003-alpha-thrice/tasks.md
+openspec/changes/003-alpha-thrice/tasks/1.md
+tree:
+--- .run/approved
+sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
+--- .run/approver
+Osq Tester <tester@example.com>
+--- .run/stacked-on
+001-alpha-twice sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1 overlap alpha
+(no newline)
