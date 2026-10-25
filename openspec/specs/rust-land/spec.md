@@ -101,12 +101,12 @@ display unless a land requirement names another message.
 `worktree_list`, in its order, whose branch is `osq/<x>`, whose
 canonical path is not the root's canonical path, and whose path holds the
 directory `openspec/changes/<x>` or `openspec/changes/archive/<x>`, is
-the worktree of change `<x>`. A folder matches the query as TypeScript's
-`matchesFolder` matches it: with `trimmed` the query without surrounding
-whitespace, and `padded` the value of `trimmed`'s leading ASCII digits
-padded with zeros to three digits when `trimmed` starts with one, or else
-`trimmed`, a folder matches when its name equals `trimmed` or `padded`,
-or starts with `trimmed` followed by `-` or `padded` followed by `-`.
+the worktree of change `<x>`. A folder matches the query when rust-core
+`parse_change_id` reads the query with `slug` false into an id that names
+the folder, as rust-core "Change ids" says; a query it refuses matches no
+folder. For `land`, `sync` and `message`, when the query is refused, the
+failure each gives for a query that matches no change SHALL instead have
+the `ChangeIdError`'s display as its message.
 
 The change SHALL be the first worktree change matching the query whose
 worktree holds `openspec/changes/archive/<x>`, or else the first folder of
@@ -143,7 +143,10 @@ in its worktree.
 | the fixture change | `001` | `Landed 001-alpha-orders` |
 | the fixture change | `  1  ` | `Landed 001-alpha-orders` |
 | the fixture change | `001-alpha-orders` | `Landed 001-alpha-orders` |
-| the fixture change | `001-alpha` | `Landed 001-alpha-orders` |
+| the fixture change | `001-alpha` | `Failed` with `No archived change "001-alpha" in an osq worktree` |
+| the fixture change | `001-alpha-orders-x` | `Failed` with `No archived change "001-alpha-orders-x" in an osq worktree` |
+| the fixture change | `1x` | `Failed` with `No archived change "1x" in an osq worktree` |
+| the fixture change | `1]` | `Failed` with `"1]" is not a change id; give the change's number, such as 7 or 007, or its full folder name` |
 | the fixture change | `2` | `Failed` with `No archived change "2" in an osq worktree` |
 | the fixture change | `alpha` | `Failed` with `No archived change "alpha" in an osq worktree` |
 | `001-alpha-orders`, whose worktree holds it under `openspec/changes/001-alpha-orders` and not under the archive | `1` | `Failed` with `001-alpha-orders has not archived on osq/001-alpha-orders` |
@@ -157,6 +160,17 @@ in its worktree.
 |---|---|
 | the fixture change's worktree remains at its "Land cleanup" path `<path>`, under a `vcs.worktreeRoot` set in `osq.toml` | `001-alpha-orders has already landed\nRemoved worktree <path>\n` |
 | the fixture change's worktree was removed with `git worktree remove --force`, and the checkout holds `openspec/changes/archive/001-alpha-orders/proposal.md` | `001-alpha-orders has already landed; nothing to clean up\n` |
+
+#### Scenario: Sync and message refuse a query that is not a change id
+- **WHEN** the row's command runs with the row's query on a land repository holding the fixture change
+- **THEN** it gives a `Failed` error for the row's command with the row's message, and `main` and the change's branch stay where they were:
+
+| Command | Query | Message |
+|---|---|---|
+| `sync` | `1]` | `"1]" is not a change id; give the change's number, such as 7 or 007, or its full folder name` |
+| `sync` | `001-alpha` | `No change "001-alpha" runs in an osq worktree` |
+| `message` | `1]` | `"1]" is not a change id; give the change's number, such as 7 or 007, or its full folder name` |
+| `message` | `001-alpha` | `No archived change "001-alpha" in an osq worktree` |
 
 ### Requirement: Land message
 `land` SHALL build the land commit's message from rust-storage

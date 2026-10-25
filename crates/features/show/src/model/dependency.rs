@@ -3,6 +3,8 @@
 use std::fs;
 use std::path::Path;
 
+use osq_core::{ChangeId, parse_change_id};
+
 /// Every dependency not yet done, in the order the proposal names them.
 pub(crate) fn unmet(changes_dir: &Path, depends_on: &[String]) -> Vec<String> {
     depends_on
@@ -14,14 +16,16 @@ pub(crate) fn unmet(changes_dir: &Path, depends_on: &[String]) -> Vec<String> {
 
 /// Whether one dependency counts as done, as TypeScript's `isDependencyDone` does.
 fn done(changes_dir: &Path, dependency: &str) -> bool {
-    let padded = format!("{dependency:0>3}");
-    if find_folder(&changes_dir.join("archive"), &padded).is_some() {
+    let Ok(id) = parse_change_id(dependency, false) else {
+        return false;
+    };
+    if find_folder(&changes_dir.join("archive"), &id).is_some() {
         return true;
     }
-    if find_folder(&changes_dir.join("rejected"), &padded).is_some() {
+    if find_folder(&changes_dir.join("rejected"), &id).is_some() {
         return false;
     }
-    let Some(active) = find_folder(changes_dir, &padded) else {
+    let Some(active) = find_folder(changes_dir, &id) else {
         return false;
     };
     let folder = changes_dir.join(active);
@@ -35,11 +39,11 @@ fn done(changes_dir: &Path, dependency: &str) -> bool {
         .all(|task| done.iter().any(|entry| entry == task))
 }
 
-/// The first directory entry that is the prefix or starts with `prefix-`.
-fn find_folder(parent: &Path, prefix: &str) -> Option<String> {
+/// The first directory entry the id names.
+fn find_folder(parent: &Path, id: &ChangeId) -> Option<String> {
     directory_names(parent)
         .into_iter()
-        .find(|name| name == prefix || name.starts_with(&format!("{prefix}-")))
+        .find(|name| id.names(name))
 }
 
 /// The names of the entries in one directory, or none when it cannot be read.

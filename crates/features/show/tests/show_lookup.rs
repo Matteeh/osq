@@ -111,29 +111,6 @@ fn show_lookup_forms() {
         let output = run(&root, &[argument]).expect("the change is found");
         assert_eq!(output.lines().next(), golden.lines().next(), "{argument}");
     }
-    let edge_cases = [
-        ("0002", "0002", "0002"),
-        ("02", "02-x", "02"),
-        ("2", "002-x", "002"),
-        ("alpha", "x-alpha", "x-alpha"),
-        ("-2", "0-2-x", "0"),
-    ];
-    for (index, (argument, folder, id)) in edge_cases.iter().enumerate() {
-        let edge = scratch(&format!("show-lookup-forms-edge-{index}"));
-        write(
-            &edge
-                .join("openspec/changes")
-                .join(folder)
-                .join("proposal.md"),
-            "---\ntitle: Edge\n---\n## Goal\n\nGoal.\n",
-        );
-        let output = run(&edge, &[argument]).expect("the edge form is found");
-        assert_eq!(
-            output.lines().next(),
-            Some(format!("Spec: {folder} ({id})").as_str()),
-            "{argument}"
-        );
-    }
 }
 
 /// Proves the failed lookup texts equal TypeScript's.

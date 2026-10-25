@@ -2,6 +2,8 @@
 
 use std::fmt::Write;
 
+use osq_core::parse_change_id;
+
 /// The refusal when `vcs` or git is unavailable.
 pub(crate) const NEEDS_GIT: &str = "osq land needs vcs.enabled and git";
 /// The refusal `sync` makes when `vcs` or git is unavailable.
@@ -36,14 +38,20 @@ pub(crate) fn not_archived(folder: &str) -> String {
 ///
 /// Implements: rust-land/land-lookup
 pub(crate) fn no_archived(query: &str) -> String {
-    format!("No archived change \"{query}\" in an osq worktree")
+    match parse_change_id(query, false) {
+        Ok(_) => format!("No archived change \"{query}\" in an osq worktree"),
+        Err(error) => error.to_string(),
+    }
 }
 
 /// The sync's refusal when no osq worktree change matches `query`.
 ///
 /// Implements: rust-land/sync-command
 pub(crate) fn no_change(query: &str) -> String {
-    format!("No change \"{query}\" runs in an osq worktree")
+    match parse_change_id(query, false) {
+        Ok(_) => format!("No change \"{query}\" runs in an osq worktree"),
+        Err(error) => error.to_string(),
+    }
 }
 
 /// The sync's line after it commits the default branch into the branch.

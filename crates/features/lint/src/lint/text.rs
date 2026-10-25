@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use osq_core::Finding as LinkFinding;
+use osq_core::{Finding as LinkFinding, parse_change_id};
 use osq_kernel_specs::{MergeError, SpecFinding};
 
 use super::finding::{Finding as RuleFinding, Origin, ReportFinding};
@@ -15,7 +15,10 @@ pub(crate) const REPOSITORY_HEADER: &str =
 ///
 /// Implements: rust-lint/lint-lookup
 pub(crate) fn not_found(query: &str, changes: &Path) -> String {
-    format!("Spec \"{query}\" not found in {}", changes.display())
+    match parse_change_id(query, false) {
+        Ok(_) => format!("Spec \"{query}\" not found in {}", changes.display()),
+        Err(error) => error.to_string(),
+    }
 }
 
 /// The line for a change with no error.

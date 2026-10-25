@@ -1,11 +1,11 @@
-//! Finding the change folder an id, prefix or path names.
+//! Finding the change folder an id or path names.
 
 use std::path::{Path, PathBuf};
 
-use osq_core::FeatureError;
+use osq_core::{FeatureError, parse_change_id};
 use osq_kernel_storage::{ChangeEntry, Location};
 
-/// One change folder found by its id, prefix or path.
+/// One change folder found by its id or path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Found {
     /// The folder's name.
@@ -16,7 +16,7 @@ pub(crate) struct Found {
     pub(crate) location: Location,
 }
 
-/// Resolves an id, prefix or path as TypeScript's `resolveSpecFolder` does.
+/// Resolves an id or path as TypeScript's `resolveSpecFolder` does.
 ///
 /// # Errors
 ///
@@ -37,8 +37,10 @@ pub(crate) fn resolve(
             return Ok(found(candidate, entries));
         }
     }
+    let change_id = parse_change_id(id, true)
+        .map_err(|error| FeatureError::failed("show", error.to_string()))?;
     for entry in entries {
-        if matches_folder(&entry.folder, trimmed) {
+        if change_id.names(&entry.folder) {
             return Ok(Found {
                 folder: entry.folder.clone(),
                 path: entry.path.clone(),
@@ -75,40 +77,4 @@ fn same_path(left: &Path, right: &Path) -> bool {
     let left = std::fs::canonicalize(left).unwrap_or_else(|_| left.to_path_buf());
     let right = std::fs::canonicalize(right).unwrap_or_else(|_| right.to_path_buf());
     left == right
-}
-
-/// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
-fn matches_folder(folder: &str, query: &str) -> bool {
-    let padded = parse_int(query).map_or_else(|| query.to_owned(), pad);
-    folder == query
-        || folder == padded
-        || folder.starts_with(&format!("{query}-"))
-        || folder.starts_with(&format!("{padded}-"))
-        || folder.ends_with(&format!("-{query}"))
-}
-
-/// Pads an integer's text to three characters as JavaScript's `padStart` does.
-fn pad(number: i64) -> String {
-    let text = number.to_string();
-    let zeros = 3_usize.saturating_sub(text.len());
-    format!("{}{text}", "0".repeat(zeros))
-}
-
-/// The integer a query starts with, as JavaScript's `Number.parseInt` reads one.
-fn parse_int(text: &str) -> Option<i64> {
-    let mut characters = text.trim_start().chars().peekable();
-    let mut sign = 1_i64;
-    if matches!(characters.peek(), Some('+' | '-')) && characters.next() == Some('-') {
-        sign = -1;
-    }
-    let mut digits = String::new();
-    while let Some(character) = characters.peek() {
-        if !character.is_ascii_digit() {
-            break;
-        }
-        if let Some(character) = characters.next() {
-            digits.push(character);
-        }
-    }
-    digits.parse::<i64>().ok().map(|number| sign * number)
 }

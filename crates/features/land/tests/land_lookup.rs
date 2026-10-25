@@ -54,45 +54,68 @@ enum Expected {
     Failed(&'static str),
 }
 
+/// Every row of "Change for a query".
+const LOOKUP_ROWS: [(&str, &str, Expected); 12] = [
+    ("fixture by 1", "1", Expected::Landed),
+    ("fixture by 001", "001", Expected::Landed),
+    ("fixture by padded spaces", "  1  ", Expected::Landed),
+    ("fixture by name", "001-alpha-orders", Expected::Landed),
+    (
+        "fixture by prefix",
+        "001-alpha",
+        Expected::Failed("No archived change \"001-alpha\" in an osq worktree"),
+    ),
+    (
+        "fixture by longer name",
+        "001-alpha-orders-x",
+        Expected::Failed("No archived change \"001-alpha-orders-x\" in an osq worktree"),
+    ),
+    (
+        "fixture by 1x",
+        "1x",
+        Expected::Failed("No archived change \"1x\" in an osq worktree"),
+    ),
+    (
+        "fixture by 1]",
+        "1]",
+        Expected::Failed(
+            "\"1]\" is not a change id; give the change's number, such as 7 or 007, or its full folder name",
+        ),
+    ),
+    (
+        "no change 2",
+        "2",
+        Expected::Failed("No archived change \"2\" in an osq worktree"),
+    ),
+    (
+        "no change alpha",
+        "alpha",
+        Expected::Failed("No archived change \"alpha\" in an osq worktree"),
+    ),
+    (
+        "active only",
+        "1",
+        Expected::Failed("001-alpha-orders has not archived on osq/001-alpha-orders"),
+    ),
+    (
+        "renamed branch",
+        "1",
+        Expected::Failed("No archived change \"1\" in an osq worktree"),
+    ),
+];
+
 /// Proves every row of "Change for a query".
 ///
 /// Covers: rust-land/change-for-a-query
 #[test]
 fn change_for_a_query() {
-    let rows: [(&str, &str, Expected); 9] = [
-        ("fixture by 1", "1", Expected::Landed),
-        ("fixture by 001", "001", Expected::Landed),
-        ("fixture by padded spaces", "  1  ", Expected::Landed),
-        ("fixture by name", "001-alpha-orders", Expected::Landed),
-        ("fixture by prefix", "001-alpha", Expected::Landed),
-        (
-            "no change 2",
-            "2",
-            Expected::Failed("No archived change \"2\" in an osq worktree"),
-        ),
-        (
-            "no change alpha",
-            "alpha",
-            Expected::Failed("No archived change \"alpha\" in an osq worktree"),
-        ),
-        (
-            "active only",
-            "1",
-            Expected::Failed("001-alpha-orders has not archived on osq/001-alpha-orders"),
-        ),
-        (
-            "renamed branch",
-            "1",
-            Expected::Failed("No archived change \"1\" in an osq worktree"),
-        ),
-    ];
-    for (index, (name, query, expected)) in rows.into_iter().enumerate() {
+    for (index, (name, query, expected)) in LOOKUP_ROWS.into_iter().enumerate() {
         let repo = LandRepo::new(&format!("lookup-{index}"));
-        match index {
-            7 => {
+        match name {
+            "active only" => {
                 repo.add_unarchived_change("001-alpha-orders");
             }
-            8 => {
+            "renamed branch" => {
                 let change = repo.add_fixture_change();
                 repo.rename_branch(&change, "work/001-alpha-orders");
             }

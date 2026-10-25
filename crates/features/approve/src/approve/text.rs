@@ -3,13 +3,18 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
+use osq_core::parse_change_id;
+
 use super::steering::Trigger;
 
 /// The refusal for a query that names no active change.
 ///
 /// Implements: rust-approve/approve-lookup
 pub(crate) fn not_found(query: &str, changes: &Path) -> String {
-    format!("Spec \"{query}\" not found in {}", changes.display())
+    match parse_change_id(query, false) {
+        Ok(_) => format!("Spec \"{query}\" not found in {}", changes.display()),
+        Err(error) => error.to_string(),
+    }
 }
 
 /// The refusal for a default-branch trigger.

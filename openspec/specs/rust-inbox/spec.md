@@ -395,10 +395,9 @@ Its id is the record's `change`, or its `item` when `change` is `None`.
 With a `change`, its title is the title of the first listed change, in the
 order "Inbox trees" lists every location, whose folder matches the
 `change`, or the `change` when none matches or that title is empty. A
-folder matches when it equals the trimmed `change` or its padded form, or
-starts with either followed by `-`, where the padded form is the number the
-trimmed `change` leads with written with at least three digits, or the
-trimmed `change` when it leads with no digit. Without a `change`, its title
+folder matches when rust-core `parse_change_id` reads the `change` with
+`slug` false into an id that names the folder, as rust-core "Change ids"
+says, and a `change` it refuses matches no folder. Without a `change`, its title
 is the title `read_queue_titles` gives for the slug `item`, or the `item`
 when it gives none. Its line is
 `  <id>: <title> — autopilot stopped: <reason><detail> — <command>`, where
@@ -419,6 +418,16 @@ whitespace read as one space.
 | `reason: queue_unreadable`, `item: next-item`, `command: osq queue approve`, with `## [Bad Slug] Broken\n\nDepends on: nothing\n\nY.\n` appended to the queue | `bad slug\n` | `  next-item: next-item — autopilot stopped: queue_unreadable: bad slug — osq queue approve` |
 | `reason: not_approved`, `item: other-item`, `command: osq queue approve` | empty | `  other-item: other-item — autopilot stopped: not_approved — osq queue approve` |
 | `reason: bogus`, `item: next-item`, `command: osq queue approve` | empty | none |
+
+#### Scenario: Autopilot stop naming a change that is not a change id
+- **WHEN** `InboxFeature::new()` runs `inbox` on the scratch project of "Autopilot stops", with `openspec/.run/autopilot-stop.md` holding the frontmatter lines `reason: halted`, `item: stopped-item`, the row's `change` line and `command: osq retry 040 1`, then `at: 2026-10-22T10:00:00.000Z`, and an empty body
+- **THEN** its output text is `Needs you`, the row's line, `Running`, `  (none)`, `Landed since last look` and `  (none)`, each followed by a newline:
+
+| Change line | Needs-you line |
+|---|---|
+| `change: "040]"` | `  040]: 040] — autopilot stopped: halted — osq retry 040 1` |
+| `change: "040-stopped-x"` | `  040-stopped-x: 040-stopped-x — autopilot stopped: halted — osq retry 040 1` |
+| `change: "040-stopped"` | `  040-stopped: Stopped — autopilot stopped: halted — osq retry 040 1` |
 
 ### Requirement: Needs-you order
 The Needs you group SHALL list, as TypeScript's `readInbox` does, the

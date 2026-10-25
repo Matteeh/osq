@@ -2,11 +2,16 @@
 
 use std::path::Path;
 
+use osq_core::parse_change_id;
+
 /// The refusal for an id that names no active change.
 ///
 /// Implements: rust-run/run-refusals
 pub(crate) fn not_found(id: &str, changes: &Path) -> String {
-    format!("Spec \"{id}\" not found in {}", changes.display())
+    match parse_change_id(id, false) {
+        Ok(_) => format!("Spec \"{id}\" not found in {}", changes.display()),
+        Err(error) => error.to_string(),
+    }
 }
 
 /// The refusal for a change that has no task file.

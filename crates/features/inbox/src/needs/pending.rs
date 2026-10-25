@@ -2,6 +2,7 @@
 //!
 //! Both are pure functions of the snapshots, the records and the queue titles.
 
+use osq_core::parse_change_id;
 use osq_kernel_storage::{AfterLandFailure, AutopilotStop, ChangeSnapshot, Location, QueueTitle};
 
 use super::{AutopilotFacts, Item, Kind};
@@ -59,11 +60,12 @@ pub(crate) fn autopilot_stopped(
     )
 }
 
-/// The title of the first listed change whose folder matches `change`.
+/// The title of the first listed change whose folder the change id names.
 fn change_title(snapshots: &[ChangeSnapshot], change: &str) -> String {
+    let id = parse_change_id(change, false).ok();
     snapshots
         .iter()
-        .find(|snapshot| matches_folder(&snapshot.folder, change))
+        .find(|snapshot| id.as_ref().is_some_and(|id| id.names(&snapshot.folder)))
         .and_then(|snapshot| snapshot.title.clone())
         .filter(|title| !title.is_empty())
         .unwrap_or_else(|| change.to_owned())
@@ -77,29 +79,6 @@ fn queue_title(queue: &[QueueTitle], slug: &str) -> String {
         .map(|item| item.title.clone())
         .filter(|title| !title.is_empty())
         .unwrap_or_else(|| slug.to_owned())
-}
-
-/// Whether a folder equals a query, its padded form, or starts with either
-/// followed by `-`.
-fn matches_folder(folder: &str, query: &str) -> bool {
-    let trimmed = query.trim();
-    let padded = padded_form(trimmed);
-    folder == trimmed
-        || folder == padded
-        || folder.starts_with(&format!("{trimmed}-"))
-        || folder.starts_with(&format!("{padded}-"))
-}
-
-/// The number a query leads with, written with at least three digits.
-fn padded_form(query: &str) -> String {
-    leading_digits(query).map_or_else(
-        || query.to_owned(),
-        |digits| {
-            digits
-                .parse::<u128>()
-                .map_or_else(|_| query.to_owned(), |number| format!("{number:03}"))
-        },
-    )
 }
 
 /// The digits a string leads with, or `None` without any.

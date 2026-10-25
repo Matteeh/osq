@@ -3,7 +3,7 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
-use osq_core::FeatureError;
+use osq_core::{FeatureError, parse_change_id};
 
 use super::args::CHANGE;
 
@@ -25,14 +25,18 @@ pub(crate) fn invalid_target(target: &str) -> FeatureError {
     ))
 }
 
-/// The refusal for an id that names no active change.
+/// The refusal for an id that names no active change, or the error for one
+/// core refuses.
 ///
 /// Implements: rust-retry/retry-refusals
 pub(crate) fn not_found(query: &str, changes: &Path) -> FeatureError {
-    failed(format!(
-        "Spec \"{query}\" not found in {}",
-        changes.display()
-    ))
+    match parse_change_id(query, false) {
+        Ok(_) => failed(format!(
+            "Spec \"{query}\" not found in {}",
+            changes.display()
+        )),
+        Err(error) => failed(error.to_string()),
+    }
 }
 
 /// The refusal for a task target on an archived change.

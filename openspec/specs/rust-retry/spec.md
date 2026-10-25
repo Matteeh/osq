@@ -53,11 +53,14 @@ with its texts, writing nothing:
 
 1. a target that, trimmed, is neither `change` nor all ASCII digits:
    `Invalid retry target "<target>": expected a numeric task or "change".`;
-2. an id that matches no active change, matched as TypeScript's
-   `matchesFolder` does among the active entries rust-retry "Active
-   worktree retry" lists, and no archived change of an osq worktree as
-   rust-retry "Archived retry" finds it:
-   `Spec "<id>" not found in <root>/openspec/changes`;
+2. an id that matches no active change among the active entries rust-retry
+   "Active worktree retry" lists, and no archived change of an osq worktree
+   as rust-retry "Archived retry" finds it:
+   `Spec "<id>" not found in <root>/openspec/changes`, or, when rust-core
+   `parse_change_id` refuses the id, the `ChangeIdError`'s display. A
+   folder matches the id when `parse_change_id` reads it with `slug` false
+   into an id that names the folder, as rust-core "Change ids" says, and an
+   id it refuses matches no folder;
 3. `.run/approved` missing or blank:
    ``Change <id> is not approved. Run `osq approve <id>` before retrying.``;
 4. `.run/approved` trimmed other than rust-storage `change_folder_seal` of
@@ -91,6 +94,16 @@ frontmatter does not parse, it is `regressed` or `dead` respectively.
 |---|---|
 | `12`, `1` | `Marker reason "weird" is not one osq knows; retry is refused.` |
 | `11`, `1` | `<root>/openspec/changes/011-scope-hash/tasks/1.md: No such file or directory (os error 2)` |
+
+#### Scenario: Retry refuses an id that is not a change id
+- **WHEN** `retry` runs with the row's arguments on a copy of `crates/features/retry/tests/fixtures/retry-project/`
+- **THEN** it gives a `Failed` error for the command `retry` with the row's message, where `<root>` is the copy's root, and leaves every file in the copy unchanged:
+
+| Arguments | Message |
+|---|---|
+| `1]`, `1` | `"1]" is not a change id; give the change's number, such as 7 or 007, or its full folder name` |
+| `1]`, `x` | `Invalid retry target "x": expected a numeric task or "change".` |
+| `001-dead-x`, `1` | `Spec "001-dead-x" not found in <root>/openspec/changes` |
 
 ### Requirement: Retry record
 A `retry` that is not refused and is not a recertification, as rust-retry
@@ -146,7 +159,7 @@ through rust-config `load_config`, failing with the config error's text.
 With `vcs.enabled` and a rust-vcs `GitVcs` root, it SHALL list rust-storage
 `change_trees` from the `worktree_list` worktrees and no stacked folders,
 and take the first archived entry of `list_tree_changes` that lies in a
-tree naming a folder and matches the id as `matchesFolder` does. Without
+tree naming a folder and matches the id as "Retry refusals" says. Without
 one, or with vcs off, the not-found refusal stands. A numeric target on
 that change SHALL fail, writing nothing, with `<folder> has archived; osq
 retry clears only its land stop: osq retry <id> change`. For `change`,

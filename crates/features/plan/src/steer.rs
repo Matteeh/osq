@@ -7,7 +7,7 @@ mod triggers;
 
 use std::path::Path;
 
-use osq_core::FeatureError;
+use osq_core::{FeatureError, parse_change_id};
 use osq_kernel_config::Config;
 use osq_kernel_storage::{ChangeSnapshot, Location};
 
@@ -146,16 +146,20 @@ fn finish(
     ))
 }
 
-/// Builds the refusal for an id that names no change needing steering.
+/// Builds the refusal for an id that names no change needing steering, or the
+/// error for an id core refuses.
 ///
 /// Implements: rust-plan/steering-lookup
 fn nothing(id: &str) -> FeatureError {
-    FeatureError::failed(
-        "plan",
-        format!(
-            "No active change matching \"{id}\" needs steering; Rust osq plan {id} steers a change only."
+    match parse_change_id(id, false) {
+        Ok(_) => FeatureError::failed(
+            "plan",
+            format!(
+                "No active change matching \"{id}\" needs steering; Rust osq plan {id} steers a change only."
+            ),
         ),
-    )
+        Err(error) => FeatureError::failed("plan", error.to_string()),
+    }
 }
 
 /// Builds the refusal for a named approved change that needs no steering.

@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use osq_core::{ChangeId, parse_change_id};
 use osq_kernel_config::Config;
 use osq_kernel_storage::{
     ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_changes, list_tree_changes,
@@ -22,8 +23,9 @@ pub(crate) struct Found {
 ///
 /// # Errors
 ///
-/// Returns the display of the first git error, or `no active change` when no
-/// active folder equals the argument or leads with its digits.
+/// Returns the display of the first git error, the display of the error for an
+/// argument core refuses, or `no active change` when no active folder the id
+/// names exists.
 ///
 /// Implements: rust-archive/change-lookup
 pub(crate) fn find(
@@ -32,13 +34,14 @@ pub(crate) fn find(
     git_on: bool,
     argument: &str,
 ) -> Result<Found, String> {
+    let id = parse_change_id(argument, false).map_err(|error| error.to_string())?;
     if !git_on {
-        return find_root(root, argument);
+        return find_root(root, argument, &id);
     }
     let trees = trees(root, config)?;
     let entry = list_tree_changes(&trees)
         .into_iter()
-        .find(|entry| entry.location == Location::Active && names(entry, argument))
+        .find(|entry| entry.location == Location::Active && id.names(&entry.folder))
         .ok_or_else(|| no_change(argument))?;
     let tree = trees
         .iter()
@@ -54,10 +57,10 @@ pub(crate) fn find(
 /// Finds the first active change directly under the root.
 ///
 /// Implements: rust-archive/change-lookup
-fn find_root(root: &Path, argument: &str) -> Result<Found, String> {
+fn find_root(root: &Path, argument: &str, id: &ChangeId) -> Result<Found, String> {
     list_changes(root)
         .into_iter()
-        .find(|entry| entry.location == Location::Active && names(entry, argument))
+        .find(|entry| entry.location == Location::Active && id.names(&entry.folder))
         .map(|entry| Found {
             entry,
             tree_root: root.to_path_buf(),
@@ -91,18 +94,4 @@ fn candidate(worktree: Worktree) -> TreeCandidate {
 /// Implements: rust-archive/change-lookup
 fn no_change(argument: &str) -> String {
     format!("no active change {argument}")
-}
-
-/// Whether one change folder has the argument's name or leading digits.
-///
-/// Implements: rust-archive/change-lookup
-fn names(entry: &ChangeEntry, argument: &str) -> bool {
-    entry.folder == argument || leading_digits(&entry.folder) == argument
-}
-
-/// The leading digits of a folder name.
-///
-/// Implements: rust-archive/change-lookup
-fn leading_digits(folder: &str) -> String {
-    folder.chars().take_while(char::is_ascii_digit).collect()
 }
